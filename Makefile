@@ -1,4 +1,4 @@
-.PHONY: sync lock lock-check format format-check lint typecheck test check
+.PHONY: sync lock lock-check format format-check lint typecheck test test-e2e check
 
 sync:
 	uv sync --all-groups
@@ -23,5 +23,8 @@ typecheck:
 
 test:
 	uv run --locked pytest
+
+test-e2e:
+	uv run --locked pytest -m e2e
 
 check: lock-check format-check lint typecheck test
