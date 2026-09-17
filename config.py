@@ -21,6 +21,9 @@ LOG_FILE_NAME = "app.log"
 DATABASE_URL_PREFIX = "sqlite+aiosqlite:///"
 LOOPBACK_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
 
+DEFAULT_SESSION_PATH = f"{RUNTIME_SESSION_DIR}/vk_topic_bridge{SESSION_SUFFIX}"
+DEFAULT_DATABASE_URL = f"{DATABASE_URL_PREFIX}data/vk_topic_bridge.db"
+
 
 def _with_session_suffix(path: Path) -> Path:
     """Append `.session` without truncating a dotted stem (unlike ``Path.with_suffix``)."""
@@ -63,14 +66,14 @@ class Settings(BaseSettings):
     TELEGRAM_BOT_API_URL: str | None = None
     TELEGRAM_API_ID: int = Field(gt=0)
     TELEGRAM_API_HASH: SecretStr = Field(min_length=1)
-    TELEGRAM_SESSION_PATH: str = Field(min_length=1)
+    TELEGRAM_SESSION_PATH: str = DEFAULT_SESSION_PATH
     TELEGRAM_MTPROXY_SERVER: str | None = None
     TELEGRAM_MTPROXY_PORT: int | None = Field(default=None, ge=1, le=65535)
     TELEGRAM_MTPROXY_SECRET: SecretStr | None = None
     SOCKS5_PROXY_URL: str | None = None
     VK_GROUP_TOKEN: SecretStr = Field(min_length=1)
     VK_GROUP_ID: int | None = None
-    DATABASE_URL: str = Field(min_length=1)
+    DATABASE_URL: str = DEFAULT_DATABASE_URL
     LOG_LEVEL: str = "INFO"
     LOG_LEVEL_LIBS: str = "WARNING"
     LOG_DIR: Path = Path("logs")

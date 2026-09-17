@@ -5,12 +5,25 @@ import os
 from logging.config import fileConfig
 
 from alembic import context
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
+from config import DEFAULT_DATABASE_URL
 from vk_topic_bridge.infrastructure.db import models  # noqa: F401  (registers metadata)
 from vk_topic_bridge.infrastructure.db.base import Base
+
+
+class _DatabaseSettings(BaseSettings):
+    """Reads DATABASE_URL from the same `.env` as the app without demanding its secrets."""
+
+    model_config = SettingsConfigDict(
+        env_file=".env", extra="ignore", env_ignore_empty=True, case_sensitive=False
+    )
+
+    DATABASE_URL: str = DEFAULT_DATABASE_URL
+
 
 config = context.config
 
@@ -22,12 +35,9 @@ target_metadata = Base.metadata
 
 def _database_url() -> str:
     url = os.environ.get("DATABASE_URL", "").strip()
-    if not url:
-        raise RuntimeError(
-            "DATABASE_URL is not set; Alembic commands require it (e.g. "
-            "DATABASE_URL='sqlite+aiosqlite:///path/to/db.sqlite3')."
-        )
-    return url
+    if url:
+        return url
+    return _DatabaseSettings().DATABASE_URL
 
 
 def run_migrations_offline() -> None:
