@@ -11,6 +11,7 @@ __pycache__/
 .basedpyright/
 .pyright/
 .coverage
+.coverage.*
 coverage.xml
 htmlcov/
 
@@ -32,5 +33,11 @@ logs/*
 
 pid/*
 !pid/.gitkeep
+
+data/*
+!data/.gitkeep
+
+runtime/telethon/*
+!runtime/telethon/.gitkeep
 
 .idea/*

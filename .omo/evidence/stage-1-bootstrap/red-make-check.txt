@@ -1,0 +1,11 @@
+uv lock --check
+Resolved 1 package in 2ms
+uv run --locked ruff format --check .
+uv run --locked ruff check .
+All checks passed!
+uv run --locked basedpyright
+0 errors, 0 warnings, 0 notes
+uv run --locked pytest
+error: Failed to spawn: `pytest`
+  Caused by: No such file or directory (os error 2)
+make: *** [Makefile:25: test] Error 2

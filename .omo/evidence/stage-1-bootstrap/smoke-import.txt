@@ -1,0 +1,14 @@
+OK vk_topic_bridge
+OK aiogram
+OK vkbottle
+OK telethon
+OK sqlalchemy
+OK sqlalchemy.ext.asyncio
+OK aiosqlite
+OK alembic
+OK pydantic_settings
+OK loguru
+OK aiohttp
+OK aiohttp_socks
+OK python_socks
+python 3.14.3

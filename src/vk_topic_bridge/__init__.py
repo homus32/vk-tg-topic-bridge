@@ -1,0 +1,1 @@
+"""VK Topic Bridge package."""

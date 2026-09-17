@@ -46,6 +46,8 @@ verification failed: Error: Failed to find expected lines in /path/to/file.ext`.
 - При создании содержательного каталога с отличающимися командами или ограничениями создать в нём краткий `AGENTS.md` и добавить путь в этот раздел.
 - Не создавать `AGENTS.md` в `.git/`, `.venv/`, `.idea/`, `.serena/`, `.opencode/`, `.omo/`
 - `docs/AGENTS.md` — правила intent, feature backlog и проектной документации.
+- `src/vk_topic_bridge/AGENTS.md` — правила слоёв пакета.
+- `tests/AGENTS.md` — тестовая стратегия.
 - `.omo/drafts/` — замороженные входные материалы intent и research; не создавать и не изменять drafts в рамках реализации.
 - `.omo/plans/` — decision-complete планы исполнения.
 
