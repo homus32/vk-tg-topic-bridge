@@ -1,0 +1,97 @@
+................................................................F.F..... [ 19%]
+.......................FFFF............................................. [ 39%]
+........................................................................ [ 59%]
+........................................................................ [ 79%]
+........................................................................ [ 99%]
+..                                                                       [100%]
+=================================== FAILURES ===================================
+___________________ test_non_owner_event_is_silently_dropped ___________________
+
+    async def test_non_owner_event_is_silently_dropped() -> None:
+        handler = RecordingHandler()
+        middleware = OwnerOnlyMiddleware(frozenset({OWNER_ID}))
+    
+        result = await middleware(handler, _event(STRANGER_ID), {})
+    
+>       assert result is None
+E       AssertionError: assert 'handled' is None
+
+tests/integration/telegram/test_owner_middleware.py:41: AssertionError
+________________ test_event_without_sender_is_silently_dropped _________________
+
+    async def test_event_without_sender_is_silently_dropped() -> None:
+        handler = RecordingHandler()
+        middleware = OwnerOnlyMiddleware(frozenset({OWNER_ID}))
+    
+        result = await middleware(handler, _event_without_sender(), {})
+    
+>       assert result is None
+E       AssertionError: assert 'handled' is None
+
+tests/integration/telegram/test_owner_middleware.py:63: AssertionError
+________ test_ready_registration_replies_success_once_with_topic_count _________
+
+    async def test_ready_registration_replies_success_once_with_topic_count() -> None:
+        message = FakeMessage()
+        register_chat = FakeRegisterChat(_result(ready=True, topics=_topics(2)))
+    
+        await handle_register(cast(Message, message), register_chat)
+    
+>       assert len(message.answers) == 1
+E       assert 0 == 1
+E        +  where 0 = len([])
+E        +    where [] = <telegram.test_register_flow.FakeMessage object at 0x79c1f8b6f770>.answers
+
+tests/integration/telegram/test_register_flow.py:90: AssertionError
+________________ test_partial_registration_asks_owner_to_retry _________________
+
+    async def test_partial_registration_asks_owner_to_retry() -> None:
+        message = FakeMessage()
+        register_chat = FakeRegisterChat(_result(ready=False, topics=[]))
+    
+        await handle_register(cast(Message, message), register_chat)
+    
+>       assert len(message.answers) == 1
+E       assert 0 == 1
+E        +  where 0 = len([])
+E        +    where [] = <telegram.test_register_flow.FakeMessage object at 0x79c1f325d450>.answers
+
+tests/integration/telegram/test_register_flow.py:103: AssertionError
+_____________ test_missing_capabilities_lists_every_missing_right ______________
+
+    async def test_missing_capabilities_lists_every_missing_right() -> None:
+        message = FakeMessage()
+        register_chat = FakeRegisterChat(
+            MissingCapabilitiesError(("can_send_video", "can_send_document"))
+        )
+    
+        await handle_register(cast(Message, message), register_chat)
+    
+>       assert len(message.answers) == 1
+E       assert 0 == 1
+E        +  where 0 = len([])
+E        +    where [] = <telegram.test_register_flow.FakeMessage object at 0x79c1f325c910>.answers
+
+tests/integration/telegram/test_register_flow.py:116: AssertionError
+_________ test_generic_provisioning_error_is_reported_without_raising __________
+
+    async def test_generic_provisioning_error_is_reported_without_raising() -> None:
+        message = FakeMessage()
+        register_chat = FakeRegisterChat(ProvisioningError("telethon is not authorized"))
+    
+        await handle_register(cast(Message, message), register_chat)
+    
+>       assert len(message.answers) == 1
+E       assert 0 == 1
+E        +  where 0 = len([])
+E        +    where [] = <telegram.test_register_flow.FakeMessage object at 0x79c1fbc80d60>.answers
+
+tests/integration/telegram/test_register_flow.py:128: AssertionError
+=========================== short test summary info ============================
+FAILED tests/integration/telegram/test_owner_middleware.py::test_non_owner_event_is_silently_dropped
+FAILED tests/integration/telegram/test_owner_middleware.py::test_event_without_sender_is_silently_dropped
+FAILED tests/integration/telegram/test_register_flow.py::test_ready_registration_replies_success_once_with_topic_count
+FAILED tests/integration/telegram/test_register_flow.py::test_partial_registration_asks_owner_to_retry
+FAILED tests/integration/telegram/test_register_flow.py::test_missing_capabilities_lists_every_missing_right
+FAILED tests/integration/telegram/test_register_flow.py::test_generic_provisioning_error_is_reported_without_raising
+6 failed, 356 passed in 9.81s
