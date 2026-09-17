@@ -1,0 +1,12 @@
+=== RED (literal command from task; NOTE: pyproject addopts '--cov' consumes the positional
+=== path as its coverage source, so this invocation collects the WHOLE suite: 381 passed, EXIT=0 ===
+........................................................................ [ 75%]
+........................................................................ [ 94%]
+.....................                                                    [100%]
+381 passed in 10.13s
+EXIT=0
+
+=== RED (isolated acceptance-only invocation: -o addopts= restores the positional path) ===
+
+no tests ran in 0.00s
+EXIT=5
