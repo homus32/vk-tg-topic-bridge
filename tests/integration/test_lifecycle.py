@@ -26,11 +26,14 @@ from alembic.config import Config
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from config import Settings
+from vk_topic_bridge.application.admin.refresh_topics import RefreshTopics
 from vk_topic_bridge.application.dto.infrastructure import ChatAccessInfo
 from vk_topic_bridge.application.dto.readiness import ReadinessState
-from vk_topic_bridge.application.ports.telegram import TelegramAdminPort
+from vk_topic_bridge.application.errors import ProvisioningError
+from vk_topic_bridge.application.ports.telegram import TelegramAdminPort, TelethonPort
+from vk_topic_bridge.application.readiness import InMemoryReadinessGate
 from vk_topic_bridge.domain.errors import FatalStartupError, FatalStartupReason
-from vk_topic_bridge.domain.value_objects import TopicInfo
+from vk_topic_bridge.domain.value_objects import ChatCapabilities, TopicInfo
 from vk_topic_bridge.infrastructure.telegram.mtproto import TelethonAdapter, TelethonUserClient
 from vk_topic_bridge.infrastructure.vk.api import RawVkApi
 
@@ -194,6 +197,34 @@ class FailingAdminPort:
         self, chat_id: int, message_thread_id: int | None, text: str
     ) -> int:
         raise RuntimeError("bot api unreachable")
+
+
+class FakeProvisioningAdminPort:
+    """Admin port with full capabilities and a positive test-send message id."""
+
+    async def get_me(self) -> int:
+        return 999
+
+    async def get_chat_capabilities(self, chat_id: int) -> ChatCapabilities:
+        return ChatCapabilities(
+            can_send_text=True,
+            can_send_photo=True,
+            can_send_video=True,
+            can_send_document=True,
+            missing=(),
+        )
+
+    async def send_test_into_topic(
+        self, chat_id: int, message_thread_id: int | None, text: str
+    ) -> int:
+        return 555
+
+
+class FailingRefreshTopics(RefreshTopics):
+    """RefreshTopics whose topic discovery always fails, leaving registration unready."""
+
+    async def refresh(self, chat_id: int) -> list[TopicInfo]:
+        raise ProvisioningError(f"chat {chat_id} returned no forum topics")
 
 
 def _container(
@@ -379,7 +410,7 @@ async def test_persisted_chat_revalidation_advances_readiness(
     await container.engine.dispose()
 
 
-async def test_persisted_destination_advances_to_destination_confirmed(
+async def test_persisted_destination_advances_to_forwarding_enabled(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     startup = _module("vk_topic_bridge.bootstrap.startup")
@@ -398,7 +429,78 @@ async def test_persisted_destination_advances_to_destination_confirmed(
 
     await startup.run_startup_checks(startup.StartupDeps(settings=settings, container=healthy))
 
-    assert healthy.readiness.current() is ReadinessState.DESTINATION_CONFIRMED
+    assert healthy.readiness.current() is ReadinessState.FORWARDING_ENABLED
+    await container.engine.dispose()
+
+
+async def test_readiness_aware_register_chat_advances_topics_ready_when_ready(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    container_module = _module("vk_topic_bridge.bootstrap.container")
+    settings = _settings(tmp_path)
+    container = _container(settings)
+    await asyncio.to_thread(_upgrade_to_head, monkeypatch, settings)
+    readiness = InMemoryReadinessGate()
+    refresh = RefreshTopics(container.uow_factory, cast(TelethonPort, FakeTelethonAdapter()))
+    use_case = container_module.ReadinessAwareRegisterChat(
+        container.uow_factory,
+        cast(TelegramAdminPort, FakeProvisioningAdminPort()),
+        refresh,
+        readiness,
+    )
+
+    result = await use_case.execute(-1001234567890, "Тестовый чат")
+
+    assert result.ready is True
+    assert readiness.current() is ReadinessState.TOPICS_READY
+    await container.engine.dispose()
+
+
+async def test_readiness_aware_register_chat_stays_when_not_ready(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    container_module = _module("vk_topic_bridge.bootstrap.container")
+    settings = _settings(tmp_path)
+    container = _container(settings)
+    await asyncio.to_thread(_upgrade_to_head, monkeypatch, settings)
+    readiness = InMemoryReadinessGate()
+    readiness.advance(ReadinessState.CHAT_REGISTERED)
+    refresh = FailingRefreshTopics(container.uow_factory, cast(TelethonPort, FakeTelethonAdapter()))
+    use_case = container_module.ReadinessAwareRegisterChat(
+        container.uow_factory,
+        cast(TelegramAdminPort, FakeProvisioningAdminPort()),
+        refresh,
+        readiness,
+    )
+
+    result = await use_case.execute(-1001234567890, "Тестовый чат")
+
+    assert result.ready is False
+    assert readiness.current() is ReadinessState.CHAT_REGISTERED
+    await container.engine.dispose()
+
+
+async def test_readiness_aware_select_destination_advances_to_forwarding_enabled(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    container_module = _module("vk_topic_bridge.bootstrap.container")
+    settings = _settings(tmp_path)
+    container = _container(settings)
+    await asyncio.to_thread(_upgrade_to_head, monkeypatch, settings)
+    readiness = InMemoryReadinessGate()
+    use_case = container_module.ReadinessAwareSelectDestination(
+        container.uow_factory,
+        cast(TelegramAdminPort, FakeProvisioningAdminPort()),
+        readiness,
+    )
+    topic = TopicInfo(
+        topic_id=7, title="Новости", is_general=False, is_closed=False, is_hidden=False
+    )
+
+    message_id = await use_case.execute(-1001234567890, topic, "run-1")
+
+    assert message_id == 555
+    assert readiness.current() is ReadinessState.FORWARDING_ENABLED
     await container.engine.dispose()
 
 

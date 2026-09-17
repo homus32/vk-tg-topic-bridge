@@ -153,6 +153,7 @@ async def _verify_persisted_chat(container: AppContainer) -> bool:
 
     if state.telegram_messages_topic_id is not None:
         container.readiness.advance(ReadinessState.DESTINATION_CONFIRMED)
+        container.readiness.advance(ReadinessState.FORWARDING_ENABLED)
     else:
         container.readiness.advance(ReadinessState.TOPICS_READY)
     return True

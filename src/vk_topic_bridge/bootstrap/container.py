@@ -16,13 +16,16 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from config import Settings
 from vk_topic_bridge.application.admin.refresh_topics import RefreshTopics
-from vk_topic_bridge.application.admin.register_chat import RegisterChat
+from vk_topic_bridge.application.admin.register_chat import RegisterChat, RegisterChatResult
 from vk_topic_bridge.application.admin.select_destination import SelectDestination
 from vk_topic_bridge.application.admin.toggle_settings import ToggleSettings
+from vk_topic_bridge.application.dto.readiness import ReadinessState
 from vk_topic_bridge.application.dto.settings import BridgeSettingsState
 from vk_topic_bridge.application.forwarding.forward_message import ForwardVkMessage
+from vk_topic_bridge.application.ports.telegram import TelegramAdminPort
 from vk_topic_bridge.application.ports.unit_of_work import UnitOfWork
 from vk_topic_bridge.application.readiness import InMemoryReadinessGate
+from vk_topic_bridge.domain.value_objects import TopicInfo
 from vk_topic_bridge.infrastructure.db.engine import create_async_engine, create_session_factory
 from vk_topic_bridge.infrastructure.db.repositories.unit_of_work import SqlAlchemyUnitOfWork
 from vk_topic_bridge.infrastructure.telegram.bot_api_factory import create_bot
@@ -104,6 +107,45 @@ def _build_vk_polling(_api: RawVkApi) -> PollingTask:
     return run
 
 
+class ReadinessAwareRegisterChat(RegisterChat):
+    """RegisterChat that promotes readiness once registration is fully ready."""
+
+    def __init__(
+        self,
+        uow_factory: Callable[[], UnitOfWork],
+        admin: TelegramAdminPort,
+        refresh: RefreshTopics,
+        readiness: InMemoryReadinessGate,
+    ) -> None:
+        super().__init__(uow_factory, admin, refresh)
+        self._readiness = readiness
+
+    async def execute(self, chat_id: int, title: str | None) -> RegisterChatResult:
+        result = await super().execute(chat_id, title)
+        if result.ready:
+            self._readiness.advance(ReadinessState.TOPICS_READY)
+        return result
+
+
+class ReadinessAwareSelectDestination(SelectDestination):
+    """SelectDestination that promotes readiness after the confirmed test send."""
+
+    def __init__(
+        self,
+        uow_factory: Callable[[], UnitOfWork],
+        admin: TelegramAdminPort,
+        readiness: InMemoryReadinessGate,
+    ) -> None:
+        super().__init__(uow_factory, admin)
+        self._readiness = readiness
+
+    async def execute(self, chat_id: int, topic: TopicInfo, run_id: str) -> int:
+        message_id = await super().execute(chat_id, topic, run_id)
+        self._readiness.advance(ReadinessState.DESTINATION_CONFIRMED)
+        self._readiness.advance(ReadinessState.FORWARDING_ENABLED)
+        return message_id
+
+
 def _register_routers(
     dispatcher: Dispatcher,
     settings: Settings,
@@ -135,8 +177,8 @@ def build_container(
     readiness = InMemoryReadinessGate()
 
     refresh_topics = RefreshTopics(uow_factory, telethon_adapter)
-    register_chat = RegisterChat(uow_factory, admin_port, refresh_topics)
-    select_destination = SelectDestination(uow_factory, admin_port)
+    register_chat = ReadinessAwareRegisterChat(uow_factory, admin_port, refresh_topics, readiness)
+    select_destination = ReadinessAwareSelectDestination(uow_factory, admin_port, readiness)
     toggle_settings = ToggleSettings(uow_factory)
     forward_message = ForwardVkMessage(
         uow_factory=uow_factory,
