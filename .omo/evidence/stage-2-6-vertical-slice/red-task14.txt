@@ -1,0 +1,387 @@
+........................................................................ [ 19%]
+........................................................................ [ 39%]
+........................................................................ [ 59%]
+........................................................................ [ 79%]
+........................................................................ [ 99%]
+..                                                                       [100%]
+=============================== warnings summary ===============================
+tests/integration/db/test_migrations.py::test_partial_unique_index_blocks_second_general_topic
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while finalizing database connection <sqlite3.Connection object at 0x77c7804f6200>: None
+  
+  Traceback (most recent call last):
+    File "/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/elements.py", line 5327, in __new__
+      self = super().__new__(cls, value)
+  ResourceWarning: unclosed database in <sqlite3.Connection object at 0x77c7804f6200>
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/integration/db/test_migrations.py::test_partial_unique_index_blocks_second_general_topic
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while finalizing database connection <sqlite3.Connection object at 0x77c7804f44f0>: None
+  
+  Traceback (most recent call last):
+    File "/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/elements.py", line 5327, in __new__
+      self = super().__new__(cls, value)
+  ResourceWarning: unclosed database in <sqlite3.Connection object at 0x77c7804f44f0>
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/integration/db/test_migrations.py::test_partial_unique_index_blocks_second_general_topic
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while finalizing database connection <sqlite3.Connection object at 0x77c7804f65c0>: None
+  
+  Traceback (most recent call last):
+    File "/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/elements.py", line 5327, in __new__
+      self = super().__new__(cls, value)
+  ResourceWarning: unclosed database in <sqlite3.Connection object at 0x77c7804f65c0>
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/integration/db/test_migrations.py::test_partial_unique_index_blocks_second_general_topic
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while finalizing database connection <sqlite3.Connection object at 0x77c7805d7880>: None
+  
+  Traceback (most recent call last):
+    File "/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/elements.py", line 5327, in __new__
+      self = super().__new__(cls, value)
+  ResourceWarning: unclosed database in <sqlite3.Connection object at 0x77c7805d7880>
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/integration/db/test_migrations.py::test_partial_unique_index_blocks_second_general_topic
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while finalizing database connection <sqlite3.Connection object at 0x77c7805d71f0>: None
+  
+  Traceback (most recent call last):
+    File "/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/elements.py", line 5327, in __new__
+      self = super().__new__(cls, value)
+  ResourceWarning: unclosed database in <sqlite3.Connection object at 0x77c7805d71f0>
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/integration/db/test_migrations.py::test_partial_unique_index_blocks_second_general_topic
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while finalizing database connection <sqlite3.Connection object at 0x77c78063f4c0>: None
+  
+  Traceback (most recent call last):
+    File "/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/elements.py", line 5327, in __new__
+      self = super().__new__(cls, value)
+  ResourceWarning: unclosed database in <sqlite3.Connection object at 0x77c78063f4c0>
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/integration/db/test_repositories.py::test_unit_of_work_rollback_discards_changes
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while finalizing database connection <sqlite3.Connection object at 0x77c7812573d0>: None
+  
+  Traceback (most recent call last):
+    File "/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/schema.py", line 4354, in __init__
+      def __init__(
+      
+  ResourceWarning: unclosed database in <sqlite3.Connection object at 0x77c7812573d0>
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/integration/db/test_repositories.py::test_unit_of_work_rollback_discards_changes
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while finalizing database connection <sqlite3.Connection object at 0x77c78120e3e0>: None
+  
+  Traceback (most recent call last):
+    File "/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/schema.py", line 4354, in __init__
+      def __init__(
+      
+  ResourceWarning: unclosed database in <sqlite3.Connection object at 0x77c78120e3e0>
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/integration/db/test_repositories.py::test_unit_of_work_rollback_discards_changes
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while finalizing database connection <sqlite3.Connection object at 0x77c7812a3100>: None
+  
+  Traceback (most recent call last):
+    File "/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/schema.py", line 4354, in __init__
+      def __init__(
+      
+  ResourceWarning: unclosed database in <sqlite3.Connection object at 0x77c7812a3100>
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/integration/db/test_repositories.py::test_unit_of_work_rollback_discards_changes
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while finalizing database connection <sqlite3.Connection object at 0x77c7812a0f40>: None
+  
+  Traceback (most recent call last):
+    File "/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/schema.py", line 4354, in __init__
+      def __init__(
+      
+  ResourceWarning: unclosed database in <sqlite3.Connection object at 0x77c7812a0f40>
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/integration/db/test_repositories.py::test_unit_of_work_rollback_discards_changes
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while finalizing database connection <sqlite3.Connection object at 0x77c78110ae30>: None
+  
+  Traceback (most recent call last):
+    File "/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/schema.py", line 4354, in __init__
+      def __init__(
+      
+  ResourceWarning: unclosed database in <sqlite3.Connection object at 0x77c78110ae30>
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/integration/db/test_repositories.py::test_unit_of_work_rollback_discards_changes
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while finalizing database connection <sqlite3.Connection object at 0x77c7811093f0>: None
+  
+  Traceback (most recent call last):
+    File "/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/schema.py", line 4354, in __init__
+      def __init__(
+      
+  ResourceWarning: unclosed database in <sqlite3.Connection object at 0x77c7811093f0>
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/integration/db/test_repositories.py::test_unit_of_work_rollback_discards_changes
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while finalizing database connection <sqlite3.Connection object at 0x77c78110a4d0>: None
+  
+  Traceback (most recent call last):
+    File "/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/schema.py", line 4354, in __init__
+      def __init__(
+      
+  ResourceWarning: unclosed database in <sqlite3.Connection object at 0x77c78110a4d0>
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/integration/db/test_repositories.py::test_unit_of_work_rollback_discards_changes
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while finalizing database connection <sqlite3.Connection object at 0x77c78083f4c0>: None
+  
+  Traceback (most recent call last):
+    File "/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/schema.py", line 4354, in __init__
+      def __init__(
+      
+  ResourceWarning: unclosed database in <sqlite3.Connection object at 0x77c78083f4c0>
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/integration/db/test_repositories.py::test_unit_of_work_rollback_discards_changes
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while finalizing database connection <sqlite3.Connection object at 0x77c7811e16c0>: None
+  
+  Traceback (most recent call last):
+    File "/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/schema.py", line 4354, in __init__
+      def __init__(
+      
+  ResourceWarning: unclosed database in <sqlite3.Connection object at 0x77c7811e16c0>
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/integration/db/test_repositories.py::test_unit_of_work_rollback_discards_changes
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while finalizing database connection <sqlite3.Connection object at 0x77c78083fd30>: None
+  
+  Traceback (most recent call last):
+    File "/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/schema.py", line 4354, in __init__
+      def __init__(
+      
+  ResourceWarning: unclosed database in <sqlite3.Connection object at 0x77c78083fd30>
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/integration/db/test_repositories.py::test_unit_of_work_rollback_discards_changes
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while finalizing database connection <sqlite3.Connection object at 0x77c78083e020>: None
+  
+  Traceback (most recent call last):
+    File "/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/schema.py", line 4354, in __init__
+      def __init__(
+      
+  ResourceWarning: unclosed database in <sqlite3.Connection object at 0x77c78083e020>
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/integration/db/test_repositories.py::test_unit_of_work_rollback_discards_changes
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while finalizing database connection <sqlite3.Connection object at 0x77c78083ff10>: None
+  
+  Traceback (most recent call last):
+    File "/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/schema.py", line 4354, in __init__
+      def __init__(
+      
+  ResourceWarning: unclosed database in <sqlite3.Connection object at 0x77c78083ff10>
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/integration/db/test_repositories.py::test_unit_of_work_rollback_discards_changes
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while finalizing database connection <sqlite3.Connection object at 0x77c78083c130>: None
+  
+  Traceback (most recent call last):
+    File "/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/schema.py", line 4354, in __init__
+      def __init__(
+      
+  ResourceWarning: unclosed database in <sqlite3.Connection object at 0x77c78083c130>
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/integration/db/test_repositories.py::test_unit_of_work_rollback_discards_changes
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while finalizing database connection <sqlite3.Connection object at 0x77c78083f6a0>: None
+  
+  Traceback (most recent call last):
+    File "/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/schema.py", line 4354, in __init__
+      def __init__(
+      
+  ResourceWarning: unclosed database in <sqlite3.Connection object at 0x77c78083f6a0>
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/integration/db/test_repositories.py::test_unit_of_work_rollback_discards_changes
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while finalizing database connection <sqlite3.Connection object at 0x77c7804f5030>: None
+  
+  Traceback (most recent call last):
+    File "/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/schema.py", line 4354, in __init__
+      def __init__(
+      
+  ResourceWarning: unclosed database in <sqlite3.Connection object at 0x77c7804f5030>
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/integration/db/test_repositories.py::test_unit_of_work_rollback_discards_changes
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while finalizing database connection <sqlite3.Connection object at 0x77c7804f72e0>: None
+  
+  Traceback (most recent call last):
+    File "/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/schema.py", line 4354, in __init__
+      def __init__(
+      
+  ResourceWarning: unclosed database in <sqlite3.Connection object at 0x77c7804f72e0>
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/integration/db/test_repositories.py::test_unit_of_work_rollback_discards_changes
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while finalizing database connection <sqlite3.Connection object at 0x77c7804f71f0>: None
+  
+  Traceback (most recent call last):
+    File "/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/schema.py", line 4354, in __init__
+      def __init__(
+      
+  ResourceWarning: unclosed database in <sqlite3.Connection object at 0x77c7804f71f0>
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/integration/db/test_repositories.py::test_unit_of_work_rollback_discards_changes
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while finalizing database connection <sqlite3.Connection object at 0x77c7804f64d0>: None
+  
+  Traceback (most recent call last):
+    File "/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/schema.py", line 4354, in __init__
+      def __init__(
+      
+  ResourceWarning: unclosed database in <sqlite3.Connection object at 0x77c7804f64d0>
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/integration/db/test_repositories.py::test_unit_of_work_rollback_discards_changes
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while finalizing database connection <sqlite3.Connection object at 0x77c7804f5c60>: None
+  
+  Traceback (most recent call last):
+    File "/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/schema.py", line 4354, in __init__
+      def __init__(
+      
+  ResourceWarning: unclosed database in <sqlite3.Connection object at 0x77c7804f5c60>
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/integration/db/test_repositories.py::test_unit_of_work_rollback_discards_changes
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while finalizing database connection <sqlite3.Connection object at 0x77c7804f5e40>: None
+  
+  Traceback (most recent call last):
+    File "/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/schema.py", line 4354, in __init__
+      def __init__(
+      
+  ResourceWarning: unclosed database in <sqlite3.Connection object at 0x77c7804f5e40>
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/integration/db/test_repositories.py::test_unit_of_work_rollback_discards_changes
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while finalizing database connection <sqlite3.Connection object at 0x77c7804f7010>: None
+  
+  Traceback (most recent call last):
+    File "/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/schema.py", line 4354, in __init__
+      def __init__(
+      
+  ResourceWarning: unclosed database in <sqlite3.Connection object at 0x77c7804f7010>
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/integration/db/test_repositories.py::test_unit_of_work_rollback_discards_changes
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while finalizing database connection <sqlite3.Connection object at 0x77c7804f74c0>: None
+  
+  Traceback (most recent call last):
+    File "/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/schema.py", line 4354, in __init__
+      def __init__(
+      
+  ResourceWarning: unclosed database in <sqlite3.Connection object at 0x77c7804f74c0>
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/integration/db/test_repositories.py::test_unit_of_work_rollback_discards_changes
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while finalizing database connection <sqlite3.Connection object at 0x77c7804f7880>: None
+  
+  Traceback (most recent call last):
+    File "/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/schema.py", line 4354, in __init__
+      def __init__(
+      
+  ResourceWarning: unclosed database in <sqlite3.Connection object at 0x77c7804f7880>
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/integration/db/test_repositories.py::test_unit_of_work_rollback_discards_changes
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while finalizing database connection <sqlite3.Connection object at 0x77c7804f7f10>: None
+  
+  Traceback (most recent call last):
+    File "/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/schema.py", line 4354, in __init__
+      def __init__(
+      
+  ResourceWarning: unclosed database in <sqlite3.Connection object at 0x77c7804f7f10>
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/integration/db/test_repositories.py::test_unit_of_work_rollback_discards_changes
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while finalizing database connection <sqlite3.Connection object at 0x77c7804f4220>: None
+  
+  Traceback (most recent call last):
+    File "/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/schema.py", line 4354, in __init__
+      def __init__(
+      
+  ResourceWarning: unclosed database in <sqlite3.Connection object at 0x77c7804f4220>
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/integration/db/test_repositories.py::test_unit_of_work_rollback_discards_changes
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored while finalizing database connection <sqlite3.Connection object at 0x77c7804f4310>: None
+  
+  Traceback (most recent call last):
+    File "/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/schema.py", line 4354, in __init__
+      def __init__(
+      
+  ResourceWarning: unclosed database in <sqlite3.Connection object at 0x77c7804f4310>
+  
+  
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+362 passed, 32 warnings in 7.98s

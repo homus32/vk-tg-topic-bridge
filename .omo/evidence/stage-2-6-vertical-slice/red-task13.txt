@@ -1,0 +1,435 @@
+........................................................................ [ 18%]
+......................................FFFFFFFFFFFF...................... [ 37%]
+........................................................................ [ 56%]
+........................................................................ [ 75%]
+........................................................................ [ 94%]
+.....................                                                    [100%]
+=================================== FAILURES ===================================
+___________________ test_importing_main_builds_no_resources ____________________
+
+    def test_importing_main_builds_no_resources() -> None:
+        result = subprocess.run(
+            [sys.executable, "-c", _IMPORT_GUARD_SCRIPT],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=120,
+        )
+    
+>       assert result.returncode == 0, result.stderr
+E       AssertionError: Traceback (most recent call last):
+E           File "<string>", line 18, in <module>
+E             import main
+E         ModuleNotFoundError: No module named 'main'
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/home/homus/PycharmProjects/vk-topic-bridge/.venv/bin/python3', '-c', '\nimport aiogram\nimpor...all last):\n  File "<string>", line 18, in <module>\n    import main\nModuleNotFoundError: No module named \'main\'\n').returncode
+
+tests/integration/test_lifecycle.py:264: AssertionError
+_________________ test_invalid_settings_return_nonzero_and_log _________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x76930c2030e0>
+caplog = <_pytest.logging.LogCaptureFixture object at 0x76930c4bacf0>
+
+    async def test_invalid_settings_return_nonzero_and_log(
+        monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+    ) -> None:
+>       main = _module("main")
+               ^^^^^^^^^^^^^^^
+
+tests/integration/test_lifecycle.py:275: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/test_lifecycle.py:72: in _module
+    return importlib.import_module(name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'main', import_ = <function _gcd_import at 0x769316abfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'main'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+___________ test_startup_failure_shuts_down_without_starting_pollers ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-197/test_startup_failure_shuts_dow0')
+
+    async def test_startup_failure_shuts_down_without_starting_pollers(tmp_path: Path) -> None:
+>       main = _module("main")
+               ^^^^^^^^^^^^^^^
+
+tests/integration/test_lifecycle.py:290: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/test_lifecycle.py:72: in _module
+    return importlib.import_module(name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'main', import_ = <function _gcd_import at 0x769316abfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'main'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+________________ test_bot_api_failure_is_fatal_before_telethon _________________
+
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-197/test_bot_api_failure_is_fatal_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x76930c201c50>
+
+    async def test_bot_api_failure_is_fatal_before_telethon(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+>       startup = _module("vk_topic_bridge.bootstrap.startup")
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/integration/test_lifecycle.py:323: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/test_lifecycle.py:72: in _module
+    return importlib.import_module(name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:1314: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:491: in _call_with_frames_removed
+    ???
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.bootstrap'
+import_ = <function _gcd_import at 0x769316abfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.bootstrap'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+_________________ test_clean_database_skips_chat_revalidation __________________
+
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-197/test_clean_database_skips_chat0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x76930c2000c0>
+
+    async def test_clean_database_skips_chat_revalidation(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+>       startup = _module("vk_topic_bridge.bootstrap.startup")
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/integration/test_lifecycle.py:341: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/test_lifecycle.py:72: in _module
+    return importlib.import_module(name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:1314: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:491: in _call_with_frames_removed
+    ???
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.bootstrap'
+import_ = <function _gcd_import at 0x769316abfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.bootstrap'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+_____________ test_persisted_chat_revalidation_advances_readiness ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-197/test_persisted_chat_revalidati0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x76930c200b40>
+
+    async def test_persisted_chat_revalidation_advances_readiness(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+>       startup = _module("vk_topic_bridge.bootstrap.startup")
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/integration/test_lifecycle.py:360: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/test_lifecycle.py:72: in _module
+    return importlib.import_module(name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:1314: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:491: in _call_with_frames_removed
+    ???
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.bootstrap'
+import_ = <function _gcd_import at 0x769316abfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.bootstrap'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+_________ test_persisted_destination_advances_to_destination_confirmed _________
+
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-197/test_persisted_destination_adv0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x76930c373cb0>
+
+    async def test_persisted_destination_advances_to_destination_confirmed(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+>       startup = _module("vk_topic_bridge.bootstrap.startup")
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/integration/test_lifecycle.py:382: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/test_lifecycle.py:72: in _module
+    return importlib.import_module(name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:1314: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:491: in _call_with_frames_removed
+    ???
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.bootstrap'
+import_ = <function _gcd_import at 0x769316abfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.bootstrap'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+_________________ test_unexpected_poller_exit_cancels_sibling __________________
+
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-197/test_unexpected_poller_exit_ca0')
+
+    async def test_unexpected_poller_exit_cancels_sibling(tmp_path: Path) -> None:
+>       main = _module("main")
+               ^^^^^^^^^^^^^^^
+
+tests/integration/test_lifecycle.py:403: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/test_lifecycle.py:72: in _module
+    return importlib.import_module(name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'main', import_ = <function _gcd_import at 0x769316abfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'main'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+_______________ test_graceful_signal_returns_zero_and_shuts_down _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-197/test_graceful_signal_returns_z0')
+
+    async def test_graceful_signal_returns_zero_and_shuts_down(tmp_path: Path) -> None:
+>       main = _module("main")
+               ^^^^^^^^^^^^^^^
+
+tests/integration/test_lifecycle.py:433: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/test_lifecycle.py:72: in _module
+    return importlib.import_module(name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'main', import_ = <function _gcd_import at 0x769316abfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'main'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+___________________ test_shutdown_closes_resources_in_order ____________________
+
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-197/test_shutdown_closes_resources0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x76930c30e9e0>
+
+    async def test_shutdown_closes_resources_in_order(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+>       shutdown_module = _module("vk_topic_bridge.bootstrap.shutdown")
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/integration/test_lifecycle.py:477: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/test_lifecycle.py:72: in _module
+    return importlib.import_module(name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:1314: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:491: in _call_with_frames_removed
+    ???
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.bootstrap'
+import_ = <function _gcd_import at 0x769316abfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.bootstrap'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+__________________ test_shutdown_continues_after_step_failure __________________
+
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-197/test_shutdown_continues_after_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x76930c30db00>
+
+    async def test_shutdown_continues_after_step_failure(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+>       shutdown_module = _module("vk_topic_bridge.bootstrap.shutdown")
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/integration/test_lifecycle.py:517: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/test_lifecycle.py:72: in _module
+    return importlib.import_module(name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:1314: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:491: in _call_with_frames_removed
+    ???
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.bootstrap'
+import_ = <function _gcd_import at 0x769316abfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.bootstrap'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+_______________ test_startup_rejects_database_without_migrations _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-197/test_startup_rejects_database_0')
+
+    async def test_startup_rejects_database_without_migrations(tmp_path: Path) -> None:
+>       startup = _module("vk_topic_bridge.bootstrap.startup")
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/integration/test_lifecycle.py:548: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/test_lifecycle.py:72: in _module
+    return importlib.import_module(name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:1314: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:491: in _call_with_frames_removed
+    ???
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.bootstrap'
+import_ = <function _gcd_import at 0x769316abfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.bootstrap'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+=========================== short test summary info ============================
+FAILED tests/integration/test_lifecycle.py::test_importing_main_builds_no_resources
+FAILED tests/integration/test_lifecycle.py::test_invalid_settings_return_nonzero_and_log
+FAILED tests/integration/test_lifecycle.py::test_startup_failure_shuts_down_without_starting_pollers
+FAILED tests/integration/test_lifecycle.py::test_bot_api_failure_is_fatal_before_telethon
+FAILED tests/integration/test_lifecycle.py::test_clean_database_skips_chat_revalidation
+FAILED tests/integration/test_lifecycle.py::test_persisted_chat_revalidation_advances_readiness
+FAILED tests/integration/test_lifecycle.py::test_persisted_destination_advances_to_destination_confirmed
+FAILED tests/integration/test_lifecycle.py::test_unexpected_poller_exit_cancels_sibling
+FAILED tests/integration/test_lifecycle.py::test_graceful_signal_returns_zero_and_shuts_down
+FAILED tests/integration/test_lifecycle.py::test_shutdown_closes_resources_in_order
+FAILED tests/integration/test_lifecycle.py::test_shutdown_continues_after_step_failure
+FAILED tests/integration/test_lifecycle.py::test_startup_rejects_database_without_migrations
+12 failed, 369 passed in 11.62s

@@ -2,14 +2,10 @@
 
 import asyncio
 import json
-from collections.abc import AsyncIterator
-from pathlib import Path
+from collections.abc import Awaitable, Callable
 
-import pytest
-from alembic import command
-from alembic.config import Config
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from vk_topic_bridge.application.dto.delivery import (
     DeliveryRecord,
@@ -17,38 +13,12 @@ from vk_topic_bridge.application.dto.delivery import (
     ReserveRequest,
 )
 from vk_topic_bridge.domain.enums import PublicationStatus, ReactionStatus, SourceType
-from vk_topic_bridge.infrastructure.db.engine import create_async_engine, create_session_factory
 from vk_topic_bridge.infrastructure.db.repositories.delivery import DeliveryRepositoryImpl
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
 CHAT_ID = -1001234567890
 TOPIC_ID = 42
 KEY = "42:100:7"
 SessionFactory = async_sessionmaker[AsyncSession]
-
-
-@pytest.fixture
-def database_url(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> str:
-    url = f"sqlite+aiosqlite:///{tmp_path / 'delivery.db'}"
-    monkeypatch.setenv("DATABASE_URL", url)
-    config = Config(str(REPO_ROOT / "alembic.ini"))
-    config.set_main_option("script_location", str(REPO_ROOT / "migrations"))
-    command.upgrade(config, "head")
-    return url
-
-
-@pytest.fixture
-async def engine(database_url: str) -> AsyncIterator[AsyncEngine]:
-    db_engine = create_async_engine(database_url)
-    try:
-        yield db_engine
-    finally:
-        await db_engine.dispose()
-
-
-@pytest.fixture
-def session_factory(engine: AsyncEngine) -> SessionFactory:
-    return create_session_factory(engine)
 
 
 def _request(key: str = KEY) -> ReserveRequest:
@@ -86,6 +56,17 @@ async def _reserve_and_claim(
     assert outcome.created is True
     assert await _claim(session_factory, outcome.record.id, token) is True
     return outcome
+
+
+async def _run(
+    session_factory: SessionFactory,
+    action: Callable[[DeliveryRepositoryImpl], Awaitable[bool]],
+) -> bool:
+    """Execute one repository mutation in its own session and commit it."""
+    async with session_factory() as session:
+        result = await action(DeliveryRepositoryImpl(session))
+        await session.commit()
+        return result
 
 
 async def _get(session_factory: SessionFactory, key: str = KEY) -> DeliveryRecord | None:
@@ -293,6 +274,9 @@ async def test_failed_before_send_is_reclaimable(session_factory: SessionFactory
     assert failed["publication_status"] == PublicationStatus.FAILED_BEFORE_SEND.value
     assert failed["last_error_code"] == "rejected"
     assert failed["last_error"] == "bad chat"
+    # No network intent was recorded, so the claim is released for a safe retry.
+    assert failed["claim_token"] is None
+    assert failed["lease_expires_at"] is None
 
     assert await _claim(session_factory, delivery_id, "claim-2") is True
     reclaimed = await _raw(session_factory, delivery_id)
@@ -386,3 +370,127 @@ async def test_reaction_failure_keeps_publication_published(
     succeeded = await _raw(session_factory, delivery_id)
     assert succeeded["reaction_status"] == ReactionStatus.SUCCEEDED.value
     assert succeeded["publication_status"] == PublicationStatus.PUBLISHED.value
+
+
+async def test_mark_send_started_with_wrong_claim_token_leaves_row_unchanged(
+    session_factory: SessionFactory,
+) -> None:
+    outcome = await _reserve(session_factory)
+    delivery_id = outcome.record.id
+    before = await _raw(session_factory, delivery_id)
+
+    assert (
+        await _run(
+            session_factory,
+            lambda repo: repo.mark_send_started(delivery_id, "wrong-token"),
+        )
+        is False
+    )
+
+    assert await _raw(session_factory, delivery_id) == before
+
+
+async def test_mark_publication_ambiguous_with_wrong_claim_token_leaves_row_unchanged(
+    session_factory: SessionFactory,
+) -> None:
+    outcome = await _reserve_and_claim(session_factory, token="claim-1")
+    delivery_id = outcome.record.id
+    assert (
+        await _run(session_factory, lambda repo: repo.mark_send_started(delivery_id, "claim-1"))
+        is True
+    )
+    before = await _raw(session_factory, delivery_id)
+
+    assert (
+        await _run(
+            session_factory,
+            lambda repo: repo.mark_publication_ambiguous(
+                delivery_id, "wrong-token", "timeout", "no reply"
+            ),
+        )
+        is False
+    )
+
+    assert await _raw(session_factory, delivery_id) == before
+
+
+async def test_mark_failed_before_send_with_wrong_claim_token_leaves_row_unchanged(
+    session_factory: SessionFactory,
+) -> None:
+    outcome = await _reserve_and_claim(session_factory, token="claim-1")
+    delivery_id = outcome.record.id
+    before = await _raw(session_factory, delivery_id)
+
+    assert (
+        await _run(
+            session_factory,
+            lambda repo: repo.mark_failed_before_send(delivery_id, "wrong-token", "rejected", None),
+        )
+        is False
+    )
+
+    assert await _raw(session_factory, delivery_id) == before
+
+
+async def test_mark_failed_permanent_with_wrong_claim_token_leaves_row_unchanged(
+    session_factory: SessionFactory,
+) -> None:
+    outcome = await _reserve_and_claim(session_factory, token="claim-1")
+    delivery_id = outcome.record.id
+    assert (
+        await _run(session_factory, lambda repo: repo.mark_send_started(delivery_id, "claim-1"))
+        is True
+    )
+    before = await _raw(session_factory, delivery_id)
+
+    assert (
+        await _run(
+            session_factory,
+            lambda repo: repo.mark_failed_permanent(delivery_id, "wrong-token", "forbidden", None),
+        )
+        is False
+    )
+
+    assert await _raw(session_factory, delivery_id) == before
+
+
+async def test_mark_published_from_reserved_is_illegal(session_factory: SessionFactory) -> None:
+    outcome = await _reserve_and_claim(session_factory, token="claim-1")
+    delivery_id = outcome.record.id
+
+    rejected = await _run(
+        session_factory,
+        lambda repo: repo.mark_published(delivery_id, "claim-1", [7]),
+    )
+
+    assert rejected is False
+    raw = await _raw(session_factory, delivery_id)
+    assert raw["publication_status"] == PublicationStatus.RESERVED.value
+    assert raw["telegram_message_ids"] is None
+    assert raw["completed_at"] is None
+
+
+async def test_ambiguous_is_terminal_for_reserve_and_claim(
+    session_factory: SessionFactory,
+) -> None:
+    outcome = await _reserve_and_claim(session_factory, token="claim-1")
+    delivery_id = outcome.record.id
+    assert (
+        await _run(session_factory, lambda repo: repo.mark_send_started(delivery_id, "claim-1"))
+        is True
+    )
+    assert (
+        await _run(
+            session_factory,
+            lambda repo: repo.mark_publication_ambiguous(delivery_id, "claim-1", "timeout", None),
+        )
+        is True
+    )
+
+    reclaimed = await _claim(session_factory, delivery_id, "claim-2")
+    assert reclaimed is False
+
+    raw = await _raw(session_factory, delivery_id)
+    assert raw["publication_status"] == PublicationStatus.AMBIGUOUS.value
+    assert raw["review_required"] == 1
+    assert raw["claim_token"] == "claim-1"

@@ -1,18 +1,12 @@
 """Integration tests for the SQLAlchemy repositories and the UnitOfWork (plan §4/§5)."""
 
-from collections.abc import AsyncIterator
-from pathlib import Path
-
 import pytest
-from alembic import command
-from alembic.config import Config
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from vk_topic_bridge.application.dto.settings import BridgeSettingsState, ToggleKind
 from vk_topic_bridge.domain.value_objects import TopicInfo
-from vk_topic_bridge.infrastructure.db.engine import create_async_engine, create_session_factory
 from vk_topic_bridge.infrastructure.db.repositories.bridge_settings import (
     BridgeSettingsRepositoryImpl,
 )
@@ -23,39 +17,8 @@ from vk_topic_bridge.infrastructure.db.repositories.telegram_topics import (
 from vk_topic_bridge.infrastructure.db.repositories.unit_of_work import SqlAlchemyUnitOfWork
 from vk_topic_bridge.infrastructure.db.repositories.vk_aliases import VkAliasRepositoryImpl
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
 CHAT_ID = -1001234567890
 SessionFactory = async_sessionmaker[AsyncSession]
-
-
-@pytest.fixture
-def database_url(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> str:
-    url = f"sqlite+aiosqlite:///{tmp_path / 'repositories.db'}"
-    monkeypatch.setenv("DATABASE_URL", url)
-    config = Config(str(REPO_ROOT / "alembic.ini"))
-    config.set_main_option("script_location", str(REPO_ROOT / "migrations"))
-    command.upgrade(config, "head")
-    return url
-
-
-@pytest.fixture
-async def engine(database_url: str) -> AsyncIterator[AsyncEngine]:
-    db_engine = create_async_engine(database_url)
-    try:
-        yield db_engine
-    finally:
-        await db_engine.dispose()
-
-
-@pytest.fixture
-def session_factory(engine: AsyncEngine) -> SessionFactory:
-    return create_session_factory(engine)
-
-
-@pytest.fixture
-async def session(session_factory: SessionFactory) -> AsyncIterator[AsyncSession]:
-    async with session_factory() as db_session:
-        yield db_session
 
 
 async def _scalar(session_factory: SessionFactory, sql: str, **params: object) -> object:
@@ -235,6 +198,28 @@ async def test_alias_unique_normalized_violation_raises(session: AsyncSession) -
 
     with pytest.raises(IntegrityError):
         await repo.upsert(7, 6, "новости", "новости")
+
+    await session.rollback()
+
+
+async def test_second_general_topic_for_same_chat_raises(session: AsyncSession) -> None:
+    await session.execute(
+        text(
+            "INSERT INTO telegram_topics (telegram_chat_id, topic_id, title, is_general)"
+            " VALUES (:chat, NULL, 'General', 1)"
+        ),
+        {"chat": CHAT_ID},
+    )
+    await session.commit()
+
+    with pytest.raises(IntegrityError):
+        await session.execute(
+            text(
+                "INSERT INTO telegram_topics (telegram_chat_id, topic_id, title, is_general)"
+                " VALUES (:chat, NULL, 'General 2', 1)"
+            ),
+            {"chat": CHAT_ID},
+        )
 
     await session.rollback()
 
