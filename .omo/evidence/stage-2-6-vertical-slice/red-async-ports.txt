@@ -1,0 +1,118 @@
+...............................................................F/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x73bb2d713790>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x73bb2d66b3d0>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x73bb2d6696c0>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x73bb2d599a80>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x73bb2d598400>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x73bb2d599b70>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x73bb2d5994e0>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x73bb2d5984f0>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x73bb2d48c220>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x73bb2d48c9a0>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x73bb2d48c7c0>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x73bb2d48dd50>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x73bb2d48ea70>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x73bb2d48f880>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x73bb2d48cd60>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x73bb2d48ce50>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x73bb2d48c8b0>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x73bb2d39dc60>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x73bb2d39c130>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x73bb2d39c6d0>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x73bb2d39cb80>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x73bb2d39ec50>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x73bb2d2bc040>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x73bb2d2bcf40>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x73bb2d2bd120>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x73bb2d2bd030>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x73bb2d1d4040>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x73bb2d1d4f40>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x73bb2d1d5120>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x73bb2d1d5030>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x73bb2d0f0040>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x73bb2d0f0f40>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+
+=================================== FAILURES ===================================
+_______ test_every_public_port_method_is_async[BridgeSettingsRepository] _______
+
+protocol = <class 'vk_topic_bridge.application.ports.repositories.BridgeSettingsRepository'>
+
+    @pytest.mark.parametrize("protocol", ASYNC_PORTS, ids=[item.__qualname__ for item in ASYNC_PORTS])
+    def test_every_public_port_method_is_async(protocol: type[object]) -> None:
+        sync_methods = _public_sync_methods(protocol)
+    
+>       assert sync_methods == [], f"{protocol.__qualname__} declares sync methods: {sync_methods}"
+E       AssertionError: BridgeSettingsRepository declares sync methods: ['get', 'reset', 'set_messages_topic', 'set_toggle', 'set_wall_topic', 'upsert_chat']
+E       assert ['get', 'rese...'upsert_chat'] == []
+E         
+E         Left contains 6 more items, first extra item: 'get'
+E         Use -v to get more diff
+
+tests/unit/application/test_port_async_contract.py:53: AssertionError
+=========================== short test summary info ============================
+FAILED tests/unit/application/test_port_async_contract.py::test_every_public_port_method_is_async[BridgeSettingsRepository]
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 63 passed in 2.16s

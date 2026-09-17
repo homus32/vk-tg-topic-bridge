@@ -1,0 +1,212 @@
+........................................................................ [ 32%]
+........................................................................ [ 64%]
+........................................................................ [ 96%]
+.........                                                                [100%]
+=============================== warnings summary ===============================
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/unittest/mock.py:434: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x70a3a8e23790>
+    class NonCallableMock(Base):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/unittest/mock.py:434: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x70a3a8d733d0>
+    class NonCallableMock(Base):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/unittest/mock.py:434: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x70a3a8d73100>
+    class NonCallableMock(Base):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/unittest/mock.py:434: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x70a3a8ca5a80>
+    class NonCallableMock(Base):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/unittest/mock.py:434: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x70a3a8ca47c0>
+    class NonCallableMock(Base):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/unittest/mock.py:434: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x70a3a8ca5b70>
+    class NonCallableMock(Base):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/unittest/mock.py:434: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x70a3a8ca54e0>
+    class NonCallableMock(Base):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/unittest/mock.py:434: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x70a3a8ca4400>
+    class NonCallableMock(Base):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/unittest/mock.py:434: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x70a3a8b94400>
+    class NonCallableMock(Base):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/unittest/mock.py:434: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x70a3a8b949a0>
+    class NonCallableMock(Base):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/unittest/mock.py:434: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x70a3a8b947c0>
+    class NonCallableMock(Base):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/unittest/mock.py:434: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x70a3a8b95d50>
+    class NonCallableMock(Base):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/unittest/mock.py:434: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x70a3a8b96a70>
+    class NonCallableMock(Base):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/unittest/mock.py:434: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x70a3a8b97880>
+    class NonCallableMock(Base):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/unittest/mock.py:434: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x70a3a8b94d60>
+    class NonCallableMock(Base):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/unittest/mock.py:434: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x70a3a8b94e50>
+    class NonCallableMock(Base):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/unittest/mock.py:434: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x70a3a8b948b0>
+    class NonCallableMock(Base):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/unittest/mock.py:434: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x70a3a8aadc60>
+    class NonCallableMock(Base):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/unittest/mock.py:434: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x70a3a8aac130>
+    class NonCallableMock(Base):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/unittest/mock.py:434: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x70a3a8aac6d0>
+    class NonCallableMock(Base):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/unittest/mock.py:434: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x70a3a8aacb80>
+    class NonCallableMock(Base):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/unittest/mock.py:434: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x70a3a8aaec50>
+    class NonCallableMock(Base):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/unittest/mock.py:434: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x70a3a89c8040>
+    class NonCallableMock(Base):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/unittest/mock.py:434: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x70a3a89c8f40>
+    class NonCallableMock(Base):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/unittest/mock.py:434: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x70a3a89c9120>
+    class NonCallableMock(Base):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/unittest/mock.py:434: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x70a3a89c9030>
+    class NonCallableMock(Base):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/unittest/mock.py:434: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x70a3a88dc040>
+    class NonCallableMock(Base):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/unittest/mock.py:434: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x70a3a88dcf40>
+    class NonCallableMock(Base):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/unittest/mock.py:434: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x70a3a88dd120>
+    class NonCallableMock(Base):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/unittest/mock.py:434: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x70a3a88dd030>
+    class NonCallableMock(Base):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/unittest/mock.py:434: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x70a3a8608040>
+    class NonCallableMock(Base):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/unittest/mock.py:434: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x70a3a8608f40>
+    class NonCallableMock(Base):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.14.3-final-0 ________________
+
+Name                                                 Stmts   Miss Branch BrPart  Cover   Missing
+------------------------------------------------------------------------------------------------
+tests/unit/application/__init__.py                       0      0      0      0   100%
+tests/unit/application/test_application_dtos.py        100      0      0      0   100%
+tests/unit/application/test_port_async_contract.py      17      0      0      0   100%
+tests/unit/application/test_port_fakes.py              173     46      2      0    73%   45, 77-78, 81-82, 85-86, 89-95, 98-99, 107, 113-114, 129, 132, 140-146, 149, 152, 157, 162, 167, 172, 175, 178, 183, 189, 192, 200, 212, 223, 228, 234, 237, 245, 248, 251, 254, 281
+tests/unit/application/test_readiness_gate.py           40      0      2      0   100%
+------------------------------------------------------------------------------------------------
+TOTAL                                                  330     46      4      0    86%
+225 passed, 32 warnings in 7.44s
+8bdefa5

@@ -1,0 +1,18 @@
+=== PROBE A: all-async impl passed to takes(repo: DeliveryRepository) — EXPECT 0 errors ===
+0 errors, 0 warnings, 0 notes
+EXIT=0
+
+=== PROBE B: all-sync impl passed to takes(repo: DeliveryRepository) — EXPECT errors ===
+/tmp/sync_probe.py
+  /tmp/sync_probe.py:69:7 - error: Аргумент типа "SyncDeliveryRepo" нельзя присвоить параметру "repo" типа "DeliveryRepository" в функции "takes"
+    "SyncDeliveryRepo" несовместим с протоколом "DeliveryRepository"
+      Тип "reserve" несовместим
+        Тип "(request: ReserveRequest) -> ReserveOutcome" нельзя присвоить типу "(request: ReserveRequest) -> CoroutineType[Any, Any, ReserveOutcome]"
+          Тип возвращаемого значения функции "ReserveOutcome" несовместим с типом "CoroutineType[Any, Any, ReserveOutcome]"
+            "ReserveOutcome" невозможно назначить "CoroutineType[Any, Any, ReserveOutcome]"
+      Тип "claim_reserved" несовместим
+        Тип "(delivery_id: int, claim_token: str, lease_seconds: int) -> bool" нельзя присвоить типу "(delivery_id: int, claim_token: str, lease_seconds: int) -> CoroutineType[Any, Any, bool]"
+          Тип возвращаемого значения функции "bool" несовместим с типом "CoroutineType[Any, Any, bool]"
+    ... (reportArgumentType)
+1 error, 0 warnings, 0 notes
+EXIT=1
