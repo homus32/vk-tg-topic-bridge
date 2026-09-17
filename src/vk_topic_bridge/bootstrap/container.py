@@ -7,7 +7,6 @@ sequence (``bootstrap.startup``) after the container exists.
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
@@ -25,6 +24,7 @@ from vk_topic_bridge.application.forwarding.forward_message import ForwardVkMess
 from vk_topic_bridge.application.ports.telegram import TelegramAdminPort
 from vk_topic_bridge.application.ports.unit_of_work import UnitOfWork
 from vk_topic_bridge.application.readiness import InMemoryReadinessGate
+from vk_topic_bridge.bootstrap.vk_consumer import VkPollingRuntime
 from vk_topic_bridge.domain.value_objects import TopicInfo
 from vk_topic_bridge.infrastructure.db.engine import create_async_engine, create_session_factory
 from vk_topic_bridge.infrastructure.db.repositories.unit_of_work import SqlAlchemyUnitOfWork
@@ -93,18 +93,16 @@ def _build_telegram_polling(bot: Bot, dispatcher: Dispatcher) -> PollingTask:
     return start
 
 
-def _build_vk_polling(_api: RawVkApi) -> PollingTask:
-    """Cancellable placeholder for the VK Long Poll consumer loop.
+def _build_vk_polling(
+    api: RawVkApi, gateway: VkApiGateway, forward: ForwardVkMessage
+) -> tuple[PollingTask, PollingStop]:
+    """Build the VK Long Poll coroutine and its stop callable; performs no I/O.
 
-    The real loop lands in a later stage; this task exists so startup coordination,
-    cancellation and shutdown are already exercised end to end.
+    The community id is resolved inside the coroutine, so container construction stays
+    network-free and the poller can be started by the lifecycle runner.
     """
-    stop_event = asyncio.Event()
-
-    async def run() -> None:
-        await stop_event.wait()
-
-    return run
+    runtime = VkPollingRuntime(api, gateway, forward)
+    return runtime.run, runtime.stop
 
 
 class ReadinessAwareRegisterChat(RegisterChat):
@@ -189,6 +187,8 @@ def build_container(
 
     _register_routers(dispatcher, settings, register_chat, _build_settings_reader(uow_factory))
 
+    vk_polling, vk_polling_stop = _build_vk_polling(vk_api_raw, vk_gateway, forward_message)
+
     return AppContainer(
         settings=settings,
         engine=engine,
@@ -209,5 +209,6 @@ def build_container(
         toggle_settings=toggle_settings,
         forward_message=forward_message,
         telegram_polling=_build_telegram_polling(bot, dispatcher),
-        vk_polling=_build_vk_polling(vk_api_raw),
+        vk_polling=vk_polling,
+        vk_polling_stop=vk_polling_stop,
     )
