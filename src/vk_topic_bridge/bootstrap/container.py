@@ -33,6 +33,10 @@ from vk_topic_bridge.infrastructure.telegram.mtproto import TelethonAdapter, Tel
 from vk_topic_bridge.infrastructure.telegram.publisher import BotApiAdminPort, BotApiPublisher
 from vk_topic_bridge.infrastructure.vk.api import RawVkApi, VkApiGateway
 from vk_topic_bridge.presentation.telegram.middlewares import OwnerOnlyMiddleware
+from vk_topic_bridge.presentation.telegram.routers.destination import (
+    TopicsReader,
+    build_destination_router,
+)
 from vk_topic_bridge.presentation.telegram.routers.register import build_register_router
 from vk_topic_bridge.presentation.telegram.routers.start import build_start_router
 
@@ -82,6 +86,19 @@ def _build_settings_reader(uow_factory: Callable[[], UnitOfWork]) -> SettingsRea
     async def read() -> BridgeSettingsState | None:
         async with uow_factory() as uow:
             return await uow.bridge_settings.get()
+
+    return read
+
+
+def _build_topics_reader(uow_factory: Callable[[], UnitOfWork]) -> TopicsReader:
+    """Read the persisted topic list for the registered chat, or nothing when unregistered."""
+
+    async def read(chat_id: int) -> list[TopicInfo]:
+        async with uow_factory() as uow:
+            state = await uow.bridge_settings.get()
+            if state is None or state.telegram_chat_id != chat_id:
+                return []
+            return await uow.telegram_topics.list(chat_id)
 
     return read
 
@@ -148,11 +165,14 @@ def _register_routers(
     dispatcher: Dispatcher,
     settings: Settings,
     register_chat: RegisterChat,
+    select_destination: SelectDestination,
     reader: SettingsReader,
+    topics_reader: TopicsReader,
 ) -> None:
     dispatcher.message.outer_middleware(OwnerOnlyMiddleware(frozenset(settings.OWNER_IDS)))
     dispatcher.include_router(build_start_router(reader))
     dispatcher.include_router(build_register_router(register_chat))
+    dispatcher.include_router(build_destination_router(select_destination, topics_reader))
 
 
 def build_container(
@@ -185,7 +205,14 @@ def build_container(
         readiness=readiness,
     )
 
-    _register_routers(dispatcher, settings, register_chat, _build_settings_reader(uow_factory))
+    _register_routers(
+        dispatcher,
+        settings,
+        register_chat,
+        select_destination,
+        _build_settings_reader(uow_factory),
+        _build_topics_reader(uow_factory),
+    )
 
     vk_polling, vk_polling_stop = _build_vk_polling(vk_api_raw, vk_gateway, forward_message)
 

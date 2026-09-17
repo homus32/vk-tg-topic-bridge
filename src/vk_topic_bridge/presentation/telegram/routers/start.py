@@ -17,6 +17,9 @@ from vk_topic_bridge.presentation.telegram.keyboards import owner_main_keyboard
 
 START_COMMAND = "start"
 
+# TODO(stage-7): /start only prints onboarding steps until the Admin UI wizard exists;
+# Stage 7 replaces this text-only reply with the permanent owner keyboard (US-02 AC-02.3).
+
 type SettingsReader = Callable[[], Awaitable[BridgeSettingsState | None]]
 
 ONBOARDING_TEXT = (

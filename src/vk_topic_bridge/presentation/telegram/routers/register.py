@@ -22,6 +22,11 @@ from vk_topic_bridge.application.errors import ProvisioningError
 
 REGISTER_COMMAND = "register"
 
+# TODO(stage-7): /register is the temporary pre-Stage-7 provisioning entry point — the
+# Telegram Admin UI wizard will learn the chat through the same RegisterChat use case.
+# The command deliberately takes no role arguments (never /register messages|wall, D11/D16)
+# and only records the owner-authorized chat plus its capabilities.
+
 REGISTERABLE_CHAT_TYPES: frozenset[str] = frozenset({"group", "supergroup"})
 
 MISSING_CAPABILITY_LABELS: dict[str, str] = {
