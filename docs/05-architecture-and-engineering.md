@@ -248,6 +248,8 @@ vk-topic-bridge/
 ├── uv.lock
 ├── alembic.ini
 ├── ecosystem.config.cjs
+├── pid/
+│   └── .gitkeep
 │
 ├── migrations/
 │   ├── env.py
@@ -1309,6 +1311,8 @@ module.exports = {
 
 Loguru при этом отдельно пишет в `logs/app.log`.
 
+PID-файл процесса PM2 хранится в каталоге `pid/` (например, `pid/vk-topic-bridge.pid`). Каталог присутствует в Git через `pid/.gitkeep`; всё остальное содержимое каталога игнорируется `.gitignore`.
+
 ## `scripts/start.sh`
 
 Production entrypoint:
@@ -1400,6 +1404,9 @@ runtime/telethon/*
 
 logs/*
 !logs/.gitkeep
+
+pid/*
+!pid/.gitkeep
 
 coverage.xml
 .coverage

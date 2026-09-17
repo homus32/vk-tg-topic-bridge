@@ -76,7 +76,7 @@
 
 Результат: чистое окружение разворачивается одной командой, quality tooling работает, будущая архитектура имеет подготовленную структуру.
 
-Подробный draft этого этапа: отдельный артефакт `08-bootstrap-intent-draft.md`.
+Подробный draft этого этапа: отдельный артефакт `07-bootstrap-intent-draft.md`.
 
 ---
 
@@ -283,6 +283,7 @@ UI должен работать поверх application use cases, без SQL/
 
 - `scripts/start.sh`;
 - `ecosystem.config.cjs`;
+- PID-файл процесса PM2 хранится в `pid/`;
 - migration-before-start;
 - PM2 autorestart;
 - `logs/pm2.log`;
