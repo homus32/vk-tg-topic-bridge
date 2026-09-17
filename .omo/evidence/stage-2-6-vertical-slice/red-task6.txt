@@ -1,0 +1,1415 @@
+....................................................FFFFFFFFFFFFFFFFFFF. [ 25%]
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF........................................ [ 51%]
+........................................................................ [ 77%]
+.............................................................            [100%]
+=================================== FAILURES ===================================
+______________________ test_loopback_hosts_are_recognized ______________________
+
+    def test_loopback_hosts_are_recognized() -> None:
+>       factory = _factory()
+                  ^^^^^^^^^^
+
+tests/integration/telegram/test_bot_api_factory.py:33: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/telegram/test_bot_api_factory.py:23: in _factory
+    return importlib.import_module("vk_topic_bridge.infrastructure.telegram.bot_api_factory")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.telegram.bot_api_factory'
+import_ = <function _gcd_import at 0x72ffeeedfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.bot_api_factory'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+______________________ test_remote_hosts_are_not_loopback ______________________
+
+    def test_remote_hosts_are_not_loopback() -> None:
+>       factory = _factory()
+                  ^^^^^^^^^^
+
+tests/integration/telegram/test_bot_api_factory.py:41: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/telegram/test_bot_api_factory.py:23: in _factory
+    return importlib.import_module("vk_topic_bridge.infrastructure.telegram.bot_api_factory")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.telegram.bot_api_factory'
+import_ = <function _gcd_import at 0x72ffeeedfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.bot_api_factory'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+____________________ test_loopback_custom_base_has_no_proxy ____________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x72ffe6f2edd0>
+
+    def test_loopback_custom_base_has_no_proxy(monkeypatch: pytest.MonkeyPatch) -> None:
+>       factory = _factory()
+                  ^^^^^^^^^^
+
+tests/integration/telegram/test_bot_api_factory.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/telegram/test_bot_api_factory.py:23: in _factory
+    return importlib.import_module("vk_topic_bridge.infrastructure.telegram.bot_api_factory")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.telegram.bot_api_factory'
+import_ = <function _gcd_import at 0x72ffeeedfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.bot_api_factory'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+__________________ test_remote_custom_base_uses_socks5_proxy ___________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x72ffe6f2ef90>
+
+    def test_remote_custom_base_uses_socks5_proxy(monkeypatch: pytest.MonkeyPatch) -> None:
+>       factory = _factory()
+                  ^^^^^^^^^^
+
+tests/integration/telegram/test_bot_api_factory.py:62: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/telegram/test_bot_api_factory.py:23: in _factory
+    return importlib.import_module("vk_topic_bridge.infrastructure.telegram.bot_api_factory")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.telegram.bot_api_factory'
+import_ = <function _gcd_import at 0x72ffeeedfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.bot_api_factory'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+__________________ test_absent_url_falls_back_to_official_api __________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x72ffe6f2e660>
+
+    def test_absent_url_falls_back_to_official_api(monkeypatch: pytest.MonkeyPatch) -> None:
+>       factory = _factory()
+                  ^^^^^^^^^^
+
+tests/integration/telegram/test_bot_api_factory.py:76: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/telegram/test_bot_api_factory.py:23: in _factory
+    return importlib.import_module("vk_topic_bridge.infrastructure.telegram.bot_api_factory")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.telegram.bot_api_factory'
+import_ = <function _gcd_import at 0x72ffeeedfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.bot_api_factory'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+__________ test_create_bot_uses_token_custom_server_and_html_default ___________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x72ffe6f2f5b0>
+
+    async def test_create_bot_uses_token_custom_server_and_html_default(
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+>       factory = _factory()
+                  ^^^^^^^^^^
+
+tests/integration/telegram/test_bot_api_factory.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/telegram/test_bot_api_factory.py:23: in _factory
+    return importlib.import_module("vk_topic_bridge.infrastructure.telegram.bot_api_factory")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.telegram.bot_api_factory'
+import_ = <function _gcd_import at 0x72ffeeedfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.bot_api_factory'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+____________ test_publish_omits_message_thread_id_for_general_topic ____________
+
+    async def test_publish_omits_message_thread_id_for_general_topic() -> None:
+        fake = FakeBot()
+>       publisher, _ = _publisher(fake)
+                       ^^^^^^^^^^^^^^^^
+
+tests/integration/telegram/test_publisher_args.py:175: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fake = <telegram.test_publisher_args.FakeBot object at 0x72ffe88bfa10>
+
+    def _publisher(fake: FakeBot) -> tuple[TelegramPublisher, TelegramAdminPort]:
+>       from vk_topic_bridge.infrastructure.telegram.publisher import BotApiAdminPort, BotApiPublisher
+E       ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.publisher'
+
+tests/integration/telegram/test_publisher_args.py:115: ModuleNotFoundError
+_________ test_publish_passes_message_thread_id_for_topic_destination __________
+
+    async def test_publish_passes_message_thread_id_for_topic_destination() -> None:
+        fake = FakeBot()
+>       publisher, _ = _publisher(fake)
+                       ^^^^^^^^^^^^^^^^
+
+tests/integration/telegram/test_publisher_args.py:189: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fake = <telegram.test_publisher_args.FakeBot object at 0x72ffe6fb9310>
+
+    def _publisher(fake: FakeBot) -> tuple[TelegramPublisher, TelegramAdminPort]:
+>       from vk_topic_bridge.infrastructure.telegram.publisher import BotApiAdminPort, BotApiPublisher
+E       ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.publisher'
+
+tests/integration/telegram/test_publisher_args.py:115: ModuleNotFoundError
+_________ test_publish_sends_composed_html_and_disables_link_previews __________
+
+    async def test_publish_sends_composed_html_and_disables_link_previews() -> None:
+        fake = FakeBot()
+>       publisher, _ = _publisher(fake)
+                       ^^^^^^^^^^^^^^^^
+
+tests/integration/telegram/test_publisher_args.py:200: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fake = <telegram.test_publisher_args.FakeBot object at 0x72ffe6fb9a90>
+
+    def _publisher(fake: FakeBot) -> tuple[TelegramPublisher, TelegramAdminPort]:
+>       from vk_topic_bridge.infrastructure.telegram.publisher import BotApiAdminPort, BotApiPublisher
+E       ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.publisher'
+
+tests/integration/telegram/test_publisher_args.py:115: ModuleNotFoundError
+________ test_send_text_omits_thread_for_general_and_returns_message_id ________
+
+    async def test_send_text_omits_thread_for_general_and_returns_message_id() -> None:
+        fake = FakeBot()
+>       publisher, _ = _publisher(fake)
+                       ^^^^^^^^^^^^^^^^
+
+tests/integration/telegram/test_publisher_args.py:217: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fake = <telegram.test_publisher_args.FakeBot object at 0x72ffe7eba520>
+
+    def _publisher(fake: FakeBot) -> tuple[TelegramPublisher, TelegramAdminPort]:
+>       from vk_topic_bridge.infrastructure.telegram.publisher import BotApiAdminPort, BotApiPublisher
+E       ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.publisher'
+
+tests/integration/telegram/test_publisher_args.py:115: ModuleNotFoundError
+____________________ test_send_text_passes_thread_for_topic ____________________
+
+    async def test_send_text_passes_thread_for_topic() -> None:
+        fake = FakeBot()
+>       publisher, _ = _publisher(fake)
+                       ^^^^^^^^^^^^^^^^
+
+tests/integration/telegram/test_publisher_args.py:228: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fake = <telegram.test_publisher_args.FakeBot object at 0x72ffe7eba060>
+
+    def _publisher(fake: FakeBot) -> tuple[TelegramPublisher, TelegramAdminPort]:
+>       from vk_topic_bridge.infrastructure.telegram.publisher import BotApiAdminPort, BotApiPublisher
+E       ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.publisher'
+
+tests/integration/telegram/test_publisher_args.py:115: ModuleNotFoundError
+_______________ test_send_test_into_topic_delegates_to_send_text _______________
+
+    async def test_send_test_into_topic_delegates_to_send_text() -> None:
+        fake = FakeBot()
+>       _, admin = _publisher(fake)
+                   ^^^^^^^^^^^^^^^^
+
+tests/integration/telegram/test_publisher_args.py:237: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fake = <telegram.test_publisher_args.FakeBot object at 0x72ffe6fe0b90>
+
+    def _publisher(fake: FakeBot) -> tuple[TelegramPublisher, TelegramAdminPort]:
+>       from vk_topic_bridge.infrastructure.telegram.publisher import BotApiAdminPort, BotApiPublisher
+E       ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.publisher'
+
+tests/integration/telegram/test_publisher_args.py:115: ModuleNotFoundError
+__________________________ test_get_me_returns_bot_id __________________________
+
+    async def test_get_me_returns_bot_id() -> None:
+        fake = FakeBot()
+>       _, admin = _publisher(fake)
+                   ^^^^^^^^^^^^^^^^
+
+tests/integration/telegram/test_publisher_args.py:249: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fake = <telegram.test_publisher_args.FakeBot object at 0x72ffe871c8d0>
+
+    def _publisher(fake: FakeBot) -> tuple[TelegramPublisher, TelegramAdminPort]:
+>       from vk_topic_bridge.infrastructure.telegram.publisher import BotApiAdminPort, BotApiPublisher
+E       ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.publisher'
+
+tests/integration/telegram/test_publisher_args.py:115: ModuleNotFoundError
+_______ test_capabilities_all_true_for_administrator_without_send_flags ________
+
+    async def test_capabilities_all_true_for_administrator_without_send_flags() -> None:
+        fake = FakeBot(member=_administrator())
+>       _, admin = _publisher(fake)
+                   ^^^^^^^^^^^^^^^^
+
+tests/integration/telegram/test_publisher_args.py:259: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fake = <telegram.test_publisher_args.FakeBot object at 0x72ffe871d150>
+
+    def _publisher(fake: FakeBot) -> tuple[TelegramPublisher, TelegramAdminPort]:
+>       from vk_topic_bridge.infrastructure.telegram.publisher import BotApiAdminPort, BotApiPublisher
+E       ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.publisher'
+
+tests/integration/telegram/test_publisher_args.py:115: ModuleNotFoundError
+____________ test_capabilities_default_to_allowed_for_plain_member _____________
+
+    async def test_capabilities_default_to_allowed_for_plain_member() -> None:
+        fake = FakeBot(member=ChatMemberMember(user=_user()))
+>       _, admin = _publisher(fake)
+                   ^^^^^^^^^^^^^^^^
+
+tests/integration/telegram/test_publisher_args.py:273: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fake = <telegram.test_publisher_args.FakeBot object at 0x72ffe6fc7050>
+
+    def _publisher(fake: FakeBot) -> tuple[TelegramPublisher, TelegramAdminPort]:
+>       from vk_topic_bridge.infrastructure.telegram.publisher import BotApiAdminPort, BotApiPublisher
+E       ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.publisher'
+
+tests/integration/telegram/test_publisher_args.py:115: ModuleNotFoundError
+_________ test_capabilities_ignore_manage_topics_for_restricted_member _________
+
+    async def test_capabilities_ignore_manage_topics_for_restricted_member() -> None:
+        fake = FakeBot(member=_restricted(can_manage_topics=False))
+>       _, admin = _publisher(fake)
+                   ^^^^^^^^^^^^^^^^
+
+tests/integration/telegram/test_publisher_args.py:282: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fake = <telegram.test_publisher_args.FakeBot object at 0x72ffe6fc7750>
+
+    def _publisher(fake: FakeBot) -> tuple[TelegramPublisher, TelegramAdminPort]:
+>       from vk_topic_bridge.infrastructure.telegram.publisher import BotApiAdminPort, BotApiPublisher
+E       ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.publisher'
+
+tests/integration/telegram/test_publisher_args.py:115: ModuleNotFoundError
+_______________ test_capabilities_report_missing_in_stable_order _______________
+
+    async def test_capabilities_report_missing_in_stable_order() -> None:
+        fake = FakeBot(
+            member=_restricted(can_send_messages=False, can_send_videos=False, can_send_documents=False)
+        )
+>       _, admin = _publisher(fake)
+                   ^^^^^^^^^^^^^^^^
+
+tests/integration/telegram/test_publisher_args.py:294: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fake = <telegram.test_publisher_args.FakeBot object at 0x72ffe6ff7e30>
+
+    def _publisher(fake: FakeBot) -> tuple[TelegramPublisher, TelegramAdminPort]:
+>       from vk_topic_bridge.infrastructure.telegram.publisher import BotApiAdminPort, BotApiPublisher
+E       ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.publisher'
+
+tests/integration/telegram/test_publisher_args.py:115: ModuleNotFoundError
+_________ test_capabilities_deny_everything_for_absent_member[member0] _________
+
+member = ChatMemberLeft(status=<ChatMemberStatus.LEFT: 'left'>, user=User(id=77, is_bot=True, first_name='Bridge', last_name=No...has_topics_enabled=None, allows_users_to_create_topics=None, can_manage_bots=None, supports_join_request_queries=None))
+
+    @pytest.mark.parametrize(
+        "member",
+        [ChatMemberLeft(user=_user()), ChatMemberBanned(user=_user(), until_date=0)],
+    )
+    async def test_capabilities_deny_everything_for_absent_member(member: ChatMemberUnion) -> None:
+        fake = FakeBot(member=member)
+>       _, admin = _publisher(fake)
+                   ^^^^^^^^^^^^^^^^
+
+tests/integration/telegram/test_publisher_args.py:311: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fake = <telegram.test_publisher_args.FakeBot object at 0x72ffe6fd5040>
+
+    def _publisher(fake: FakeBot) -> tuple[TelegramPublisher, TelegramAdminPort]:
+>       from vk_topic_bridge.infrastructure.telegram.publisher import BotApiAdminPort, BotApiPublisher
+E       ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.publisher'
+
+tests/integration/telegram/test_publisher_args.py:115: ModuleNotFoundError
+_________ test_capabilities_deny_everything_for_absent_member[member1] _________
+
+member = ChatMemberBanned(status=<ChatMemberStatus.KICKED: 'kicked'>, user=User(id=77, is_bot=True, first_name='Bridge', last_n...anage_bots=None, supports_join_request_queries=None), until_date=datetime.datetime(1970, 1, 1, 0, 0, tzinfo=TzInfo(0)))
+
+    @pytest.mark.parametrize(
+        "member",
+        [ChatMemberLeft(user=_user()), ChatMemberBanned(user=_user(), until_date=0)],
+    )
+    async def test_capabilities_deny_everything_for_absent_member(member: ChatMemberUnion) -> None:
+        fake = FakeBot(member=member)
+>       _, admin = _publisher(fake)
+                   ^^^^^^^^^^^^^^^^
+
+tests/integration/telegram/test_publisher_args.py:311: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fake = <telegram.test_publisher_args.FakeBot object at 0x72ffe6faac10>
+
+    def _publisher(fake: FakeBot) -> tuple[TelegramPublisher, TelegramAdminPort]:
+>       from vk_topic_bridge.infrastructure.telegram.publisher import BotApiAdminPort, BotApiPublisher
+E       ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.publisher'
+
+tests/integration/telegram/test_publisher_args.py:115: ModuleNotFoundError
+_________ test_ambiguous_failures_map_to_publication_ambiguous[error0] _________
+
+error = TimeoutError()
+
+    @pytest.mark.parametrize(
+        "error",
+        [
+            asyncio.TimeoutError(),
+            TelegramNetworkError(_send_error(), "connection reset"),
+            TelegramServerError(_send_error(), "internal"),
+            TelegramRetryAfter(_send_error(), "flood", 5),
+            aiohttp.ClientError("client failure"),
+            aiohttp.ClientConnectionError("connection dropped"),
+        ],
+    )
+    async def test_ambiguous_failures_map_to_publication_ambiguous(error: BaseException) -> None:
+        fake = FakeBot(error=error)
+>       publisher, _ = _publisher(fake)
+                       ^^^^^^^^^^^^^^^^
+
+tests/integration/telegram/test_publisher_args.py:343: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fake = <telegram.test_publisher_args.FakeBot object at 0x72ffe6fab230>
+
+    def _publisher(fake: FakeBot) -> tuple[TelegramPublisher, TelegramAdminPort]:
+>       from vk_topic_bridge.infrastructure.telegram.publisher import BotApiAdminPort, BotApiPublisher
+E       ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.publisher'
+
+tests/integration/telegram/test_publisher_args.py:115: ModuleNotFoundError
+_________ test_ambiguous_failures_map_to_publication_ambiguous[error1] _________
+
+error = TelegramNetworkError('HTTP Client says - connection reset')
+
+    @pytest.mark.parametrize(
+        "error",
+        [
+            asyncio.TimeoutError(),
+            TelegramNetworkError(_send_error(), "connection reset"),
+            TelegramServerError(_send_error(), "internal"),
+            TelegramRetryAfter(_send_error(), "flood", 5),
+            aiohttp.ClientError("client failure"),
+            aiohttp.ClientConnectionError("connection dropped"),
+        ],
+    )
+    async def test_ambiguous_failures_map_to_publication_ambiguous(error: BaseException) -> None:
+        fake = FakeBot(error=error)
+>       publisher, _ = _publisher(fake)
+                       ^^^^^^^^^^^^^^^^
+
+tests/integration/telegram/test_publisher_args.py:343: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fake = <telegram.test_publisher_args.FakeBot object at 0x72ffe6f8a340>
+
+    def _publisher(fake: FakeBot) -> tuple[TelegramPublisher, TelegramAdminPort]:
+>       from vk_topic_bridge.infrastructure.telegram.publisher import BotApiAdminPort, BotApiPublisher
+E       ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.publisher'
+
+tests/integration/telegram/test_publisher_args.py:115: ModuleNotFoundError
+_________ test_ambiguous_failures_map_to_publication_ambiguous[error2] _________
+
+error = TelegramServerError('Telegram server says - internal')
+
+    @pytest.mark.parametrize(
+        "error",
+        [
+            asyncio.TimeoutError(),
+            TelegramNetworkError(_send_error(), "connection reset"),
+            TelegramServerError(_send_error(), "internal"),
+            TelegramRetryAfter(_send_error(), "flood", 5),
+            aiohttp.ClientError("client failure"),
+            aiohttp.ClientConnectionError("connection dropped"),
+        ],
+    )
+    async def test_ambiguous_failures_map_to_publication_ambiguous(error: BaseException) -> None:
+        fake = FakeBot(error=error)
+>       publisher, _ = _publisher(fake)
+                       ^^^^^^^^^^^^^^^^
+
+tests/integration/telegram/test_publisher_args.py:343: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fake = <telegram.test_publisher_args.FakeBot object at 0x72ffe73db7d0>
+
+    def _publisher(fake: FakeBot) -> tuple[TelegramPublisher, TelegramAdminPort]:
+>       from vk_topic_bridge.infrastructure.telegram.publisher import BotApiAdminPort, BotApiPublisher
+E       ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.publisher'
+
+tests/integration/telegram/test_publisher_args.py:115: ModuleNotFoundError
+_________ test_ambiguous_failures_map_to_publication_ambiguous[error3] _________
+
+error = TelegramRetryAfter('Telegram server says - Flood control exceeded on method 'SendMessage' in chat -1001234567890. Retr... flood
+(background on this error at: https://core.telegram.org/bots/faq#my-bot-is-hitting-limits-how-do-i-avoid-this)')
+
+    @pytest.mark.parametrize(
+        "error",
+        [
+            asyncio.TimeoutError(),
+            TelegramNetworkError(_send_error(), "connection reset"),
+            TelegramServerError(_send_error(), "internal"),
+            TelegramRetryAfter(_send_error(), "flood", 5),
+            aiohttp.ClientError("client failure"),
+            aiohttp.ClientConnectionError("connection dropped"),
+        ],
+    )
+    async def test_ambiguous_failures_map_to_publication_ambiguous(error: BaseException) -> None:
+        fake = FakeBot(error=error)
+>       publisher, _ = _publisher(fake)
+                       ^^^^^^^^^^^^^^^^
+
+tests/integration/telegram/test_publisher_args.py:343: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fake = <telegram.test_publisher_args.FakeBot object at 0x72ffe73db890>
+
+    def _publisher(fake: FakeBot) -> tuple[TelegramPublisher, TelegramAdminPort]:
+>       from vk_topic_bridge.infrastructure.telegram.publisher import BotApiAdminPort, BotApiPublisher
+E       ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.publisher'
+
+tests/integration/telegram/test_publisher_args.py:115: ModuleNotFoundError
+_________ test_ambiguous_failures_map_to_publication_ambiguous[error4] _________
+
+error = ClientError('client failure')
+
+    @pytest.mark.parametrize(
+        "error",
+        [
+            asyncio.TimeoutError(),
+            TelegramNetworkError(_send_error(), "connection reset"),
+            TelegramServerError(_send_error(), "internal"),
+            TelegramRetryAfter(_send_error(), "flood", 5),
+            aiohttp.ClientError("client failure"),
+            aiohttp.ClientConnectionError("connection dropped"),
+        ],
+    )
+    async def test_ambiguous_failures_map_to_publication_ambiguous(error: BaseException) -> None:
+        fake = FakeBot(error=error)
+>       publisher, _ = _publisher(fake)
+                       ^^^^^^^^^^^^^^^^
+
+tests/integration/telegram/test_publisher_args.py:343: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fake = <telegram.test_publisher_args.FakeBot object at 0x72ffe6fb7ac0>
+
+    def _publisher(fake: FakeBot) -> tuple[TelegramPublisher, TelegramAdminPort]:
+>       from vk_topic_bridge.infrastructure.telegram.publisher import BotApiAdminPort, BotApiPublisher
+E       ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.publisher'
+
+tests/integration/telegram/test_publisher_args.py:115: ModuleNotFoundError
+_________ test_ambiguous_failures_map_to_publication_ambiguous[error5] _________
+
+error = ClientConnectionError('connection dropped')
+
+    @pytest.mark.parametrize(
+        "error",
+        [
+            asyncio.TimeoutError(),
+            TelegramNetworkError(_send_error(), "connection reset"),
+            TelegramServerError(_send_error(), "internal"),
+            TelegramRetryAfter(_send_error(), "flood", 5),
+            aiohttp.ClientError("client failure"),
+            aiohttp.ClientConnectionError("connection dropped"),
+        ],
+    )
+    async def test_ambiguous_failures_map_to_publication_ambiguous(error: BaseException) -> None:
+        fake = FakeBot(error=error)
+>       publisher, _ = _publisher(fake)
+                       ^^^^^^^^^^^^^^^^
+
+tests/integration/telegram/test_publisher_args.py:343: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fake = <telegram.test_publisher_args.FakeBot object at 0x72ffe6e583c0>
+
+    def _publisher(fake: FakeBot) -> tuple[TelegramPublisher, TelegramAdminPort]:
+>       from vk_topic_bridge.infrastructure.telegram.publisher import BotApiAdminPort, BotApiPublisher
+E       ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.publisher'
+
+tests/integration/telegram/test_publisher_args.py:115: ModuleNotFoundError
+________ test_definitive_rejections_map_to_publication_rejected[error0] ________
+
+error = TelegramBadRequest('Telegram server says - Bad Request: message thread not found')
+
+    @pytest.mark.parametrize(
+        "error",
+        [
+            TelegramBadRequest(_send_error(), "Bad Request: message thread not found"),
+            TelegramForbiddenError(_send_error(), "Forbidden: bot was blocked"),
+            TelegramUnauthorizedError(_send_error(), "Unauthorized"),
+            TelegramConflictError(_send_error(), "Conflict"),
+        ],
+    )
+    async def test_definitive_rejections_map_to_publication_rejected(error: BaseException) -> None:
+        fake = FakeBot(error=error)
+>       publisher, _ = _publisher(fake)
+                       ^^^^^^^^^^^^^^^^
+
+tests/integration/telegram/test_publisher_args.py:363: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fake = <telegram.test_publisher_args.FakeBot object at 0x72ffe6f76b70>
+
+    def _publisher(fake: FakeBot) -> tuple[TelegramPublisher, TelegramAdminPort]:
+>       from vk_topic_bridge.infrastructure.telegram.publisher import BotApiAdminPort, BotApiPublisher
+E       ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.publisher'
+
+tests/integration/telegram/test_publisher_args.py:115: ModuleNotFoundError
+________ test_definitive_rejections_map_to_publication_rejected[error1] ________
+
+error = TelegramForbiddenError('Telegram server says - Forbidden: bot was blocked')
+
+    @pytest.mark.parametrize(
+        "error",
+        [
+            TelegramBadRequest(_send_error(), "Bad Request: message thread not found"),
+            TelegramForbiddenError(_send_error(), "Forbidden: bot was blocked"),
+            TelegramUnauthorizedError(_send_error(), "Unauthorized"),
+            TelegramConflictError(_send_error(), "Conflict"),
+        ],
+    )
+    async def test_definitive_rejections_map_to_publication_rejected(error: BaseException) -> None:
+        fake = FakeBot(error=error)
+>       publisher, _ = _publisher(fake)
+                       ^^^^^^^^^^^^^^^^
+
+tests/integration/telegram/test_publisher_args.py:363: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fake = <telegram.test_publisher_args.FakeBot object at 0x72ffe6f76cb0>
+
+    def _publisher(fake: FakeBot) -> tuple[TelegramPublisher, TelegramAdminPort]:
+>       from vk_topic_bridge.infrastructure.telegram.publisher import BotApiAdminPort, BotApiPublisher
+E       ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.publisher'
+
+tests/integration/telegram/test_publisher_args.py:115: ModuleNotFoundError
+________ test_definitive_rejections_map_to_publication_rejected[error2] ________
+
+error = TelegramUnauthorizedError('Telegram server says - Unauthorized')
+
+    @pytest.mark.parametrize(
+        "error",
+        [
+            TelegramBadRequest(_send_error(), "Bad Request: message thread not found"),
+            TelegramForbiddenError(_send_error(), "Forbidden: bot was blocked"),
+            TelegramUnauthorizedError(_send_error(), "Unauthorized"),
+            TelegramConflictError(_send_error(), "Conflict"),
+        ],
+    )
+    async def test_definitive_rejections_map_to_publication_rejected(error: BaseException) -> None:
+        fake = FakeBot(error=error)
+>       publisher, _ = _publisher(fake)
+                       ^^^^^^^^^^^^^^^^
+
+tests/integration/telegram/test_publisher_args.py:363: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fake = <telegram.test_publisher_args.FakeBot object at 0x72ffe6f9fd10>
+
+    def _publisher(fake: FakeBot) -> tuple[TelegramPublisher, TelegramAdminPort]:
+>       from vk_topic_bridge.infrastructure.telegram.publisher import BotApiAdminPort, BotApiPublisher
+E       ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.publisher'
+
+tests/integration/telegram/test_publisher_args.py:115: ModuleNotFoundError
+________ test_definitive_rejections_map_to_publication_rejected[error3] ________
+
+error = TelegramConflictError('Telegram server says - Conflict')
+
+    @pytest.mark.parametrize(
+        "error",
+        [
+            TelegramBadRequest(_send_error(), "Bad Request: message thread not found"),
+            TelegramForbiddenError(_send_error(), "Forbidden: bot was blocked"),
+            TelegramUnauthorizedError(_send_error(), "Unauthorized"),
+            TelegramConflictError(_send_error(), "Conflict"),
+        ],
+    )
+    async def test_definitive_rejections_map_to_publication_rejected(error: BaseException) -> None:
+        fake = FakeBot(error=error)
+>       publisher, _ = _publisher(fake)
+                       ^^^^^^^^^^^^^^^^
+
+tests/integration/telegram/test_publisher_args.py:363: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fake = <telegram.test_publisher_args.FakeBot object at 0x72ffe6e7b4d0>
+
+    def _publisher(fake: FakeBot) -> tuple[TelegramPublisher, TelegramAdminPort]:
+>       from vk_topic_bridge.infrastructure.telegram.publisher import BotApiAdminPort, BotApiPublisher
+E       ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.publisher'
+
+tests/integration/telegram/test_publisher_args.py:115: ModuleNotFoundError
+______________________ test_send_text_maps_rejections_too ______________________
+
+    async def test_send_text_maps_rejections_too() -> None:
+        fake = FakeBot(error=TelegramBadRequest(_send_error(), "Bad Request: chat not found"))
+>       publisher, _ = _publisher(fake)
+                       ^^^^^^^^^^^^^^^^
+
+tests/integration/telegram/test_publisher_args.py:374: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fake = <telegram.test_publisher_args.FakeBot object at 0x72ffe6e7be50>
+
+    def _publisher(fake: FakeBot) -> tuple[TelegramPublisher, TelegramAdminPort]:
+>       from vk_topic_bridge.infrastructure.telegram.publisher import BotApiAdminPort, BotApiPublisher
+E       ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.publisher'
+
+tests/integration/telegram/test_publisher_args.py:115: ModuleNotFoundError
+_____________________ test_long_error_message_is_truncated _____________________
+
+    async def test_long_error_message_is_truncated() -> None:
+        fake = FakeBot(error=TelegramBadRequest(_send_error(), "x" * 5000))
+>       publisher, _ = _publisher(fake)
+                       ^^^^^^^^^^^^^^^^
+
+tests/integration/telegram/test_publisher_args.py:382: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fake = <telegram.test_publisher_args.FakeBot object at 0x72ffe6e61470>
+
+    def _publisher(fake: FakeBot) -> tuple[TelegramPublisher, TelegramAdminPort]:
+>       from vk_topic_bridge.infrastructure.telegram.publisher import BotApiAdminPort, BotApiPublisher
+E       ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.publisher'
+
+tests/integration/telegram/test_publisher_args.py:115: ModuleNotFoundError
+__________________ test_cancelled_error_propagates_unchanged ___________________
+
+    async def test_cancelled_error_propagates_unchanged() -> None:
+        cancelled = asyncio.CancelledError("caller cancelled")
+        fake = FakeBot(error=cancelled)
+>       publisher, _ = _publisher(fake)
+                       ^^^^^^^^^^^^^^^^
+
+tests/integration/telegram/test_publisher_args.py:393: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fake = <telegram.test_publisher_args.FakeBot object at 0x72ffe6e614e0>
+
+    def _publisher(fake: FakeBot) -> tuple[TelegramPublisher, TelegramAdminPort]:
+>       from vk_topic_bridge.infrastructure.telegram.publisher import BotApiAdminPort, BotApiPublisher
+E       ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.publisher'
+
+tests/integration/telegram/test_publisher_args.py:115: ModuleNotFoundError
+______________________ test_adapters_satisfy_frozen_ports ______________________
+
+    async def test_adapters_satisfy_frozen_ports() -> None:
+        fake = FakeBot(member=ChatMemberMember(user=_user()))
+>       publisher, admin = _publisher(fake)
+                           ^^^^^^^^^^^^^^^^
+
+tests/integration/telegram/test_publisher_args.py:406: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fake = <telegram.test_publisher_args.FakeBot object at 0x72ffe6e61e10>
+
+    def _publisher(fake: FakeBot) -> tuple[TelegramPublisher, TelegramAdminPort]:
+>       from vk_topic_bridge.infrastructure.telegram.publisher import BotApiAdminPort, BotApiPublisher
+E       ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.publisher'
+
+tests/integration/telegram/test_publisher_args.py:115: ModuleNotFoundError
+_______________________ test_maps_object_payload_fields ________________________
+
+    def test_maps_object_payload_fields() -> None:
+>       mapper = _mapper()
+                 ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x72ffeeedfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+__________________ test_source_key_ignores_message_id_and_ts ___________________
+
+    def test_source_key_ignores_message_id_and_ts() -> None:
+>       mapper = _mapper()
+                 ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:60: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x72ffeeedfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+_________________________ test_preserves_cyrillic_text _________________________
+
+    def test_preserves_cyrillic_text() -> None:
+>       mapper = _mapper()
+                 ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:70: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x72ffeeedfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+__________________ test_missing_optional_fields_are_tolerated __________________
+
+    def test_missing_optional_fields_are_tolerated() -> None:
+>       mapper = _mapper()
+                 ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:80: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x72ffeeedfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+_____________________ test_null_text_becomes_empty_string ______________________
+
+    def test_null_text_becomes_empty_string() -> None:
+>       mapper = _mapper()
+                 ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:91: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x72ffeeedfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+___________________ test_missing_peer_id_raises_value_error ____________________
+
+    def test_missing_peer_id_raises_value_error() -> None:
+>       mapper = _mapper()
+                 ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x72ffeeedfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+___________ test_missing_conversation_message_id_raises_value_error ____________
+
+    def test_missing_conversation_message_id_raises_value_error() -> None:
+>       mapper = _mapper()
+                 ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:105: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x72ffeeedfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+______________________ test_is_cropped_detection[1-True0] ______________________
+
+value = 1, expected = True
+
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            (1, True),
+            (True, True),
+            (0, False),
+            (False, False),
+            (None, False),
+            ("1", True),
+            ("0", False),
+        ],
+    )
+    def test_is_cropped_detection(value: object, expected: bool) -> None:
+>       mapper = _mapper()
+                 ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:124: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x72ffeeedfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+_____________________ test_is_cropped_detection[True-True] _____________________
+
+value = True, expected = True
+
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            (1, True),
+            (True, True),
+            (0, False),
+            (False, False),
+            (None, False),
+            ("1", True),
+            ("0", False),
+        ],
+    )
+    def test_is_cropped_detection(value: object, expected: bool) -> None:
+>       mapper = _mapper()
+                 ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:124: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x72ffeeedfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+_____________________ test_is_cropped_detection[0-False0] ______________________
+
+value = 0, expected = False
+
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            (1, True),
+            (True, True),
+            (0, False),
+            (False, False),
+            (None, False),
+            ("1", True),
+            ("0", False),
+        ],
+    )
+    def test_is_cropped_detection(value: object, expected: bool) -> None:
+>       mapper = _mapper()
+                 ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:124: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x72ffeeedfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+____________________ test_is_cropped_detection[False-False] ____________________
+
+value = False, expected = False
+
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            (1, True),
+            (True, True),
+            (0, False),
+            (False, False),
+            (None, False),
+            ("1", True),
+            ("0", False),
+        ],
+    )
+    def test_is_cropped_detection(value: object, expected: bool) -> None:
+>       mapper = _mapper()
+                 ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:124: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x72ffeeedfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+____________________ test_is_cropped_detection[None-False] _____________________
+
+value = None, expected = False
+
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            (1, True),
+            (True, True),
+            (0, False),
+            (False, False),
+            (None, False),
+            ("1", True),
+            ("0", False),
+        ],
+    )
+    def test_is_cropped_detection(value: object, expected: bool) -> None:
+>       mapper = _mapper()
+                 ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:124: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x72ffeeedfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+______________________ test_is_cropped_detection[1-True1] ______________________
+
+value = '1', expected = True
+
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            (1, True),
+            (True, True),
+            (0, False),
+            (False, False),
+            (None, False),
+            ("1", True),
+            ("0", False),
+        ],
+    )
+    def test_is_cropped_detection(value: object, expected: bool) -> None:
+>       mapper = _mapper()
+                 ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:124: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x72ffeeedfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+_____________________ test_is_cropped_detection[0-False1] ______________________
+
+value = '0', expected = False
+
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            (1, True),
+            (True, True),
+            (0, False),
+            (False, False),
+            (None, False),
+            ("1", True),
+            ("0", False),
+        ],
+    )
+    def test_is_cropped_detection(value: object, expected: bool) -> None:
+>       mapper = _mapper()
+                 ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:124: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x72ffeeedfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+_______________________ test_is_cropped_absent_is_false ________________________
+
+    def test_is_cropped_absent_is_false() -> None:
+>       mapper = _mapper()
+                 ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:129: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x72ffeeedfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+_______________________ test_attachments_are_classified ________________________
+
+    def test_attachments_are_classified() -> None:
+>       mapper = _mapper()
+                 ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:134: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x72ffeeedfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+____________________ test_non_list_attachments_are_ignored _____________________
+
+    def test_non_list_attachments_are_ignored() -> None:
+>       mapper = _mapper()
+                 ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:162: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x72ffeeedfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+______________ test_first_peer_guard_binds_once_and_rejects_other ______________
+
+    def test_first_peer_guard_binds_once_and_rejects_other() -> None:
+>       guard = _mapper().FirstPeerGuard()
+                ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:171: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x72ffeeedfe20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+=========================== short test summary info ============================
+FAILED tests/integration/telegram/test_bot_api_factory.py::test_loopback_hosts_are_recognized
+FAILED tests/integration/telegram/test_bot_api_factory.py::test_remote_hosts_are_not_loopback
+FAILED tests/integration/telegram/test_bot_api_factory.py::test_loopback_custom_base_has_no_proxy
+FAILED tests/integration/telegram/test_bot_api_factory.py::test_remote_custom_base_uses_socks5_proxy
+FAILED tests/integration/telegram/test_bot_api_factory.py::test_absent_url_falls_back_to_official_api
+FAILED tests/integration/telegram/test_bot_api_factory.py::test_create_bot_uses_token_custom_server_and_html_default
+FAILED tests/integration/telegram/test_publisher_args.py::test_publish_omits_message_thread_id_for_general_topic
+FAILED tests/integration/telegram/test_publisher_args.py::test_publish_passes_message_thread_id_for_topic_destination
+FAILED tests/integration/telegram/test_publisher_args.py::test_publish_sends_composed_html_and_disables_link_previews
+FAILED tests/integration/telegram/test_publisher_args.py::test_send_text_omits_thread_for_general_and_returns_message_id
+FAILED tests/integration/telegram/test_publisher_args.py::test_send_text_passes_thread_for_topic
+FAILED tests/integration/telegram/test_publisher_args.py::test_send_test_into_topic_delegates_to_send_text
+FAILED tests/integration/telegram/test_publisher_args.py::test_get_me_returns_bot_id
+FAILED tests/integration/telegram/test_publisher_args.py::test_capabilities_all_true_for_administrator_without_send_flags
+FAILED tests/integration/telegram/test_publisher_args.py::test_capabilities_default_to_allowed_for_plain_member
+FAILED tests/integration/telegram/test_publisher_args.py::test_capabilities_ignore_manage_topics_for_restricted_member
+FAILED tests/integration/telegram/test_publisher_args.py::test_capabilities_report_missing_in_stable_order
+FAILED tests/integration/telegram/test_publisher_args.py::test_capabilities_deny_everything_for_absent_member[member0]
+FAILED tests/integration/telegram/test_publisher_args.py::test_capabilities_deny_everything_for_absent_member[member1]
+FAILED tests/integration/telegram/test_publisher_args.py::test_ambiguous_failures_map_to_publication_ambiguous[error0]
+FAILED tests/integration/telegram/test_publisher_args.py::test_ambiguous_failures_map_to_publication_ambiguous[error1]
+FAILED tests/integration/telegram/test_publisher_args.py::test_ambiguous_failures_map_to_publication_ambiguous[error2]
+FAILED tests/integration/telegram/test_publisher_args.py::test_ambiguous_failures_map_to_publication_ambiguous[error3]
+FAILED tests/integration/telegram/test_publisher_args.py::test_ambiguous_failures_map_to_publication_ambiguous[error4]
+FAILED tests/integration/telegram/test_publisher_args.py::test_ambiguous_failures_map_to_publication_ambiguous[error5]
+FAILED tests/integration/telegram/test_publisher_args.py::test_definitive_rejections_map_to_publication_rejected[error0]
+FAILED tests/integration/telegram/test_publisher_args.py::test_definitive_rejections_map_to_publication_rejected[error1]
+FAILED tests/integration/telegram/test_publisher_args.py::test_definitive_rejections_map_to_publication_rejected[error2]
+FAILED tests/integration/telegram/test_publisher_args.py::test_definitive_rejections_map_to_publication_rejected[error3]
+FAILED tests/integration/telegram/test_publisher_args.py::test_send_text_maps_rejections_too
+FAILED tests/integration/telegram/test_publisher_args.py::test_long_error_message_is_truncated
+FAILED tests/integration/telegram/test_publisher_args.py::test_cancelled_error_propagates_unchanged
+FAILED tests/integration/telegram/test_publisher_args.py::test_adapters_satisfy_frozen_ports
+FAILED tests/integration/vk/test_mapper.py::test_maps_object_payload_fields
+FAILED tests/integration/vk/test_mapper.py::test_source_key_ignores_message_id_and_ts
+FAILED tests/integration/vk/test_mapper.py::test_preserves_cyrillic_text - Mo...
+FAILED tests/integration/vk/test_mapper.py::test_missing_optional_fields_are_tolerated
+FAILED tests/integration/vk/test_mapper.py::test_null_text_becomes_empty_string
+FAILED tests/integration/vk/test_mapper.py::test_missing_peer_id_raises_value_error
+FAILED tests/integration/vk/test_mapper.py::test_missing_conversation_message_id_raises_value_error
+FAILED tests/integration/vk/test_mapper.py::test_is_cropped_detection[1-True0]
+FAILED tests/integration/vk/test_mapper.py::test_is_cropped_detection[True-True]
+FAILED tests/integration/vk/test_mapper.py::test_is_cropped_detection[0-False0]
+FAILED tests/integration/vk/test_mapper.py::test_is_cropped_detection[False-False]
+FAILED tests/integration/vk/test_mapper.py::test_is_cropped_detection[None-False]
+FAILED tests/integration/vk/test_mapper.py::test_is_cropped_detection[1-True1]
+FAILED tests/integration/vk/test_mapper.py::test_is_cropped_detection[0-False1]
+FAILED tests/integration/vk/test_mapper.py::test_is_cropped_absent_is_false
+FAILED tests/integration/vk/test_mapper.py::test_attachments_are_classified
+FAILED tests/integration/vk/test_mapper.py::test_non_list_attachments_are_ignored
+FAILED tests/integration/vk/test_mapper.py::test_first_peer_guard_binds_once_and_rejects_other
+51 failed, 226 passed in 6.55s
+
+EXIT=1 (pytest)
+# 33 failures were in tests/integration/telegram/* (ModuleNotFoundError: bot_api_factory / publisher),
+# the remaining failures belong to the parallel Wave-3 VK workstream (tests/integration/vk).

@@ -1,0 +1,179 @@
+"""Mapper tests for VK event normalization (plan §9, docs 03 §10, docs 05 §14).
+
+The production module is imported lazily so that, during the RED phase, its absence
+surfaces as a normal test failure instead of aborting collection of the suite.
+"""
+
+import importlib
+from types import ModuleType
+
+import pytest
+
+from vk_topic_bridge.domain.enums import AttachmentKind
+from vk_topic_bridge.domain.value_objects import Author
+
+GROUP_ID = 42
+PEER_ID = 2000000001
+CMID = 789
+
+
+def _mapper() -> ModuleType:
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+
+
+def _author() -> Author:
+    return Author(user_id=123, first_name="Иван", last_name="Иванов", screen_name="ivan")
+
+
+def _message(**overrides: object) -> dict[str, object]:
+    base: dict[str, object] = {
+        "id": 456,
+        "date": 1700000000,
+        "from_id": 123,
+        "peer_id": PEER_ID,
+        "conversation_message_id": CMID,
+        "text": "@all #извк",
+        "attachments": [],
+        "fwd_messages": [],
+        "reply_message": None,
+        "is_cropped": 0,
+    }
+    base.update(overrides)
+    return base
+
+
+def test_maps_object_payload_fields() -> None:
+    mapper = _mapper()
+    source = mapper.map_message(group_id=GROUP_ID, message=_message(), author=_author())
+
+    assert source.source_key == f"{GROUP_ID}:{PEER_ID}:{CMID}"
+    assert source.has_all is True
+    assert source.has_hashtag is True
+    assert source.group_id == GROUP_ID
+    assert source.peer_id == PEER_ID
+    assert source.conversation_message_id == CMID
+    assert source.author.display_name == "Иван Иванов"
+    assert source.author.profile_url == "https://vk.com/id123"
+
+
+def test_source_key_ignores_message_id_and_ts() -> None:
+    mapper = _mapper()
+    message = _message(id=456, ts=999999)
+    source = mapper.map_message(group_id=GROUP_ID, message=message, author=_author())
+
+    assert source.source_key == f"{GROUP_ID}:{PEER_ID}:{CMID}"
+    assert "456" not in source.source_key
+    assert "999999" not in source.source_key
+
+
+def test_preserves_cyrillic_text() -> None:
+    mapper = _mapper()
+    text = "Привет, мир! #новости @all — ёжик"
+    source = mapper.map_message(group_id=GROUP_ID, message=_message(text=text), author=_author())
+
+    assert source.text == text
+    assert source.has_all is True
+    assert source.has_hashtag is True
+
+
+def test_missing_optional_fields_are_tolerated() -> None:
+    mapper = _mapper()
+    message: dict[str, object] = {"peer_id": PEER_ID, "conversation_message_id": CMID}
+    source = mapper.map_message(group_id=GROUP_ID, message=message, author=_author())
+
+    assert source.text == ""
+    assert source.has_all is False
+    assert source.has_hashtag is False
+    assert source.attachments == ()
+
+
+def test_null_text_becomes_empty_string() -> None:
+    mapper = _mapper()
+    source = mapper.map_message(group_id=GROUP_ID, message=_message(text=None), author=_author())
+
+    assert source.text == ""
+
+
+def test_missing_peer_id_raises_value_error() -> None:
+    mapper = _mapper()
+    message: dict[str, object] = {"conversation_message_id": CMID}
+    with pytest.raises(ValueError, match="peer_id"):
+        mapper.map_message(group_id=GROUP_ID, message=message, author=_author())
+
+
+def test_missing_conversation_message_id_raises_value_error() -> None:
+    mapper = _mapper()
+    message: dict[str, object] = {"peer_id": PEER_ID}
+    with pytest.raises(ValueError, match="conversation_message_id"):
+        mapper.map_message(group_id=GROUP_ID, message=message, author=_author())
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        (1, True),
+        (True, True),
+        (0, False),
+        (False, False),
+        (None, False),
+    ],
+)
+def test_is_cropped_detection(value: object, expected: bool) -> None:
+    mapper = _mapper()
+    assert mapper.is_cropped({"is_cropped": value}) is expected
+
+
+def test_is_cropped_absent_is_false() -> None:
+    mapper = _mapper()
+    assert mapper.is_cropped({}) is False
+
+
+def test_attachments_are_classified() -> None:
+    mapper = _mapper()
+    message = _message(
+        attachments=[
+            {"type": "photo", "photo": {"id": 11, "owner_id": -1}},
+            {"type": "video", "video": {"id": 22, "owner_id": -1, "title": "clip", "size": 10}},
+            {"type": "doc", "doc": {"id": 33, "owner_id": -1, "title": "file.pdf", "size": 2048}},
+            {"type": "sticker", "sticker": {"id": 44}},
+        ]
+    )
+    source = mapper.map_message(group_id=GROUP_ID, message=message, author=_author())
+
+    assert [attachment.kind for attachment in source.attachments] == [
+        AttachmentKind.PHOTO,
+        AttachmentKind.VIDEO,
+        AttachmentKind.DOCUMENT,
+        AttachmentKind.UNSUPPORTED,
+    ]
+    video = source.attachments[1]
+    assert video.file_name == "clip"
+    assert video.size_bytes == 10
+    document = source.attachments[2]
+    assert document.file_name == "file.pdf"
+    assert document.size_bytes == 2048
+    assert source.attachments[3].file_name is None
+    assert source.attachments[3].size_bytes is None
+
+
+def test_non_list_attachments_are_ignored() -> None:
+    mapper = _mapper()
+    source = mapper.map_message(
+        group_id=GROUP_ID, message=_message(attachments=None), author=_author()
+    )
+
+    assert source.attachments == ()
+
+
+def test_first_peer_guard_binds_once_and_rejects_other() -> None:
+    guard = _mapper().FirstPeerGuard()
+
+    assert guard.current() is None
+    assert guard.bind(111) is True
+    assert guard.bind(111) is True
+    assert guard.bind(222) is False
+    assert guard.current() == 111
+
+    guard.reset()
+    assert guard.current() is None
+    assert guard.bind(222) is True

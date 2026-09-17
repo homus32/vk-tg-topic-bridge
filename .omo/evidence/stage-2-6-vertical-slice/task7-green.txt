@@ -1,0 +1,16 @@
+..........                                                               [100%]
+10 passed in 0.55s
+EXIT=0
+
+# NOTE: repo addopts ends in bare `--cov` (nargs=?) which consumes the FIRST positional path,
+# so the exact command above only collected 2 of 3 files. Corrected order (flags before paths):
+.................                                                        [100%]
+17 passed in 0.64s
+EXIT=0
+GIT_REV=332574e
+
+=== task-7 verification ===
+ruff format src/vk_topic_bridge/infrastructure/telegram/{proxy,mtproto}.py tests/unit/test_telethon_proxy.py tests/integration/telegram -> 8 files left unchanged
+ruff check src/vk_topic_bridge/infrastructure/telegram tests/unit/test_telethon_proxy.py tests/integration/telegram -> All checks passed!
+basedpyright src/vk_topic_bridge/infrastructure/telegram -> 0 errors, 0 warnings, 0 notes
+full suite: uv run --locked pytest -q --no-cov -p no:cacheprovider -> 310 passed (baseline 293 + 17 new), EXIT=0

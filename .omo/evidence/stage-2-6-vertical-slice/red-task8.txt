@@ -1,0 +1,1035 @@
+........................................................................ [ 24%]
+..............FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF........................ [ 49%]
+........................................................................ [ 73%]
+........................................................................ [ 98%]
+.....                                                                    [100%]
+=================================== FAILURES ===================================
+_______________________ test_maps_object_payload_fields ________________________
+
+    def test_maps_object_payload_fields() -> None:
+>       mapper = _mapper()
+                 ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+__________________ test_source_key_ignores_message_id_and_ts ___________________
+
+    def test_source_key_ignores_message_id_and_ts() -> None:
+>       mapper = _mapper()
+                 ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:60: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+_________________________ test_preserves_cyrillic_text _________________________
+
+    def test_preserves_cyrillic_text() -> None:
+>       mapper = _mapper()
+                 ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:70: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+__________________ test_missing_optional_fields_are_tolerated __________________
+
+    def test_missing_optional_fields_are_tolerated() -> None:
+>       mapper = _mapper()
+                 ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:80: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+_____________________ test_null_text_becomes_empty_string ______________________
+
+    def test_null_text_becomes_empty_string() -> None:
+>       mapper = _mapper()
+                 ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:91: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+___________________ test_missing_peer_id_raises_value_error ____________________
+
+    def test_missing_peer_id_raises_value_error() -> None:
+>       mapper = _mapper()
+                 ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+___________ test_missing_conversation_message_id_raises_value_error ____________
+
+    def test_missing_conversation_message_id_raises_value_error() -> None:
+>       mapper = _mapper()
+                 ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:105: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+______________________ test_is_cropped_detection[1-True] _______________________
+
+value = 1, expected = True
+
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            (1, True),
+            (True, True),
+            (0, False),
+            (False, False),
+            (None, False),
+        ],
+    )
+    def test_is_cropped_detection(value: object, expected: bool) -> None:
+>       mapper = _mapper()
+                 ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:122: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+_____________________ test_is_cropped_detection[True-True] _____________________
+
+value = True, expected = True
+
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            (1, True),
+            (True, True),
+            (0, False),
+            (False, False),
+            (None, False),
+        ],
+    )
+    def test_is_cropped_detection(value: object, expected: bool) -> None:
+>       mapper = _mapper()
+                 ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:122: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+______________________ test_is_cropped_detection[0-False] ______________________
+
+value = 0, expected = False
+
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            (1, True),
+            (True, True),
+            (0, False),
+            (False, False),
+            (None, False),
+        ],
+    )
+    def test_is_cropped_detection(value: object, expected: bool) -> None:
+>       mapper = _mapper()
+                 ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:122: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+____________________ test_is_cropped_detection[False-False] ____________________
+
+value = False, expected = False
+
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            (1, True),
+            (True, True),
+            (0, False),
+            (False, False),
+            (None, False),
+        ],
+    )
+    def test_is_cropped_detection(value: object, expected: bool) -> None:
+>       mapper = _mapper()
+                 ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:122: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+____________________ test_is_cropped_detection[None-False] _____________________
+
+value = None, expected = False
+
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            (1, True),
+            (True, True),
+            (0, False),
+            (False, False),
+            (None, False),
+        ],
+    )
+    def test_is_cropped_detection(value: object, expected: bool) -> None:
+>       mapper = _mapper()
+                 ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:122: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+_______________________ test_is_cropped_absent_is_false ________________________
+
+    def test_is_cropped_absent_is_false() -> None:
+>       mapper = _mapper()
+                 ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:127: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+_______________________ test_attachments_are_classified ________________________
+
+    def test_attachments_are_classified() -> None:
+>       mapper = _mapper()
+                 ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:132: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+____________________ test_non_list_attachments_are_ignored _____________________
+
+    def test_non_list_attachments_are_ignored() -> None:
+>       mapper = _mapper()
+                 ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:160: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+______________ test_first_peer_guard_binds_once_and_rejects_other ______________
+
+    def test_first_peer_guard_binds_once_and_rejects_other() -> None:
+>       guard = _mapper().FirstPeerGuard()
+                ^^^^^^^^^
+
+tests/integration/vk/test_mapper.py:169: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_mapper.py:21: in _mapper
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.mapper")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.mapper'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.mapper'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+___________________ test_get_community_id_derives_from_token ___________________
+
+    async def test_get_community_id_derives_from_token() -> None:
+>       module = _api_module()
+                 ^^^^^^^^^^^^^
+
+tests/integration/vk/test_vk_api.py:95: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_vk_api.py:23: in _api_module
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.api")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.api'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.api'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+_______________ test_get_community_id_accepts_matching_override ________________
+
+    async def test_get_community_id_accepts_matching_override() -> None:
+>       module = _api_module()
+                 ^^^^^^^^^^^^^
+
+tests/integration/vk/test_vk_api.py:104: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_vk_api.py:23: in _api_module
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.api")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.api'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.api'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+______________ test_get_community_id_rejects_mismatched_override _______________
+
+    async def test_get_community_id_rejects_mismatched_override() -> None:
+>       module = _api_module()
+                 ^^^^^^^^^^^^^
+
+tests/integration/vk/test_vk_api.py:112: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_vk_api.py:23: in _api_module
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.api")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.api'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.api'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+_________________ test_get_community_id_empty_groups_is_fatal __________________
+
+    async def test_get_community_id_empty_groups_is_fatal() -> None:
+>       module = _api_module()
+                 ^^^^^^^^^^^^^
+
+tests/integration/vk/test_vk_api.py:121: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_vk_api.py:23: in _api_module
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.api")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.api'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.api'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+_______________________ test_check_long_poll_shapes_info _______________________
+
+    async def test_check_long_poll_shapes_info() -> None:
+>       module = _api_module()
+                 ^^^^^^^^^^^^^
+
+tests/integration/vk/test_vk_api.py:133: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_vk_api.py:23: in _api_module
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.api")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.api'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.api'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+____________________ test_check_long_poll_reports_disabled _____________________
+
+    async def test_check_long_poll_reports_disabled() -> None:
+>       module = _api_module()
+                 ^^^^^^^^^^^^^
+
+tests/integration/vk/test_vk_api.py:156: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_vk_api.py:23: in _api_module
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.api")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.api'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.api'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+________________________ test_get_author_reads_profile _________________________
+
+    async def test_get_author_reads_profile() -> None:
+>       module = _api_module()
+                 ^^^^^^^^^^^^^
+
+tests/integration/vk/test_vk_api.py:176: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_vk_api.py:23: in _api_module
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.api")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.api'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.api'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+________________ test_get_author_tolerates_missing_screen_name _________________
+
+    async def test_get_author_tolerates_missing_screen_name() -> None:
+>       module = _api_module()
+                 ^^^^^^^^^^^^^
+
+tests/integration/vk/test_vk_api.py:193: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_vk_api.py:23: in _api_module
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.api")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.api'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.api'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+____________ test_normalize_event_non_cropped_maps_object_directly _____________
+
+    async def test_normalize_event_non_cropped_maps_object_directly() -> None:
+>       module = _api_module()
+                 ^^^^^^^^^^^^^
+
+tests/integration/vk/test_vk_api.py:207: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_vk_api.py:23: in _api_module
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.api")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.api'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.api'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+________________ test_cropped_event_triggers_full_message_fetch ________________
+
+    async def test_cropped_event_triggers_full_message_fetch() -> None:
+>       module = _api_module()
+                 ^^^^^^^^^^^^^
+
+tests/integration/vk/test_vk_api.py:226: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_vk_api.py:23: in _api_module
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.api")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.api'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.api'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+____________ test_get_full_message_maps_by_conversation_message_id _____________
+
+    async def test_get_full_message_maps_by_conversation_message_id() -> None:
+>       module = _api_module()
+                 ^^^^^^^^^^^^^
+
+tests/integration/vk/test_vk_api.py:256: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_vk_api.py:23: in _api_module
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.api")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.api'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.api'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+______________ test_set_reaction_sends_peer_cmid_and_reaction_id _______________
+
+    async def test_set_reaction_sends_peer_cmid_and_reaction_id() -> None:
+>       module = _api_module()
+                 ^^^^^^^^^^^^^
+
+tests/integration/vk/test_vk_api.py:276: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_vk_api.py:23: in _api_module
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.api")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.api'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.api'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+____________________ test_fatal_vk_codes_are_classified[5] _____________________
+
+code = 5
+
+    @pytest.mark.parametrize("code", [5, 15, 100])
+    async def test_fatal_vk_codes_are_classified(code: int) -> None:
+>       module = _api_module()
+                 ^^^^^^^^^^^^^
+
+tests/integration/vk/test_vk_api.py:294: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_vk_api.py:23: in _api_module
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.api")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.api'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.api'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+____________________ test_fatal_vk_codes_are_classified[15] ____________________
+
+code = 15
+
+    @pytest.mark.parametrize("code", [5, 15, 100])
+    async def test_fatal_vk_codes_are_classified(code: int) -> None:
+>       module = _api_module()
+                 ^^^^^^^^^^^^^
+
+tests/integration/vk/test_vk_api.py:294: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_vk_api.py:23: in _api_module
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.api")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.api'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.api'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+___________________ test_fatal_vk_codes_are_classified[100] ____________________
+
+code = 100
+
+    @pytest.mark.parametrize("code", [5, 15, 100])
+    async def test_fatal_vk_codes_are_classified(code: int) -> None:
+>       module = _api_module()
+                 ^^^^^^^^^^^^^
+
+tests/integration/vk/test_vk_api.py:294: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_vk_api.py:23: in _api_module
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.api")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.api'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.api'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+__________________ test_retryable_vk_codes_are_classified[6] ___________________
+
+code = 6
+
+    @pytest.mark.parametrize("code", [6, 10])
+    async def test_retryable_vk_codes_are_classified(code: int) -> None:
+>       module = _api_module()
+                 ^^^^^^^^^^^^^
+
+tests/integration/vk/test_vk_api.py:306: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_vk_api.py:23: in _api_module
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.api")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.api'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.api'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+__________________ test_retryable_vk_codes_are_classified[10] __________________
+
+code = 10
+
+    @pytest.mark.parametrize("code", [6, 10])
+    async def test_retryable_vk_codes_are_classified(code: int) -> None:
+>       module = _api_module()
+                 ^^^^^^^^^^^^^
+
+tests/integration/vk/test_vk_api.py:306: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_vk_api.py:23: in _api_module
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.api")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.api'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.api'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+__________________ test_gateway_satisfies_vk_gateway_protocol __________________
+
+    def test_gateway_satisfies_vk_gateway_protocol() -> None:
+>       module = _api_module()
+                 ^^^^^^^^^^^^^
+
+tests/integration/vk/test_vk_api.py:317: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/vk/test_vk_api.py:23: in _api_module
+    return importlib.import_module("vk_topic_bridge.infrastructure.vk.api")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.vk.api'
+import_ = <function _gcd_import at 0x703a8758be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.vk.api'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+=========================== short test summary info ============================
+FAILED tests/integration/vk/test_mapper.py::test_maps_object_payload_fields
+FAILED tests/integration/vk/test_mapper.py::test_source_key_ignores_message_id_and_ts
+FAILED tests/integration/vk/test_mapper.py::test_preserves_cyrillic_text - Mo...
+FAILED tests/integration/vk/test_mapper.py::test_missing_optional_fields_are_tolerated
+FAILED tests/integration/vk/test_mapper.py::test_null_text_becomes_empty_string
+FAILED tests/integration/vk/test_mapper.py::test_missing_peer_id_raises_value_error
+FAILED tests/integration/vk/test_mapper.py::test_missing_conversation_message_id_raises_value_error
+FAILED tests/integration/vk/test_mapper.py::test_is_cropped_detection[1-True]
+FAILED tests/integration/vk/test_mapper.py::test_is_cropped_detection[True-True]
+FAILED tests/integration/vk/test_mapper.py::test_is_cropped_detection[0-False]
+FAILED tests/integration/vk/test_mapper.py::test_is_cropped_detection[False-False]
+FAILED tests/integration/vk/test_mapper.py::test_is_cropped_detection[None-False]
+FAILED tests/integration/vk/test_mapper.py::test_is_cropped_absent_is_false
+FAILED tests/integration/vk/test_mapper.py::test_attachments_are_classified
+FAILED tests/integration/vk/test_mapper.py::test_non_list_attachments_are_ignored
+FAILED tests/integration/vk/test_mapper.py::test_first_peer_guard_binds_once_and_rejects_other
+FAILED tests/integration/vk/test_vk_api.py::test_get_community_id_derives_from_token
+FAILED tests/integration/vk/test_vk_api.py::test_get_community_id_accepts_matching_override
+FAILED tests/integration/vk/test_vk_api.py::test_get_community_id_rejects_mismatched_override
+FAILED tests/integration/vk/test_vk_api.py::test_get_community_id_empty_groups_is_fatal
+FAILED tests/integration/vk/test_vk_api.py::test_check_long_poll_shapes_info
+FAILED tests/integration/vk/test_vk_api.py::test_check_long_poll_reports_disabled
+FAILED tests/integration/vk/test_vk_api.py::test_get_author_reads_profile - M...
+FAILED tests/integration/vk/test_vk_api.py::test_get_author_tolerates_missing_screen_name
+FAILED tests/integration/vk/test_vk_api.py::test_normalize_event_non_cropped_maps_object_directly
+FAILED tests/integration/vk/test_vk_api.py::test_cropped_event_triggers_full_message_fetch
+FAILED tests/integration/vk/test_vk_api.py::test_get_full_message_maps_by_conversation_message_id
+FAILED tests/integration/vk/test_vk_api.py::test_set_reaction_sends_peer_cmid_and_reaction_id
+FAILED tests/integration/vk/test_vk_api.py::test_fatal_vk_codes_are_classified[5]
+FAILED tests/integration/vk/test_vk_api.py::test_fatal_vk_codes_are_classified[15]
+FAILED tests/integration/vk/test_vk_api.py::test_fatal_vk_codes_are_classified[100]
+FAILED tests/integration/vk/test_vk_api.py::test_retryable_vk_codes_are_classified[6]
+FAILED tests/integration/vk/test_vk_api.py::test_retryable_vk_codes_are_classified[10]
+FAILED tests/integration/vk/test_vk_api.py::test_gateway_satisfies_vk_gateway_protocol
+34 failed, 259 passed in 4.66s

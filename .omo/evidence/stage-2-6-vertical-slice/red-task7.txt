@@ -1,0 +1,548 @@
+..........................................................FFFFFF........ [ 23%]
+....................FFFF................................................ [ 46%]
+........................................................................ [ 69%]
+........................................................................ [ 92%]
+...............FFFFFFF                                                   [100%]
+=================================== FAILURES ===================================
+_________ test_forum_channel_reports_numeric_entity_id_and_forum_flag __________
+
+    async def test_forum_channel_reports_numeric_entity_id_and_forum_flag() -> None:
+>       mtproto = _mtproto()
+                  ^^^^^^^^^^
+
+tests/integration/telegram/test_chat_access.py:66: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/telegram/test_chat_access.py:19: in _mtproto
+    return importlib.import_module("vk_topic_bridge.infrastructure.telegram.mtproto")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.telegram.mtproto'
+import_ = <function _gcd_import at 0x71b68b38be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.mtproto'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+________________ test_channel_without_forum_flag_reports_false _________________
+
+    async def test_channel_without_forum_flag_reports_false() -> None:
+>       mtproto = _mtproto()
+                  ^^^^^^^^^^
+
+tests/integration/telegram/test_chat_access.py:76: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/telegram/test_chat_access.py:19: in _mtproto
+    return importlib.import_module("vk_topic_bridge.infrastructure.telegram.mtproto")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.telegram.mtproto'
+import_ = <function _gcd_import at 0x71b68b38be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.mtproto'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+_____________________ test_plain_chat_reports_false_forum ______________________
+
+    async def test_plain_chat_reports_false_forum() -> None:
+>       mtproto = _mtproto()
+                  ^^^^^^^^^^
+
+tests/integration/telegram/test_chat_access.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/telegram/test_chat_access.py:19: in _mtproto
+    return importlib.import_module("vk_topic_bridge.infrastructure.telegram.mtproto")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.telegram.mtproto'
+import_ = <function _gcd_import at 0x71b68b38be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.mtproto'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+______________ test_unresolvable_entity_raises_recoverable_error _______________
+
+    async def test_unresolvable_entity_raises_recoverable_error() -> None:
+>       mtproto = _mtproto()
+                  ^^^^^^^^^^
+
+tests/integration/telegram/test_chat_access.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/telegram/test_chat_access.py:19: in _mtproto
+    return importlib.import_module("vk_topic_bridge.infrastructure.telegram.mtproto")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.telegram.mtproto'
+import_ = <function _gcd_import at 0x71b68b38be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.mtproto'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+__________________ test_rpc_failure_raises_recoverable_error ___________________
+
+    async def test_rpc_failure_raises_recoverable_error() -> None:
+>       mtproto = _mtproto()
+                  ^^^^^^^^^^
+
+tests/integration/telegram/test_chat_access.py:107: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/telegram/test_chat_access.py:19: in _mtproto
+    return importlib.import_module("vk_topic_bridge.infrastructure.telegram.mtproto")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.telegram.mtproto'
+import_ = <function _gcd_import at 0x71b68b38be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.mtproto'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+________________ test_is_authorized_and_get_me_proxy_to_client _________________
+
+    async def test_is_authorized_and_get_me_proxy_to_client() -> None:
+>       mtproto = _mtproto()
+                  ^^^^^^^^^^
+
+tests/integration/telegram/test_chat_access.py:116: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/telegram/test_chat_access.py:19: in _mtproto
+    return importlib.import_module("vk_topic_bridge.infrastructure.telegram.mtproto")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.telegram.mtproto'
+import_ = <function _gcd_import at 0x71b68b38be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.mtproto'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+_____________ test_general_topic_maps_to_none_id_with_general_flag _____________
+
+    async def test_general_topic_maps_to_none_id_with_general_flag() -> None:
+>       mtproto = _mtproto()
+                  ^^^^^^^^^^
+
+tests/integration/telegram/test_topic_mapper.py:109: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/telegram/test_topic_mapper.py:24: in _mtproto
+    return importlib.import_module("vk_topic_bridge.infrastructure.telegram.mtproto")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.telegram.mtproto'
+import_ = <function _gcd_import at 0x71b68b38be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.mtproto'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+________________ test_regular_topic_keeps_numeric_id_and_flags _________________
+
+    async def test_regular_topic_keeps_numeric_id_and_flags() -> None:
+>       mtproto = _mtproto()
+                  ^^^^^^^^^^
+
+tests/integration/telegram/test_topic_mapper.py:121: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/telegram/test_topic_mapper.py:24: in _mtproto
+    return importlib.import_module("vk_topic_bridge.infrastructure.telegram.mtproto")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.telegram.mtproto'
+import_ = <function _gcd_import at 0x71b68b38be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.mtproto'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+____ test_two_pages_are_concatenated_in_order_and_cursor_follows_last_topic ____
+
+    async def test_two_pages_are_concatenated_in_order_and_cursor_follows_last_topic() -> None:
+>       mtproto = _mtproto()
+                  ^^^^^^^^^^
+
+tests/integration/telegram/test_topic_mapper.py:135: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/telegram/test_topic_mapper.py:24: in _mtproto
+    return importlib.import_module("vk_topic_bridge.infrastructure.telegram.mtproto")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.telegram.mtproto'
+import_ = <function _gcd_import at 0x71b68b38be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.mtproto'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+___________ test_repeated_page_stops_pagination_without_reprocessing ___________
+
+    async def test_repeated_page_stops_pagination_without_reprocessing() -> None:
+>       mtproto = _mtproto()
+                  ^^^^^^^^^^
+
+tests/integration/telegram/test_topic_mapper.py:165: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/integration/telegram/test_topic_mapper.py:24: in _mtproto
+    return importlib.import_module("vk_topic_bridge.infrastructure.telegram.mtproto")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.telegram.mtproto'
+import_ = <function _gcd_import at 0x71b68b38be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.mtproto'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+___________________ test_direct_transport_returns_no_kwargs ____________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71b67b68dda0>
+
+    def test_direct_transport_returns_no_kwargs(monkeypatch: pytest.MonkeyPatch) -> None:
+>       proxy = _proxy()
+                ^^^^^^^^
+
+tests/unit/test_telethon_proxy.py:32: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/unit/test_telethon_proxy.py:22: in _proxy
+    return importlib.import_module("vk_topic_bridge.infrastructure.telegram.proxy")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.telegram.proxy'
+import_ = <function _gcd_import at 0x71b68b38be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.proxy'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+______ test_mtproxy_transport_uses_tcp_mtproxy_connection_and_plain_tuple ______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71b67b68dc50>
+
+    def test_mtproxy_transport_uses_tcp_mtproxy_connection_and_plain_tuple(
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+>       proxy = _proxy()
+                ^^^^^^^^
+
+tests/unit/test_telethon_proxy.py:41: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/unit/test_telethon_proxy.py:22: in _proxy
+    return importlib.import_module("vk_topic_bridge.infrastructure.telegram.proxy")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.telegram.proxy'
+import_ = <function _gcd_import at 0x71b68b38be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.proxy'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+_______________ test_socks5_transport_builds_telethon_dict_form ________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71b67b68e740>
+
+    def test_socks5_transport_builds_telethon_dict_form(monkeypatch: pytest.MonkeyPatch) -> None:
+>       proxy = _proxy()
+                ^^^^^^^^
+
+tests/unit/test_telethon_proxy.py:58: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/unit/test_telethon_proxy.py:22: in _proxy
+    return importlib.import_module("vk_topic_bridge.infrastructure.telegram.proxy")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.telegram.proxy'
+import_ = <function _gcd_import at 0x71b68b38be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.proxy'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+__________ test_socks5h_transport_decodes_percent_encoded_credentials __________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71b67b68f690>
+
+    def test_socks5h_transport_decodes_percent_encoded_credentials(
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+>       proxy = _proxy()
+                ^^^^^^^^
+
+tests/unit/test_telethon_proxy.py:78: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/unit/test_telethon_proxy.py:22: in _proxy
+    return importlib.import_module("vk_topic_bridge.infrastructure.telegram.proxy")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.telegram.proxy'
+import_ = <function _gcd_import at 0x71b68b38be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.proxy'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+___________ test_malformed_socks5_url_raises_value_error[socks5://] ____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71b67b68e200>
+url = 'socks5://'
+
+    @pytest.mark.parametrize(
+        "url",
+        [
+            "socks5://",
+            "socks5://127.0.0.1",
+            "socks5://127.0.0.1:not-a-port",
+        ],
+    )
+    def test_malformed_socks5_url_raises_value_error(
+        monkeypatch: pytest.MonkeyPatch, url: str
+    ) -> None:
+>       proxy = _proxy()
+                ^^^^^^^^
+
+tests/unit/test_telethon_proxy.py:109: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/unit/test_telethon_proxy.py:22: in _proxy
+    return importlib.import_module("vk_topic_bridge.infrastructure.telegram.proxy")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.telegram.proxy'
+import_ = <function _gcd_import at 0x71b68b38be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.proxy'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+_______ test_malformed_socks5_url_raises_value_error[socks5://127.0.0.1] _______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71b67b68ec10>
+url = 'socks5://127.0.0.1'
+
+    @pytest.mark.parametrize(
+        "url",
+        [
+            "socks5://",
+            "socks5://127.0.0.1",
+            "socks5://127.0.0.1:not-a-port",
+        ],
+    )
+    def test_malformed_socks5_url_raises_value_error(
+        monkeypatch: pytest.MonkeyPatch, url: str
+    ) -> None:
+>       proxy = _proxy()
+                ^^^^^^^^
+
+tests/unit/test_telethon_proxy.py:109: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/unit/test_telethon_proxy.py:22: in _proxy
+    return importlib.import_module("vk_topic_bridge.infrastructure.telegram.proxy")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.telegram.proxy'
+import_ = <function _gcd_import at 0x71b68b38be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.proxy'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+_ test_malformed_socks5_url_raises_value_error[socks5://127.0.0.1:not-a-port] __
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71b67b68d400>
+url = 'socks5://127.0.0.1:not-a-port'
+
+    @pytest.mark.parametrize(
+        "url",
+        [
+            "socks5://",
+            "socks5://127.0.0.1",
+            "socks5://127.0.0.1:not-a-port",
+        ],
+    )
+    def test_malformed_socks5_url_raises_value_error(
+        monkeypatch: pytest.MonkeyPatch, url: str
+    ) -> None:
+>       proxy = _proxy()
+                ^^^^^^^^
+
+tests/unit/test_telethon_proxy.py:109: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/unit/test_telethon_proxy.py:22: in _proxy
+    return importlib.import_module("vk_topic_bridge.infrastructure.telegram.proxy")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'vk_topic_bridge.infrastructure.telegram.proxy'
+import_ = <function _gcd_import at 0x71b68b38be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'vk_topic_bridge.infrastructure.telegram.proxy'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+=========================== short test summary info ============================
+FAILED tests/integration/telegram/test_chat_access.py::test_forum_channel_reports_numeric_entity_id_and_forum_flag
+FAILED tests/integration/telegram/test_chat_access.py::test_channel_without_forum_flag_reports_false
+FAILED tests/integration/telegram/test_chat_access.py::test_plain_chat_reports_false_forum
+FAILED tests/integration/telegram/test_chat_access.py::test_unresolvable_entity_raises_recoverable_error
+FAILED tests/integration/telegram/test_chat_access.py::test_rpc_failure_raises_recoverable_error
+FAILED tests/integration/telegram/test_chat_access.py::test_is_authorized_and_get_me_proxy_to_client
+FAILED tests/integration/telegram/test_topic_mapper.py::test_general_topic_maps_to_none_id_with_general_flag
+FAILED tests/integration/telegram/test_topic_mapper.py::test_regular_topic_keeps_numeric_id_and_flags
+FAILED tests/integration/telegram/test_topic_mapper.py::test_two_pages_are_concatenated_in_order_and_cursor_follows_last_topic
+FAILED tests/integration/telegram/test_topic_mapper.py::test_repeated_page_stops_pagination_without_reprocessing
+FAILED tests/unit/test_telethon_proxy.py::test_direct_transport_returns_no_kwargs
+FAILED tests/unit/test_telethon_proxy.py::test_mtproxy_transport_uses_tcp_mtproxy_connection_and_plain_tuple
+FAILED tests/unit/test_telethon_proxy.py::test_socks5_transport_builds_telethon_dict_form
+FAILED tests/unit/test_telethon_proxy.py::test_socks5h_transport_decodes_percent_encoded_credentials
+FAILED tests/unit/test_telethon_proxy.py::test_malformed_socks5_url_raises_value_error[socks5://]
+FAILED tests/unit/test_telethon_proxy.py::test_malformed_socks5_url_raises_value_error[socks5://127.0.0.1]
+FAILED tests/unit/test_telethon_proxy.py::test_malformed_socks5_url_raises_value_error[socks5://127.0.0.1:not-a-port]
+17 failed, 293 passed in 3.99s
+
+# NOTE: ${PIPESTATUS[0]} is bash-only and was empty under the interactive zsh shell.
+# The exact command above collected the whole suite because repo addopts ends in bare
+# `--cov` (nargs='?'), which consumes the FIRST positional path; result: 17 failed, 293 passed.
+# Corrected-order RED re-run (flags before paths, all three task-7 test files, modules absent):
+# Corrected RED re-run output:
+# FAILED tests/integration/telegram/test_chat_access.py::test_channel_without_forum_flag_reports_false
+# FAILED tests/integration/telegram/test_chat_access.py::test_plain_chat_reports_false_forum
+# FAILED tests/integration/telegram/test_chat_access.py::test_unresolvable_entity_raises_recoverable_error
+# FAILED tests/integration/telegram/test_chat_access.py::test_rpc_failure_raises_recoverable_error
+# FAILED tests/integration/telegram/test_chat_access.py::test_is_authorized_and_get_me_proxy_to_client
+# 17 failed in 0.87s
+# EXIT=1
