@@ -1,0 +1,19 @@
+F
+=================================== FAILURES ===================================
+____________________ test_reserved_to_send_started_is_legal ____________________
+
+    def test_reserved_to_send_started_is_legal() -> None:
+        assert (
+>           delivery_policy.is_legal_transition(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                PublicationStatus.RESERVED, PublicationStatus.SEND_STARTED
+            )
+            is True
+        )
+E       AttributeError: module 'vk_topic_bridge.domain.policies.delivery_policy' has no attribute 'is_legal_transition'
+
+tests/unit/domain/test_delivery_policy.py:11: AttributeError
+=========================== short test summary info ============================
+FAILED tests/unit/domain/test_delivery_policy.py::test_reserved_to_send_started_is_legal
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed in 0.02s

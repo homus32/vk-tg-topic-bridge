@@ -1,0 +1,27 @@
+..F
+=================================== FAILURES ===================================
+___________ test_migration_from_base_to_head_creates_expected_tables ___________
+
+db_path = PosixPath('/tmp/pytest-of-homus/pytest-5/test_migration_from_base_to_he0/migration.db')
+
+    def test_migration_from_base_to_head_creates_expected_tables(db_path: Path) -> None:
+        _upgrade()
+    
+>       assert _table_names(db_path) >= PRODUCT_TABLES | {"alembic_version"}
+E       AssertionError: assert {'alembic_version'} >= frozenset({'a...pic_aliases'})
+E         
+E         Extra items in the right set:
+E         'vk_topic_aliases'
+E         'bridge_settings'
+E         'delivery_records'
+E         'telegram_topics'
+
+tests/integration/db/test_migrations.py:121: AssertionError
+----------------------------- Captured stderr call -----------------------------
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+=========================== short test summary info ============================
+FAILED tests/integration/db/test_migrations.py::test_migration_from_base_to_head_creates_expected_tables
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 2 passed in 0.50s
+EXIT=1

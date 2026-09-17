@@ -1,0 +1,209 @@
+........................................................................ [ 40%]
+........................................................................ [ 81%]
+................................/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/coverage/inorout.py:558: CoverageWarning: Module tests/unit/test_config.py was never imported. (module-not-imported); see https://coverage.readthedocs.io/en/7.16.1/messages.html#warning-module-not-imported
+  self.warn(f"Module {pkg} was never imported.", slug="module-not-imported")
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/coverage/control.py:967: CoverageWarning: No data was collected. (no-data-collected); see https://coverage.readthedocs.io/en/7.16.1/messages.html#warning-no-data-collected
+  self._warn("No data was collected.", slug="no-data-collected")
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/pytest_cov/plugin.py:366: CovReportWarning: Failed to generate report: No data to report.
+
+  warnings.warn(CovReportWarning(message), stacklevel=1)
+
+WARNING: Failed to generate report: No data to report.
+
+                                                                         [100%]
+=============================== warnings summary ===============================
+tests/integration/db/test_migrations.py::test_upgrade_head_is_idempotent
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/threading.py:301: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f66e8f43d30>
+    if hasattr(lock, '_release_save'):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/integration/db/test_migrations.py::test_general_topic_partial_index_only_covers_general_rows
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/configparser.py:1077: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f66e8f93f10>
+    for st.lineno, line in enumerate(map(self._comments.wrap, fp), start=1):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/integration/db/test_migrations.py::test_general_topic_partial_index_only_covers_general_rows
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/configparser.py:1077: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f66e8f93790>
+    for st.lineno, line in enumerate(map(self._comments.wrap, fp), start=1):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/integration/db/test_migrations.py::test_general_topic_partial_index_only_covers_general_rows
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/configparser.py:1077: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f66ea37af20>
+    for st.lineno, line in enumerate(map(self._comments.wrap, fp), start=1):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/integration/db/test_migrations.py::test_general_topic_partial_index_only_covers_general_rows
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/configparser.py:1077: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f66e8f931f0>
+    for st.lineno, line in enumerate(map(self._comments.wrap, fp), start=1):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/integration/db/test_migrations.py::test_partial_unique_index_blocks_second_general_topic
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/schema.py:2443: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f66e98331f0>
+    if fk_key in self.table.metadata._fk_memos:
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/integration/db/test_migrations.py::test_partial_unique_index_allows_general_topic_in_another_chat
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/alembic/operations/ops.py:1161: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f66ea37ae30>
+    def __init__(
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/integration/db/test_migrations.py::test_partial_unique_index_allows_general_topic_in_another_chat
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/alembic/operations/ops.py:1161: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f66e8e1a110>
+    def __init__(
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/integration/db/test_migrations.py::test_alias_unique_per_user_and_normalized_alias
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/typing.py:399: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f66e8f92020>
+    return _caches[func](*args, **kwds)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/integration/db/test_migrations.py::test_alias_unique_per_user_and_normalized_alias
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/typing.py:399: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f66e8e1a890>
+    return _caches[func](*args, **kwds)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/integration/db/test_migrations.py::test_alias_unique_per_user_and_normalized_alias
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/typing.py:399: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f66e8e1a7a0>
+    return _caches[func](*args, **kwds)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/integration/db/test_migrations.py::test_alias_unique_per_user_and_topic
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/visitors.py:126: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f66e8e18a90>
+    def _compiler_dispatch(
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/integration/db/test_migrations.py::test_alias_unique_per_user_and_topic
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/visitors.py:126: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f66e8e1af20>
+    def _compiler_dispatch(
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/integration/db/test_migrations.py::test_delivery_records_defaults
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/schema.py:4962: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f66e8e1ba60>
+    def __init__(
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/integration/db/test_migrations.py::test_delivery_records_defaults
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/schema.py:4962: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f66e8e1bf10>
+    def __init__(
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/integration/db/test_migrations.py::test_delivery_source_key_is_unique
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/util/langhelpers.py:1308: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f66e8e19d50>
+    def oneshot(*args, **kw):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/integration/db/test_migrations.py::test_delivery_source_key_is_unique
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/util/langhelpers.py:1308: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f66e8e1b100>
+    def oneshot(*args, **kw):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/integration/db/test_migrations.py::test_publication_status_accepts_known_statuses[reserved]
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/schema.py:1170: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f66e8d8c040>
+    @property
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/integration/db/test_migrations.py::test_publication_status_accepts_known_statuses[reserved]
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/sqlalchemy/sql/schema.py:1170: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f66e8d8c5e0>
+    @property
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/pydantic/_internal/_generate_schema.py:997: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f66e8d8c7c0>
+    args = tuple(self._resolve_forward_ref(a) if isinstance(a, ForwardRef) else a for a in args)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/pydantic/_internal/_generate_schema.py:997: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f66e8d8c130>
+    args = tuple(self._resolve_forward_ref(a) if isinstance(a, ForwardRef) else a for a in args)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/pydantic/_internal/_generate_schema.py:997: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f66e8d8cf40>
+    args = tuple(self._resolve_forward_ref(a) if isinstance(a, ForwardRef) else a for a in args)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/pydantic/_internal/_generate_schema.py:997: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f66e8d8dd50>
+    args = tuple(self._resolve_forward_ref(a) if isinstance(a, ForwardRef) else a for a in args)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/pydantic/_internal/_generate_schema.py:997: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f66e8cbc040>
+    args = tuple(self._resolve_forward_ref(a) if isinstance(a, ForwardRef) else a for a in args)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/pydantic/_internal/_generate_schema.py:997: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f66e8cbd030>
+    args = tuple(self._resolve_forward_ref(a) if isinstance(a, ForwardRef) else a for a in args)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/pydantic/_internal/_generate_schema.py:997: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f66e8cbcf40>
+    args = tuple(self._resolve_forward_ref(a) if isinstance(a, ForwardRef) else a for a in args)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/pydantic/_internal/_generate_schema.py:997: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f66e8cbce50>
+    args = tuple(self._resolve_forward_ref(a) if isinstance(a, ForwardRef) else a for a in args)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/pydantic/_internal/_generate_schema.py:997: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f66e8bdc040>
+    args = tuple(self._resolve_forward_ref(a) if isinstance(a, ForwardRef) else a for a in args)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/pydantic/_internal/_generate_schema.py:997: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f66e8bdc5e0>
+    args = tuple(self._resolve_forward_ref(a) if isinstance(a, ForwardRef) else a for a in args)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/pydantic/_internal/_generate_schema.py:997: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f66e8bdc220>
+    args = tuple(self._resolve_forward_ref(a) if isinstance(a, ForwardRef) else a for a in args)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/pydantic/_internal/_generate_schema.py:997: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f66e8bdd120>
+    args = tuple(self._resolve_forward_ref(a) if isinstance(a, ForwardRef) else a for a in args)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/pydantic/_internal/_generate_schema.py:997: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f66e8af0040>
+    args = tuple(self._resolve_forward_ref(a) if isinstance(a, ForwardRef) else a for a in args)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+176 passed, 32 warnings in 6.25s
+08878d3

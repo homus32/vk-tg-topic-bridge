@@ -1,0 +1,16 @@
+F
+=================================== FAILURES ===================================
+____________________ test_all_only_with_toggle_on_forwards _____________________
+
+    def test_all_only_with_toggle_on_forwards() -> None:
+>       decision = forwarding_policy.decide(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^
+            "@all", auto_forward_all=True, auto_forward_hashtags=False
+        )
+E       AttributeError: module 'vk_topic_bridge.domain.policies.forwarding_policy' has no attribute 'decide'
+
+tests/unit/domain/test_forwarding_policy.py:37: AttributeError
+=========================== short test summary info ============================
+FAILED tests/unit/domain/test_forwarding_policy.py::test_all_only_with_toggle_on_forwards
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed in 0.05s
