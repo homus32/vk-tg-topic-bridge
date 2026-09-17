@@ -189,5 +189,5 @@ Your next move: Работа выполнена и верифицирована 
 - [x] `.env.example` — 18 пустых ключей без секретов; `.env`, runtime DB, логи, Telethon session игнорируются; `uv.lock` не игнорируется.
 - [x] Scope protection: нет `config.py` / `logger.py` / API clients / ORM / handlers / PM2; нет network-dependent тестов.
 - [x] `make check` — exit=0 (главный гейт Stage 1).
-- [ ] Коммит — ожидает явного запроса пользователя (не входит в критерии завершения работ без запроса).
+- [x] Коммит — выполнен post-factum: `abcd88c` (feat bootstrap), `4313f76` (.env.example, gitignore БД); пункт закрыт.
 

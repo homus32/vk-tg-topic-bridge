@@ -1,6 +1,7 @@
 .idea/
 .serena/
 .opencode/
+.vkbottle/
 
 .venv/
 __pycache__/
@@ -43,4 +44,5 @@ runtime/telethon/*
 .idea/*
 
 vk_topic_bridge.db
+vk_topic_bridge.db-*
 vk_topic_bridge.session
