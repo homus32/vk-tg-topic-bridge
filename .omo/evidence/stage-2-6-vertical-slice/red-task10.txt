@@ -1,0 +1,370 @@
+........................................................................ [ 22%]
+........................................................................ [ 44%]
+.................FFFFFFFFFFFFFFFF....................................... [ 66%]
+........................................................................ [ 88%]
+......................................                                   [100%]
+=================================== FAILURES ===================================
+_________ test_refresh_replaces_persisted_topics_with_discovered_ones __________
+
+    async def test_refresh_replaces_persisted_topics_with_discovered_ones() -> None:
+        harness = _build(topics=[GENERAL_TOPIC, NEWS_TOPIC])
+    
+>       topics = await harness.use_case.refresh(CHAT_ID)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/application/test_refresh_topics.py:64: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <vk_topic_bridge.application.admin.refresh_topics.RefreshTopics object at 0x78a0b5942e40>
+chat_id = -1001234567890
+
+    async def refresh(self, chat_id: int) -> list[TopicInfo]:
+>       raise NotImplementedError
+E       NotImplementedError
+
+src/vk_topic_bridge/application/admin/refresh_topics.py:16: NotImplementedError
+_________________ test_non_forum_chat_is_a_provisioning_error __________________
+
+    async def test_non_forum_chat_is_a_provisioning_error() -> None:
+        harness = _build(is_forum=False, topics=[NEWS_TOPIC])
+    
+        with pytest.raises(ProvisioningError):
+>           await harness.use_case.refresh(CHAT_ID)
+
+tests/unit/application/test_refresh_topics.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <vk_topic_bridge.application.admin.refresh_topics.RefreshTopics object at 0x78a0b41b0690>
+chat_id = -1001234567890
+
+    async def refresh(self, chat_id: int) -> list[TopicInfo]:
+>       raise NotImplementedError
+E       NotImplementedError
+
+src/vk_topic_bridge/application/admin/refresh_topics.py:16: NotImplementedError
+____ test_empty_topic_list_is_a_provisioning_error_and_nothing_is_persisted ____
+
+    async def test_empty_topic_list_is_a_provisioning_error_and_nothing_is_persisted() -> None:
+        harness = _build(topics=[])
+    
+        with pytest.raises(ProvisioningError):
+>           await harness.use_case.refresh(CHAT_ID)
+
+tests/unit/application/test_refresh_topics.py:86: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <vk_topic_bridge.application.admin.refresh_topics.RefreshTopics object at 0x78a0b417ae90>
+chat_id = -1001234567890
+
+    async def refresh(self, chat_id: int) -> list[TopicInfo]:
+>       raise NotImplementedError
+E       NotImplementedError
+
+src/vk_topic_bridge/application/admin/refresh_topics.py:16: NotImplementedError
+_______________ test_register_persists_chat_and_refreshed_topics _______________
+
+    async def test_register_persists_chat_and_refreshed_topics() -> None:
+        harness = _build(FULL_CAPABILITIES, [NEWS_TOPIC])
+    
+>       result = await harness.use_case.execute(CHAT_ID, CHAT_TITLE)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/application/test_register_chat.py:89: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <vk_topic_bridge.application.admin.register_chat.RegisterChat object at 0x78a0b5940ec0>
+chat_id = -1001234567890, title = 'Тестовый чат'
+
+    async def execute(self, chat_id: int, title: str | None) -> RegisterChatResult:
+>       raise NotImplementedError
+E       NotImplementedError
+
+src/vk_topic_bridge/application/admin/register_chat.py:38: NotImplementedError
+______ test_register_lists_every_missing_capability_and_persists_nothing _______
+
+    async def test_register_lists_every_missing_capability_and_persists_nothing() -> None:
+        harness = _build(CAPABILITIES_WITH_HOLES, [NEWS_TOPIC])
+    
+        with pytest.raises(MissingCapabilitiesError) as excinfo:
+>           await harness.use_case.execute(CHAT_ID, CHAT_TITLE)
+
+tests/unit/application/test_register_chat.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <vk_topic_bridge.application.admin.register_chat.RegisterChat object at 0x78a0b4179e50>
+chat_id = -1001234567890, title = 'Тестовый чат'
+
+    async def execute(self, chat_id: int, title: str | None) -> RegisterChatResult:
+>       raise NotImplementedError
+E       NotImplementedError
+
+src/vk_topic_bridge/application/admin/register_chat.py:38: NotImplementedError
+______________ test_register_keeps_chat_when_topic_refresh_fails _______________
+
+caplog = <_pytest.logging.LogCaptureFixture object at 0x78a0b5941010>
+
+    async def test_register_keeps_chat_when_topic_refresh_fails(
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        harness = _build(FULL_CAPABILITIES, [])
+    
+        with caplog.at_level(logging.WARNING):
+>           result = await harness.use_case.execute(CHAT_ID, CHAT_TITLE)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/application/test_register_chat.py:123: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <vk_topic_bridge.application.admin.register_chat.RegisterChat object at 0x78a0b4179810>
+chat_id = -1001234567890, title = 'Тестовый чат'
+
+    async def execute(self, chat_id: int, title: str | None) -> RegisterChatResult:
+>       raise NotImplementedError
+E       NotImplementedError
+
+src/vk_topic_bridge/application/admin/register_chat.py:38: NotImplementedError
+_______________ test_register_does_not_require_can_manage_topics _______________
+
+    async def test_register_does_not_require_can_manage_topics() -> None:
+        # ChatCapabilities has no can_manage_topics field: registration only requires the
+        # publication capabilities, so a clean missing list must succeed (D21).
+        harness = _build(FULL_CAPABILITIES, [NEWS_TOPIC])
+    
+>       result = await harness.use_case.execute(CHAT_ID, CHAT_TITLE)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/application/test_register_chat.py:144: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <vk_topic_bridge.application.admin.register_chat.RegisterChat object at 0x78a0b8a895b0>
+chat_id = -1001234567890, title = 'Тестовый чат'
+
+    async def execute(self, chat_id: int, title: str | None) -> RegisterChatResult:
+>       raise NotImplementedError
+E       NotImplementedError
+
+src/vk_topic_bridge/application/admin/register_chat.py:38: NotImplementedError
+____________ test_topic_is_persisted_only_after_positive_test_send _____________
+
+    async def test_topic_is_persisted_only_after_positive_test_send() -> None:
+        harness = _build()
+    
+>       message_id = await harness.use_case.execute(CHAT_ID, NEWS_TOPIC, RUN_ID)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/application/test_select_destination.py:70: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <vk_topic_bridge.application.admin.select_destination.SelectDestination object at 0x78a0b5941be0>
+chat_id = -1001234567890
+topic = TopicInfo(topic_id=7, title='Новости', is_general=False, is_closed=False, is_hidden=False)
+run_id = 'gate-topic-run-1'
+
+    async def execute(self, chat_id: int, topic: TopicInfo, run_id: str) -> int:
+>       raise NotImplementedError
+E       NotImplementedError
+
+src/vk_topic_bridge/application/admin/select_destination.py:16: NotImplementedError
+____________ test_failed_test_send_propagates_and_persists_no_topic ____________
+
+    async def test_failed_test_send_propagates_and_persists_no_topic() -> None:
+        harness = _build(failure=RuntimeError("bot api rejected the test send"))
+    
+>       with pytest.raises(RuntimeError, match="rejected the test send"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'rejected the test send'
+E         Actual message: ''
+
+tests/unit/application/test_select_destination.py:84: AssertionError
+________ test_non_positive_test_send_message_id_is_a_provisioning_error ________
+
+    async def test_non_positive_test_send_message_id_is_a_provisioning_error() -> None:
+        harness = _build(message_id=0)
+    
+        with pytest.raises(ProvisioningError):
+>           await harness.use_case.execute(CHAT_ID, NEWS_TOPIC, RUN_ID)
+
+tests/unit/application/test_select_destination.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <vk_topic_bridge.application.admin.select_destination.SelectDestination object at 0x78a0b41782d0>
+chat_id = -1001234567890
+topic = TopicInfo(topic_id=7, title='Новости', is_general=False, is_closed=False, is_hidden=False)
+run_id = 'gate-topic-run-1'
+
+    async def execute(self, chat_id: int, topic: TopicInfo, run_id: str) -> int:
+>       raise NotImplementedError
+E       NotImplementedError
+
+src/vk_topic_bridge/application/admin/select_destination.py:16: NotImplementedError
+_______________________ test_wall_topic_is_never_touched _______________________
+
+    async def test_wall_topic_is_never_touched() -> None:
+        harness = _build()
+        harness.settings.state = replace(harness.settings.state, telegram_wall_topic_id=99)
+    
+>       await harness.use_case.execute(CHAT_ID, NEWS_TOPIC, RUN_ID)
+
+tests/unit/application/test_select_destination.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <vk_topic_bridge.application.admin.select_destination.SelectDestination object at 0x78a0b8ac3490>
+chat_id = -1001234567890
+topic = TopicInfo(topic_id=7, title='Новости', is_general=False, is_closed=False, is_hidden=False)
+run_id = 'gate-topic-run-1'
+
+    async def execute(self, chat_id: int, topic: TopicInfo, run_id: str) -> int:
+>       raise NotImplementedError
+E       NotImplementedError
+
+src/vk_topic_bridge/application/admin/select_destination.py:16: NotImplementedError
+______ test_toggle_updates_only_the_selected_field[all-auto_forward_all] _______
+
+kind = <ToggleKind.ALL: 'all'>, field = 'auto_forward_all'
+
+    @pytest.mark.parametrize(
+        ("kind", "field"),
+        [
+            (ToggleKind.ALL, "auto_forward_all"),
+            (ToggleKind.HASHTAGS, "auto_forward_hashtags"),
+            (ToggleKind.WALL, "auto_forward_wall"),
+        ],
+    )
+    async def test_toggle_updates_only_the_selected_field(kind: ToggleKind, field: str) -> None:
+        harness = _build()
+    
+>       state = await harness.use_case.execute(kind, False)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/application/test_toggle_settings.py:40: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <vk_topic_bridge.application.admin.toggle_settings.ToggleSettings object at 0x78a0b59434d0>
+kind = <ToggleKind.ALL: 'all'>, value = False
+
+    async def execute(self, kind: ToggleKind, value: bool) -> BridgeSettingsState:
+>       raise NotImplementedError
+E       NotImplementedError
+
+src/vk_topic_bridge/application/admin/toggle_settings.py:14: NotImplementedError
+_ test_toggle_updates_only_the_selected_field[hashtags-auto_forward_hashtags] __
+
+kind = <ToggleKind.HASHTAGS: 'hashtags'>, field = 'auto_forward_hashtags'
+
+    @pytest.mark.parametrize(
+        ("kind", "field"),
+        [
+            (ToggleKind.ALL, "auto_forward_all"),
+            (ToggleKind.HASHTAGS, "auto_forward_hashtags"),
+            (ToggleKind.WALL, "auto_forward_wall"),
+        ],
+    )
+    async def test_toggle_updates_only_the_selected_field(kind: ToggleKind, field: str) -> None:
+        harness = _build()
+    
+>       state = await harness.use_case.execute(kind, False)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/application/test_toggle_settings.py:40: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <vk_topic_bridge.application.admin.toggle_settings.ToggleSettings object at 0x78a0b412f4d0>
+kind = <ToggleKind.HASHTAGS: 'hashtags'>, value = False
+
+    async def execute(self, kind: ToggleKind, value: bool) -> BridgeSettingsState:
+>       raise NotImplementedError
+E       NotImplementedError
+
+src/vk_topic_bridge/application/admin/toggle_settings.py:14: NotImplementedError
+_____ test_toggle_updates_only_the_selected_field[wall-auto_forward_wall] ______
+
+kind = <ToggleKind.WALL: 'wall'>, field = 'auto_forward_wall'
+
+    @pytest.mark.parametrize(
+        ("kind", "field"),
+        [
+            (ToggleKind.ALL, "auto_forward_all"),
+            (ToggleKind.HASHTAGS, "auto_forward_hashtags"),
+            (ToggleKind.WALL, "auto_forward_wall"),
+        ],
+    )
+    async def test_toggle_updates_only_the_selected_field(kind: ToggleKind, field: str) -> None:
+        harness = _build()
+    
+>       state = await harness.use_case.execute(kind, False)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/application/test_toggle_settings.py:40: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <vk_topic_bridge.application.admin.toggle_settings.ToggleSettings object at 0x78a0b412efd0>
+kind = <ToggleKind.WALL: 'wall'>, value = False
+
+    async def execute(self, kind: ToggleKind, value: bool) -> BridgeSettingsState:
+>       raise NotImplementedError
+E       NotImplementedError
+
+src/vk_topic_bridge/application/admin/toggle_settings.py:14: NotImplementedError
+____________ test_toggle_setting_true_wins_over_a_preexisting_false ____________
+
+    async def test_toggle_setting_true_wins_over_a_preexisting_false() -> None:
+        harness = _build()
+        harness.settings.state = replace(harness.settings.state, auto_forward_all=False)
+    
+>       state = await harness.use_case.execute(ToggleKind.ALL, True)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/application/test_toggle_settings.py:52: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <vk_topic_bridge.application.admin.toggle_settings.ToggleSettings object at 0x78a0b8ac16e0>
+kind = <ToggleKind.ALL: 'all'>, value = True
+
+    async def execute(self, kind: ToggleKind, value: bool) -> BridgeSettingsState:
+>       raise NotImplementedError
+E       NotImplementedError
+
+src/vk_topic_bridge/application/admin/toggle_settings.py:14: NotImplementedError
+______________________ test_reset_restores_factory_state _______________________
+
+    async def test_reset_restores_factory_state() -> None:
+        harness = _build()
+        harness.settings.state = replace(
+            harness.settings.state,
+            telegram_chat_id=-100999,
+            telegram_messages_topic_id=7,
+            auto_forward_all=False,
+        )
+    
+>       state = await harness.use_case.reset()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/application/test_toggle_settings.py:66: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <vk_topic_bridge.application.admin.toggle_settings.ToggleSettings object at 0x78a0b8ac1f30>
+
+    async def reset(self) -> BridgeSettingsState:
+>       raise NotImplementedError
+E       NotImplementedError
+
+src/vk_topic_bridge/application/admin/toggle_settings.py:17: NotImplementedError
+=========================== short test summary info ============================
+FAILED tests/unit/application/test_refresh_topics.py::test_refresh_replaces_persisted_topics_with_discovered_ones
+FAILED tests/unit/application/test_refresh_topics.py::test_non_forum_chat_is_a_provisioning_error
+FAILED tests/unit/application/test_refresh_topics.py::test_empty_topic_list_is_a_provisioning_error_and_nothing_is_persisted
+FAILED tests/unit/application/test_register_chat.py::test_register_persists_chat_and_refreshed_topics
+FAILED tests/unit/application/test_register_chat.py::test_register_lists_every_missing_capability_and_persists_nothing
+FAILED tests/unit/application/test_register_chat.py::test_register_keeps_chat_when_topic_refresh_fails
+FAILED tests/unit/application/test_register_chat.py::test_register_does_not_require_can_manage_topics
+FAILED tests/unit/application/test_select_destination.py::test_topic_is_persisted_only_after_positive_test_send
+FAILED tests/unit/application/test_select_destination.py::test_failed_test_send_propagates_and_persists_no_topic
+FAILED tests/unit/application/test_select_destination.py::test_non_positive_test_send_message_id_is_a_provisioning_error
+FAILED tests/unit/application/test_select_destination.py::test_wall_topic_is_never_touched
+FAILED tests/unit/application/test_toggle_settings.py::test_toggle_updates_only_the_selected_field[all-auto_forward_all]
+FAILED tests/unit/application/test_toggle_settings.py::test_toggle_updates_only_the_selected_field[hashtags-auto_forward_hashtags]
+FAILED tests/unit/application/test_toggle_settings.py::test_toggle_updates_only_the_selected_field[wall-auto_forward_wall]
+FAILED tests/unit/application/test_toggle_settings.py::test_toggle_setting_true_wins_over_a_preexisting_false
+FAILED tests/unit/application/test_toggle_settings.py::test_reset_restores_factory_state
+16 failed, 310 passed in 6.63s

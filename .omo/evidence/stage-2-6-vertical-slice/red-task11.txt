@@ -1,0 +1,460 @@
+........................................................................ [ 21%]
+........................................................................ [ 42%]
+........................................................................ [ 63%]
+..........................FFFFFFFFFFFF.................................. [ 85%]
+..................................................                       [100%]
+=================================== FAILURES ===================================
+___________ test_import_executes_no_prompts_and_constructs_no_client ___________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7371a9372200>
+
+    def test_import_executes_no_prompts_and_constructs_no_client(
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        prompt_calls: list[str] = []
+        constructions: list[tuple[object, ...]] = []
+    
+        def forbidden_input(prompt: str = "") -> str:
+            prompt_calls.append(prompt)
+            raise AssertionError("input() must not run while importing authorize_telegram")
+    
+        def forbidden_getpass(prompt: str = "", stream: object = None) -> str:
+            prompt_calls.append(prompt)
+            raise AssertionError("getpass() must not run while importing authorize_telegram")
+    
+        def forbidden_init(self: object, *args: object, **kwargs: object) -> None:
+            constructions.append(args)
+            raise AssertionError("TelegramClient must not be constructed while importing")
+    
+        monkeypatch.setattr(builtins, "input", forbidden_input)
+        monkeypatch.setattr(getpass, "getpass", forbidden_getpass)
+        monkeypatch.setattr(TelegramClient, "__init__", forbidden_init)
+    
+>       module = _load_fresh_module()
+                 ^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/test_authorize_telegram.py:136: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/unit/test_authorize_telegram.py:99: in _load_fresh_module
+    loader.exec_module(module)
+<frozen importlib._bootstrap_external>:755: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:892: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x7371a935cad0>
+path = '/home/homus/PycharmProjects/vk-topic-bridge/authorize_telegram.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/home/homus/PycharmProjects/vk-topic-bridge/authorize_telegram.py'
+
+<frozen importlib._bootstrap_external>:950: FileNotFoundError
+__________ test_session_file_for_appends_session_suffix_under_runtime __________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7371a93702f0>
+
+    def test_session_file_for_appends_session_suffix_under_runtime(
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+>       module = _module()
+                 ^^^^^^^^^
+
+tests/unit/test_authorize_telegram.py:147: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/unit/test_authorize_telegram.py:84: in _module
+    return importlib.import_module("authorize_telegram")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'authorize_telegram', import_ = <function _gcd_import at 0x7371b4f8be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'authorize_telegram'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+________ test_session_file_for_appends_without_truncating_dotted_names _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7371a93330e0>
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-146/test_session_file_for_appends_0')
+
+    def test_session_file_for_appends_without_truncating_dotted_names(
+        monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+>       module = _module()
+                 ^^^^^^^^^
+
+tests/unit/test_authorize_telegram.py:159: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/unit/test_authorize_telegram.py:84: in _module
+    return importlib.import_module("authorize_telegram")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'authorize_telegram', import_ = <function _gcd_import at 0x7371b4f8be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'authorize_telegram'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+_____________ test_prepare_fresh_session_returns_none_when_absent ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-146/test_prepare_fresh_session_ret0')
+
+    def test_prepare_fresh_session_returns_none_when_absent(tmp_path: Path) -> None:
+>       module = _module()
+                 ^^^^^^^^^
+
+tests/unit/test_authorize_telegram.py:166: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/unit/test_authorize_telegram.py:84: in _module
+    return importlib.import_module("authorize_telegram")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'authorize_telegram', import_ = <function _gcd_import at 0x7371b4f8be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'authorize_telegram'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+_______ test_prepare_fresh_session_backs_up_session_and_removes_sidecars _______
+
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-146/test_prepare_fresh_session_bac0')
+
+    def test_prepare_fresh_session_backs_up_session_and_removes_sidecars(tmp_path: Path) -> None:
+>       module = _module()
+                 ^^^^^^^^^
+
+tests/unit/test_authorize_telegram.py:174: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/unit/test_authorize_telegram.py:84: in _module
+    return importlib.import_module("authorize_telegram")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'authorize_telegram', import_ = <function _gcd_import at 0x7371b4f8be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'authorize_telegram'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+____________ test_build_client_passes_resolved_proxy_kwargs[direct] ____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7371a9373000>
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-146/test_build_client_passes_resol0')
+env = {}
+
+    @pytest.mark.parametrize(
+        "env",
+        [
+            pytest.param({}, id="direct"),
+            pytest.param({"SOCKS5_PROXY_URL": "socks5://127.0.0.1:10809"}, id="socks5"),
+            pytest.param(
+                {
+                    "TELEGRAM_MTPROXY_SERVER": "127.0.0.1",
+                    "TELEGRAM_MTPROXY_PORT": "1443",
+                    "TELEGRAM_MTPROXY_SECRET": MTPROXY_SECRET,
+                },
+                id="mtproxy",
+            ),
+        ],
+    )
+    def test_build_client_passes_resolved_proxy_kwargs(
+        monkeypatch: pytest.MonkeyPatch, tmp_path: Path, env: dict[str, str]
+    ) -> None:
+>       module = _module()
+                 ^^^^^^^^^
+
+tests/unit/test_authorize_telegram.py:214: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/unit/test_authorize_telegram.py:84: in _module
+    return importlib.import_module("authorize_telegram")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'authorize_telegram', import_ = <function _gcd_import at 0x7371b4f8be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'authorize_telegram'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+____________ test_build_client_passes_resolved_proxy_kwargs[socks5] ____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7371a9372970>
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-146/test_build_client_passes_resol1')
+env = {'SOCKS5_PROXY_URL': 'socks5://127.0.0.1:10809'}
+
+    @pytest.mark.parametrize(
+        "env",
+        [
+            pytest.param({}, id="direct"),
+            pytest.param({"SOCKS5_PROXY_URL": "socks5://127.0.0.1:10809"}, id="socks5"),
+            pytest.param(
+                {
+                    "TELEGRAM_MTPROXY_SERVER": "127.0.0.1",
+                    "TELEGRAM_MTPROXY_PORT": "1443",
+                    "TELEGRAM_MTPROXY_SECRET": MTPROXY_SECRET,
+                },
+                id="mtproxy",
+            ),
+        ],
+    )
+    def test_build_client_passes_resolved_proxy_kwargs(
+        monkeypatch: pytest.MonkeyPatch, tmp_path: Path, env: dict[str, str]
+    ) -> None:
+>       module = _module()
+                 ^^^^^^^^^
+
+tests/unit/test_authorize_telegram.py:214: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/unit/test_authorize_telegram.py:84: in _module
+    return importlib.import_module("authorize_telegram")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'authorize_telegram', import_ = <function _gcd_import at 0x7371b4f8be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'authorize_telegram'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+___________ test_build_client_passes_resolved_proxy_kwargs[mtproxy] ____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7371a920f000>
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-146/test_build_client_passes_resol2')
+env = {'TELEGRAM_MTPROXY_SERVER': '127.0.0.1', 'TELEGRAM_MTPROXY_PORT': '1443', 'TELEGRAM_MTPROXY_SECRET': 'dd00000000000000000000000000000000'}
+
+    @pytest.mark.parametrize(
+        "env",
+        [
+            pytest.param({}, id="direct"),
+            pytest.param({"SOCKS5_PROXY_URL": "socks5://127.0.0.1:10809"}, id="socks5"),
+            pytest.param(
+                {
+                    "TELEGRAM_MTPROXY_SERVER": "127.0.0.1",
+                    "TELEGRAM_MTPROXY_PORT": "1443",
+                    "TELEGRAM_MTPROXY_SECRET": MTPROXY_SECRET,
+                },
+                id="mtproxy",
+            ),
+        ],
+    )
+    def test_build_client_passes_resolved_proxy_kwargs(
+        monkeypatch: pytest.MonkeyPatch, tmp_path: Path, env: dict[str, str]
+    ) -> None:
+>       module = _module()
+                 ^^^^^^^^^
+
+tests/unit/test_authorize_telegram.py:214: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/unit/test_authorize_telegram.py:84: in _module
+    return importlib.import_module("authorize_telegram")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'authorize_telegram', import_ = <function _gcd_import at 0x7371b4f8be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'authorize_telegram'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+_________ test_main_authorizes_and_reports_only_non_sensitive_identity _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7371a920e0b0>
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-146/test_main_authorizes_and_repor0')
+capsys = <_pytest.capture.CaptureFixture object at 0x7371aaea3e00>
+
+    async def test_main_authorizes_and_reports_only_non_sensitive_identity(
+        monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+>       module, settings, session_path = _install_module(monkeypatch, tmp_path)
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/test_authorize_telegram.py:245: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/unit/test_authorize_telegram.py:106: in _install_module
+    module = _module()
+             ^^^^^^^^^
+tests/unit/test_authorize_telegram.py:84: in _module
+    return importlib.import_module("authorize_telegram")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'authorize_telegram', import_ = <function _gcd_import at 0x7371b4f8be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'authorize_telegram'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+___________ test_main_returns_failure_when_account_is_not_authorized ___________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7371a920ee40>
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-146/test_main_returns_failure_when0')
+capsys = <_pytest.capture.CaptureFixture object at 0x7371a93c5950>
+
+    async def test_main_returns_failure_when_account_is_not_authorized(
+        monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+>       module, _settings_obj, _session_path = _install_module(monkeypatch, tmp_path)
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/test_authorize_telegram.py:285: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/unit/test_authorize_telegram.py:106: in _install_module
+    module = _module()
+             ^^^^^^^^^
+tests/unit/test_authorize_telegram.py:84: in _module
+    return importlib.import_module("authorize_telegram")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'authorize_telegram', import_ = <function _gcd_import at 0x7371b4f8be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'authorize_telegram'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+____________ test_main_reports_interrupted_input_without_traceback _____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7371a920ec80>
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-146/test_main_reports_interrupted_0')
+capsys = <_pytest.capture.CaptureFixture object at 0x7371a93c7b10>
+
+    async def test_main_reports_interrupted_input_without_traceback(
+        monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+>       module, _settings_obj, _session_path = _install_module(monkeypatch, tmp_path)
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/test_authorize_telegram.py:306: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/unit/test_authorize_telegram.py:106: in _install_module
+    module = _module()
+             ^^^^^^^^^
+tests/unit/test_authorize_telegram.py:84: in _module
+    return importlib.import_module("authorize_telegram")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'authorize_telegram', import_ = <function _gcd_import at 0x7371b4f8be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'authorize_telegram'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+_____________ test_main_reports_invalid_settings_without_traceback _____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7371a920f3f0>
+capsys = <_pytest.capture.CaptureFixture object at 0x7371adc7c770>
+
+    async def test_main_reports_invalid_settings_without_traceback(
+        monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+>       module = _module()
+                 ^^^^^^^^^
+
+tests/unit/test_authorize_telegram.py:327: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/unit/test_authorize_telegram.py:84: in _module
+    return importlib.import_module("authorize_telegram")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1398: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1371: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'authorize_telegram', import_ = <function _gcd_import at 0x7371b4f8be20>
+
+>   ???
+E   ModuleNotFoundError: No module named 'authorize_telegram'
+
+<frozen importlib._bootstrap>:1335: ModuleNotFoundError
+=========================== short test summary info ============================
+FAILED tests/unit/test_authorize_telegram.py::test_import_executes_no_prompts_and_constructs_no_client
+FAILED tests/unit/test_authorize_telegram.py::test_session_file_for_appends_session_suffix_under_runtime
+FAILED tests/unit/test_authorize_telegram.py::test_session_file_for_appends_without_truncating_dotted_names
+FAILED tests/unit/test_authorize_telegram.py::test_prepare_fresh_session_returns_none_when_absent
+FAILED tests/unit/test_authorize_telegram.py::test_prepare_fresh_session_backs_up_session_and_removes_sidecars
+FAILED tests/unit/test_authorize_telegram.py::test_build_client_passes_resolved_proxy_kwargs[direct]
+FAILED tests/unit/test_authorize_telegram.py::test_build_client_passes_resolved_proxy_kwargs[socks5]
+FAILED tests/unit/test_authorize_telegram.py::test_build_client_passes_resolved_proxy_kwargs[mtproxy]
+FAILED tests/unit/test_authorize_telegram.py::test_main_authorizes_and_reports_only_non_sensitive_identity
+FAILED tests/unit/test_authorize_telegram.py::test_main_returns_failure_when_account_is_not_authorized
+FAILED tests/unit/test_authorize_telegram.py::test_main_reports_interrupted_input_without_traceback
+FAILED tests/unit/test_authorize_telegram.py::test_main_reports_invalid_settings_without_traceback
+12 failed, 326 passed in 7.21s
