@@ -384,16 +384,31 @@ def test_session_path_cannot_escape_runtime_dir(monkeypatch: pytest.MonkeyPatch)
     assert Path(settings.TELEGRAM_SESSION_PATH) == RUNTIME_SESSION_DIR / "evil.session"
 
 
-def test_session_path_absolute_honored_as_is(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_session_path_absolute_inside_runtime_dir_is_accepted(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     config = _config()
+    runtime_dir = config.RUNTIME_SESSION_DIR.resolve()
 
-    _prepare_env(monkeypatch, TELEGRAM_SESSION_PATH="/srv/sessions/user.session")
+    _prepare_env(monkeypatch, TELEGRAM_SESSION_PATH=str(runtime_dir / "user.session"))
     with_suffix = config.Settings(_env_file=None)
-    assert Path(with_suffix.TELEGRAM_SESSION_PATH) == Path("/srv/sessions/user.session")
+    assert Path(with_suffix.TELEGRAM_SESSION_PATH) == runtime_dir / "user.session"
 
-    _prepare_env(monkeypatch, TELEGRAM_SESSION_PATH="/srv/sessions/raw")
+    _prepare_env(monkeypatch, TELEGRAM_SESSION_PATH=str(runtime_dir / "raw"))
     without_suffix = config.Settings(_env_file=None)
-    assert Path(without_suffix.TELEGRAM_SESSION_PATH) == Path("/srv/sessions/raw")
+    assert Path(without_suffix.TELEGRAM_SESSION_PATH) == runtime_dir / "raw.session"
+
+
+def test_session_path_absolute_outside_runtime_dir_is_rejected(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config = _config()
+    _prepare_env(monkeypatch, TELEGRAM_SESSION_PATH="/tmp/elsewhere/acc.session")
+
+    with pytest.raises(ValidationError) as excinfo:
+        config.Settings(_env_file=None)
+
+    assert "runtime/telethon" in str(excinfo.value)
 
 
 def test_log_file_uses_log_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:

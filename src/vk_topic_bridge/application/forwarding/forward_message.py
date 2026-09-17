@@ -154,7 +154,16 @@ class ForwardVkMessage:
             )
             await uow.commit()
         if not marked:
-            logger.warning("mark_published lost CAS for delivery %s", delivery_id)
+            # Another worker won the publication CAS: this send is unconfirmed, so neither
+            # the reaction nor the success outcome may claim it.
+            logger.error("mark_published lost CAS for delivery %s", delivery_id)
+            return ForwardOutcome(
+                published=False,
+                skipped=False,
+                reason="claim_lost",
+                delivery_id=delivery_id,
+                message_ids=result.message_ids,
+            )
 
         await self._ensure_reaction(source, delivery_id)
         return ForwardOutcome(

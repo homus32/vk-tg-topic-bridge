@@ -105,7 +105,9 @@ def _install_module(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, **env: str
 ) -> tuple[ModuleType, Settings, Path]:
     module = _module()
-    session_path = tmp_path / "account.session"
+    # Settings only accepts sessions under the CWD-scoped runtime/telethon directory.
+    monkeypatch.chdir(tmp_path)
+    session_path = tmp_path / "runtime" / "telethon" / "account.session"
     settings = _settings(monkeypatch, TELEGRAM_SESSION_PATH=str(session_path), **env)
     monkeypatch.setattr(module, "get_settings", lambda: settings)
     monkeypatch.setattr(module, "TelegramClient", _StubClient)
@@ -158,9 +160,11 @@ def test_session_file_for_appends_without_truncating_dotted_names(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     module = _module()
-    settings = _settings(monkeypatch, TELEGRAM_SESSION_PATH=str(tmp_path / "owner.account"))
+    monkeypatch.chdir(tmp_path)
+    scoped = tmp_path / "runtime" / "telethon" / "owner.account"
+    settings = _settings(monkeypatch, TELEGRAM_SESSION_PATH=str(scoped))
 
-    assert module.session_file_for(settings) == tmp_path / "owner.account.session"
+    assert module.session_file_for(settings) == scoped.with_name("owner.account.session")
 
 
 def test_prepare_fresh_session_returns_none_when_absent(tmp_path: Path) -> None:
@@ -215,7 +219,7 @@ def test_build_client_passes_resolved_proxy_kwargs(
 ) -> None:
     module = _module()
     settings = _settings(monkeypatch, **env)
-    session_path = tmp_path / "account.session"
+    session_path = tmp_path / "runtime" / "telethon" / "account.session"
     sentinel = object()
     calls: list[tuple[tuple[object, ...], dict[str, object]]] = []
 
@@ -245,6 +249,7 @@ async def test_main_authorizes_and_reports_only_non_sensitive_identity(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     module, settings, session_path = _install_module(monkeypatch, tmp_path)
+    session_path.parent.mkdir(parents=True, exist_ok=True)
     session_path.write_bytes(b"previous-account-session")
     sidecar = session_path.with_name(session_path.name + "-wal")
     sidecar.write_bytes(b"stale-sidecar")
@@ -264,7 +269,7 @@ async def test_main_authorizes_and_reports_only_non_sensitive_identity(
     assert client.start_kwargs["password"]() == PASSWORD_SECRET
     assert client.disconnected is True
     assert not session_path.exists()
-    assert len(list(tmp_path.glob("account.session.bak-*"))) == 1
+    assert len(list(session_path.parent.glob("account.session.bak-*"))) == 1
     assert not sidecar.exists()
 
     captured = capsys.readouterr()

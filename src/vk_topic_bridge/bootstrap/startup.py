@@ -19,12 +19,35 @@ from sqlalchemy import text
 from sqlalchemy.engine import Connection
 
 from config import Settings
+from logger import redact_secrets
 from vk_topic_bridge.application.dto.readiness import ReadinessState
 from vk_topic_bridge.bootstrap.container import AppContainer
 from vk_topic_bridge.domain.errors import FatalStartupError, FatalStartupReason
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _MIGRATIONS_DIR = _REPO_ROOT / "migrations"
+
+
+def _secret_values(settings: Settings) -> tuple[str, ...]:
+    """Secret values that may be embedded in a third-party exception message."""
+    values = [
+        settings.TELEGRAM_BOT_TOKEN.get_secret_value(),
+        settings.TELEGRAM_API_HASH.get_secret_value(),
+        settings.VK_GROUP_TOKEN.get_secret_value(),
+    ]
+    if settings.TELEGRAM_MTPROXY_SECRET is not None:
+        values.append(settings.TELEGRAM_MTPROXY_SECRET.get_secret_value())
+    return tuple(values)
+
+
+def _safe_detail(container_or_settings: AppContainer | Settings, exc: BaseException) -> str:
+    """Render an exception for ``FatalStartupError`` without leaking configured secrets."""
+    settings = (
+        container_or_settings.settings
+        if isinstance(container_or_settings, AppContainer)
+        else container_or_settings
+    )
+    return redact_secrets(str(exc), _secret_values(settings))
 
 
 @runtime_checkable
@@ -63,7 +86,9 @@ async def ensure_database_ready(container: AppContainer) -> None:
         async with container.session_factory() as session:
             await session.execute(text("SELECT 1"))
     except Exception as exc:
-        raise FatalStartupError(FatalStartupReason.DB_UNAVAILABLE, str(exc)) from exc
+        raise FatalStartupError(
+            FatalStartupReason.DB_UNAVAILABLE, _safe_detail(container, exc)
+        ) from exc
 
     try:
         async with container.engine.connect() as connection:
@@ -72,7 +97,9 @@ async def ensure_database_ready(container: AppContainer) -> None:
     except FatalStartupError:
         raise
     except Exception as exc:
-        raise FatalStartupError(FatalStartupReason.MIGRATION_FAILED, str(exc)) from exc
+        raise FatalStartupError(
+            FatalStartupReason.MIGRATION_FAILED, _safe_detail(container, exc)
+        ) from exc
 
     if head is None or current != head:
         raise FatalStartupError(
@@ -85,7 +112,9 @@ async def _verify_bot_api(container: AppContainer) -> None:
     try:
         await container.admin_port.get_me()
     except Exception as exc:
-        raise FatalStartupError(FatalStartupReason.BOT_API_UNREACHABLE, str(exc)) from exc
+        raise FatalStartupError(
+            FatalStartupReason.BOT_API_UNREACHABLE, _safe_detail(container, exc)
+        ) from exc
 
 
 async def _verify_telethon(container: AppContainer) -> None:
@@ -94,11 +123,15 @@ async def _verify_telethon(container: AppContainer) -> None:
         try:
             await client.connect()
         except Exception as exc:
-            raise FatalStartupError(FatalStartupReason.TELETHON_UNAUTHORIZED, str(exc)) from exc
+            raise FatalStartupError(
+                FatalStartupReason.TELETHON_UNAUTHORIZED, _safe_detail(container, exc)
+            ) from exc
     try:
         authorized = await container.telethon_adapter.is_authorized()
     except Exception as exc:
-        raise FatalStartupError(FatalStartupReason.TELETHON_UNAUTHORIZED, str(exc)) from exc
+        raise FatalStartupError(
+            FatalStartupReason.TELETHON_UNAUTHORIZED, _safe_detail(container, exc)
+        ) from exc
     if not authorized:
         raise FatalStartupError(
             FatalStartupReason.TELETHON_UNAUTHORIZED, "session is not authorized"
@@ -106,18 +139,24 @@ async def _verify_telethon(container: AppContainer) -> None:
     try:
         await container.telethon_adapter.get_me()
     except Exception as exc:
-        raise FatalStartupError(FatalStartupReason.TELETHON_UNAUTHORIZED, str(exc)) from exc
+        raise FatalStartupError(
+            FatalStartupReason.TELETHON_UNAUTHORIZED, _safe_detail(container, exc)
+        ) from exc
 
 
 async def _verify_vk(container: AppContainer) -> None:
     try:
         await container.vk_gateway.get_community_id()
     except Exception as exc:
-        raise FatalStartupError(FatalStartupReason.VK_IDENTITY, str(exc)) from exc
+        raise FatalStartupError(
+            FatalStartupReason.VK_IDENTITY, _safe_detail(container, exc)
+        ) from exc
     try:
         long_poll = await container.vk_gateway.check_long_poll()
     except Exception as exc:
-        raise FatalStartupError(FatalStartupReason.VK_LONGPOLL_DISABLED, str(exc)) from exc
+        raise FatalStartupError(
+            FatalStartupReason.VK_LONGPOLL_DISABLED, _safe_detail(container, exc)
+        ) from exc
     if not long_poll.enabled:
         raise FatalStartupError(
             FatalStartupReason.VK_LONGPOLL_DISABLED, "Long Poll is disabled for the community"
@@ -135,7 +174,9 @@ async def _verify_persisted_chat(container: AppContainer) -> bool:
     try:
         access = await container.telethon_adapter.verify_chat_access(chat_id)
     except Exception as exc:
-        raise FatalStartupError(FatalStartupReason.TELETHON_CHAT_ACCESS, str(exc)) from exc
+        raise FatalStartupError(
+            FatalStartupReason.TELETHON_CHAT_ACCESS, _safe_detail(container, exc)
+        ) from exc
     if access.entity_id != chat_id or not access.is_forum:
         raise FatalStartupError(
             FatalStartupReason.TELETHON_CHAT_ACCESS,
@@ -145,13 +186,28 @@ async def _verify_persisted_chat(container: AppContainer) -> bool:
     try:
         topics = await container.telethon_adapter.list_topics(chat_id)
     except Exception as exc:
-        raise FatalStartupError(FatalStartupReason.TOPICS_UNAVAILABLE, str(exc)) from exc
+        raise FatalStartupError(
+            FatalStartupReason.TOPICS_UNAVAILABLE, _safe_detail(container, exc)
+        ) from exc
     if not topics:
         raise FatalStartupError(
             FatalStartupReason.TOPICS_UNAVAILABLE, f"chat {chat_id} returned no forum topics"
         )
 
-    if state.telegram_messages_topic_id is not None:
+    destination_id = state.telegram_messages_topic_id
+    if destination_id is not None:
+        destination = next((topic for topic in topics if topic.topic_id == destination_id), None)
+        if destination is None:
+            raise FatalStartupError(
+                FatalStartupReason.TOPICS_UNAVAILABLE,
+                f"persisted destination topic {destination_id} is missing from chat {chat_id}",
+            )
+        if destination.is_closed or destination.is_hidden:
+            state_name = "closed" if destination.is_closed else "hidden"
+            raise FatalStartupError(
+                FatalStartupReason.TOPICS_UNAVAILABLE,
+                f"persisted destination topic {destination_id} is {state_name}",
+            )
         container.readiness.advance(ReadinessState.DESTINATION_CONFIRMED)
         container.readiness.advance(ReadinessState.FORWARDING_ENABLED)
     else:

@@ -5,9 +5,11 @@ from collections.abc import Sequence
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from types import TracebackType
-from typing import Self
+from typing import Self, cast
 
 import pytest
+from aiogram import Bot
+from aiogram.types import Message
 
 from vk_topic_bridge.application.dto.delivery import (
     DeliveryRecord,
@@ -34,6 +36,7 @@ from vk_topic_bridge.domain.value_objects import (
     SourceMessage,
     TopicInfo,
 )
+from vk_topic_bridge.infrastructure.telegram.publisher import BotApiPublisher
 
 _NOW = datetime(2026, 9, 18, 12, 0, tzinfo=UTC)
 _SOURCE_KEY = "111:222:333"
@@ -83,6 +86,7 @@ class _FakeLedger:
     def __init__(self) -> None:
         self.records: dict[str, DeliveryRecord] = {}
         self.deny_send_started = False
+        self.fail_mark_published = False
         self._next_id = 1
 
     def seed(
@@ -163,6 +167,18 @@ class _FakeLedger:
         self, delivery_id: int, claim_token: str, message_ids: Sequence[int]
     ) -> bool:
         key, record = self._find(delivery_id)
+        if self.fail_mark_published:
+            # Simulated CAS loss: a competing worker committed the publication first.
+            self._write(
+                key,
+                replace(
+                    record,
+                    publication_status=PublicationStatus.PUBLISHED,
+                    telegram_message_ids=tuple(message_ids),
+                    completed_at=datetime.now(UTC),
+                ),
+            )
+            return False
         if record.claim_token != claim_token:
             return False
         if record.publication_status is not PublicationStatus.SEND_STARTED:
@@ -304,6 +320,8 @@ class _FakePublisher:
 
     async def publish(self, publication: Publication) -> PublicationResult:
         self.calls.append(publication)
+        # Model the network suspension point so concurrent calls genuinely interleave.
+        await asyncio.sleep(0)
         if self.error is not None:
             raise self.error
         return PublicationResult(
@@ -328,6 +346,22 @@ class _BlockingPublisher(_FakePublisher):
         self.started.set()
         await asyncio.Event().wait()
         raise AssertionError("unreachable")
+
+
+class _ResetBot:
+    """``Bot`` double whose transport always fails with a bare native connection reset.
+
+    Not a ``Bot`` subclass: overriding ``send_message`` would break the base signature.
+    ``BotApiPublisher`` only calls the method dynamically, so a structural double plus a
+    single cast at the SDK boundary is enough.
+    """
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    async def send_message(self, **_kwargs: object) -> Message:
+        self.calls += 1
+        raise ConnectionResetError("reset by peer")
 
 
 class _FakeVk:
@@ -502,6 +536,7 @@ class _Harness:
         publisher_error: BaseException | None = None,
         vk_error: Exception | None = None,
         blocking_publisher: bool = False,
+        bot: Bot | None = None,
     ) -> None:
         self.ledger = _FakeLedger()
         if settings_missing:
@@ -510,15 +545,15 @@ class _Harness:
             self.settings = _FakeSettings(settings)
         else:
             self.settings = _FakeSettings(_registered_settings())
-        if blocking_publisher:
-            self.publisher: _FakePublisher = _BlockingPublisher()
-        else:
-            self.publisher = _FakePublisher(error=publisher_error)
+        self.publisher: _FakePublisher = (
+            _BlockingPublisher() if blocking_publisher else _FakePublisher(error=publisher_error)
+        )
+        self.bot_publisher = BotApiPublisher(bot) if bot is not None else None
         self.vk = _FakeVk(error=vk_error)
         self.readiness = _FakeReadiness(readiness_state)
         self.use_case = ForwardVkMessage(
             uow_factory=self._make_uow,
-            publisher=self.publisher,
+            publisher=self.bot_publisher if self.bot_publisher is not None else self.publisher,
             vk=self.vk,
             readiness=self.readiness,
         )
@@ -747,3 +782,48 @@ async def test_cancelled_error_during_publish_persists_ambiguous_and_reraises() 
     assert record.publication_status is PublicationStatus.AMBIGUOUS
     assert record.review_required is True
     assert len(blocking.calls) == 1
+
+
+async def test_lost_cas_after_publish_does_not_react_and_reports_failure() -> None:
+    harness = _Harness()
+    harness.ledger.fail_mark_published = True
+
+    outcome = await harness.use_case.execute(_source("@all Привет"))
+
+    assert len(harness.publisher.calls) == 1
+    assert harness.vk.reaction_calls == []
+    assert outcome.published is False
+    assert outcome.skipped is False
+    assert outcome.reason == "claim_lost"
+    assert outcome.message_ids == _MESSAGE_IDS
+
+
+async def test_concurrent_execute_publishes_exactly_once() -> None:
+    harness = _Harness()
+
+    first, second = await asyncio.gather(
+        harness.use_case.execute(_source("@all Привет")),
+        harness.use_case.execute(_source("@all Привет")),
+    )
+
+    assert len(harness.publisher.calls) == 1
+    assert len(harness.ledger.records) == 1
+    assert len(harness.vk.reaction_calls) == 1
+    assert _stored(harness.ledger).publication_status is PublicationStatus.PUBLISHED
+    assert first.delivery_id == second.delivery_id
+
+
+async def test_native_connection_reset_is_ambiguous() -> None:
+    bot = _ResetBot()
+    harness = _Harness(bot=cast(Bot, bot))
+
+    outcome = await harness.use_case.execute(_source("@all Привет"))
+
+    assert outcome.published is False
+    assert outcome.reason == "ambiguous"
+    assert bot.calls == 1
+    record = _stored(harness.ledger)
+    assert record.publication_status is PublicationStatus.AMBIGUOUS
+    assert record.review_required is True
+    assert record.last_error_code == "bot_api_connection_reset"
+    assert harness.vk.reaction_calls == []

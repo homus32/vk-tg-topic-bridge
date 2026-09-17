@@ -1,0 +1,307 @@
+....................................................................F..F [ 15%]
+........................................................................ [ 30%]
+...............................................F........................ [ 45%]
+........................................................F.F............. [ 60%]
+........................................................................ [ 75%]
+........................F.....FFF....................................... [ 90%]
+...............................................                          [100%]
+=================================== FAILURES ===================================
+__________ test_us26_session_path_is_normalized[absolute-with-suffix] __________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ee0d1f30750>
+configured = '/tmp/account.session'
+expected = PosixPath('/tmp/account.session')
+
+    @pytest.mark.parametrize(
+        "configured, expected",
+        [
+            pytest.param(
+                "owner-account", Path("runtime/telethon/owner-account.session"), id="relative"
+            ),
+            pytest.param(
+                "/tmp/account.session",
+                Path("/tmp/account.session"),
+                id="absolute-with-suffix",
+            ),
+        ],
+    )
+    def test_us26_session_path_is_normalized(
+        monkeypatch: pytest.MonkeyPatch, configured: str, expected: Path
+    ) -> None:
+        module = importlib.import_module("authorize_telegram")
+>       settings = settings_from_env(monkeypatch, TELEGRAM_SESSION_PATH=configured)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/acceptance/test_us26_authorize_script.py:111: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ee0d1f30750>
+env = {'TELEGRAM_SESSION_PATH': '/tmp/account.session'}
+
+    def settings_from_env(monkeypatch: pytest.MonkeyPatch, **env: str) -> Settings:
+        """Build ``Settings`` from the isolated test environment plus explicit overrides."""
+        for key, value in env.items():
+            monkeypatch.setenv(key, value)
+        # The autouse conftest fixture disables the dotenv file, so only env applies.
+>       return Settings.model_validate({})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for Settings
+E       TELEGRAM_SESSION_PATH
+E         Value error, TELEGRAM_SESSION_PATH must stay under runtime/telethon/ [type=value_error, input_value='/tmp/account.session', input_type=str]
+E           For further information visit https://errors.pydantic.dev/2.13/v/value_error
+
+tests/acceptance/_fakes.py:73: ValidationError
+____________ test_us26_build_client_uses_settings_transport_kwargs _____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ee0d0169940>
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-282/test_us26_build_client_uses_se0')
+
+    def test_us26_build_client_uses_settings_transport_kwargs(
+        monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        module = importlib.import_module("authorize_telegram")
+>       settings = settings_from_env(monkeypatch, TELEGRAM_SESSION_PATH=str(tmp_path / "acc.session"))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/acceptance/test_us26_authorize_script.py:147: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ee0d0169940>
+env = {'TELEGRAM_SESSION_PATH': '/tmp/pytest-of-homus/pytest-282/test_us26_build_client_uses_se0/acc.session'}
+
+    def settings_from_env(monkeypatch: pytest.MonkeyPatch, **env: str) -> Settings:
+        """Build ``Settings`` from the isolated test environment plus explicit overrides."""
+        for key, value in env.items():
+            monkeypatch.setenv(key, value)
+        # The autouse conftest fixture disables the dotenv file, so only env applies.
+>       return Settings.model_validate({})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for Settings
+E       TELEGRAM_SESSION_PATH
+E         Value error, TELEGRAM_SESSION_PATH must stay under runtime/telethon/ [type=value_error, input_value='/tmp/pytest-of-homus/pyt...nt_uses_se0/acc.session', input_type=str]
+E           For further information visit https://errors.pydantic.dev/2.13/v/value_error
+
+tests/acceptance/_fakes.py:73: ValidationError
+_______________ test_send_intent_is_committed_before_network_io ________________
+
+session_factory = async_sessionmaker(class_='AsyncSession', bind=<sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x7ee0caaa0d50>, autoflush=True, expire_on_commit=False)
+
+    async def test_send_intent_is_committed_before_network_io(
+        session_factory: SessionFactory,
+    ) -> None:
+        publisher = _DbObservingPublisher(session_factory=session_factory, source_key=SOURCE_KEY)
+        gateway = VkApiGateway(FakeRawVkApi(), Settings.model_validate({}))
+        readiness = InMemoryReadinessGate()
+        readiness.advance(ReadinessState.FORWARDING_ENABLED)
+        use_case = ForwardVkMessage(
+            uow_factory=lambda: SqlAlchemyUnitOfWork(session_factory),
+            publisher=publisher,
+            vk=gateway,
+            readiness=readiness,
+        )
+    
+        outcome = await use_case.execute(make_source(PRIMARY_TEXT))
+    
+>       assert outcome.published is True
+E       AssertionError: assert False is True
+E        +  where False = ForwardOutcome(published=False, skipped=True, reason='unregistered', delivery_id=None, message_ids=()).published
+
+tests/integration/test_forwarding_chain.py:291: AssertionError
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 0001, create bridge settings, telegram topics, vk topic aliases and delivery records
+________ test_lost_cas_after_publish_does_not_react_and_reports_failure ________
+
+    async def test_lost_cas_after_publish_does_not_react_and_reports_failure() -> None:
+        harness = _Harness()
+        harness.ledger.fail_mark_published = True
+    
+        outcome = await harness.use_case.execute(_source("@all Привет"))
+    
+        assert len(harness.publisher.calls) == 1
+>       assert harness.vk.reaction_calls == []
+E       assert [(222, 333)] == []
+E         
+E         Left contains one more item: (222, 333)
+E         Use -v to get more diff
+
+tests/unit/application/test_forward_message.py:792: AssertionError
+__________________ test_native_connection_reset_is_ambiguous ___________________
+
+    async def test_native_connection_reset_is_ambiguous() -> None:
+        bot = _ResetBot()
+        harness = _Harness(bot=bot)
+    
+>       outcome = await harness.use_case.execute(_source("@all Привет"))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/application/test_forward_message.py:818: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/vk_topic_bridge/application/forwarding/forward_message.py:135: in execute
+    result = await self._publisher.publish(publication)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/vk_topic_bridge/infrastructure/telegram/publisher.py:130: in publish
+    message = await _send_message(self._bot, destination, publication.html_text)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/vk_topic_bridge/infrastructure/telegram/publisher.py:119: in _send_message
+    raise _classify(exc) from exc
+          ^^^^^^^^^^^^^^
+src/vk_topic_bridge/infrastructure/telegram/publisher.py:92: in _classify
+    raise exc
+src/vk_topic_bridge/infrastructure/telegram/publisher.py:109: in _send_message
+    return await bot.send_message(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <application.test_forward_message._ResetBot object at 0x7ee0ca0ba900>
+_kwargs = {'chat_id': 100, 'text': '<a href="https://vk.com/id1">Ivan Petrov</a>\n\n@all Привет\n\n#извк', 'message_thread_id': ...r_large_media=<Default('link_preview_prefer_large_media')>, show_above_text=<Default('link_preview_show_above_text')>)}
+
+    async def send_message(self, **_kwargs: object) -> Message:
+        self.calls += 1
+>       raise ConnectionResetError("reset by peer")
+E       ConnectionResetError: reset by peer
+
+tests/unit/application/test_forward_message.py:359: ConnectionResetError
+________ test_session_file_for_appends_without_truncating_dotted_names _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ee0ca4f8210>
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-282/test_session_file_for_appends_0')
+
+    def test_session_file_for_appends_without_truncating_dotted_names(
+        monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        module = _module()
+>       settings = _settings(monkeypatch, TELEGRAM_SESSION_PATH=str(tmp_path / "owner.account"))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/test_authorize_telegram.py:161: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ee0ca4f8210>
+env = {'TELEGRAM_SESSION_PATH': '/tmp/pytest-of-homus/pytest-282/test_session_file_for_appends_0/owner.account'}
+
+    def _settings(monkeypatch: pytest.MonkeyPatch, **env: str) -> Settings:
+        for key, value in env.items():
+            monkeypatch.setenv(key, value)
+        # The conftest fixture disables the dotenv file; only the dummy env applies.
+>       return Settings.model_validate({})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for Settings
+E       TELEGRAM_SESSION_PATH
+E         Value error, TELEGRAM_SESSION_PATH must stay under runtime/telethon/ [type=value_error, input_value='/tmp/pytest-of-homus/pyt...appends_0/owner.account', input_type=str]
+E           For further information visit https://errors.pydantic.dev/2.13/v/value_error
+
+tests/unit/test_authorize_telegram.py:91: ValidationError
+_________ test_main_authorizes_and_reports_only_non_sensitive_identity _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ee0ca4f8130>
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-282/test_main_authorizes_and_repor0')
+capsys = <_pytest.capture.CaptureFixture object at 0x7ee0d05be120>
+
+    async def test_main_authorizes_and_reports_only_non_sensitive_identity(
+        monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+>       module, settings, session_path = _install_module(monkeypatch, tmp_path)
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/test_authorize_telegram.py:247: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/unit/test_authorize_telegram.py:109: in _install_module
+    settings = _settings(monkeypatch, TELEGRAM_SESSION_PATH=str(session_path), **env)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ee0ca4f8130>
+env = {'TELEGRAM_SESSION_PATH': '/tmp/pytest-of-homus/pytest-282/test_main_authorizes_and_repor0/account.session'}
+
+    def _settings(monkeypatch: pytest.MonkeyPatch, **env: str) -> Settings:
+        for key, value in env.items():
+            monkeypatch.setenv(key, value)
+        # The conftest fixture disables the dotenv file; only the dummy env applies.
+>       return Settings.model_validate({})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for Settings
+E       TELEGRAM_SESSION_PATH
+E         Value error, TELEGRAM_SESSION_PATH must stay under runtime/telethon/ [type=value_error, input_value='/tmp/pytest-of-homus/pyt..._repor0/account.session', input_type=str]
+E           For further information visit https://errors.pydantic.dev/2.13/v/value_error
+
+tests/unit/test_authorize_telegram.py:91: ValidationError
+___________ test_main_returns_failure_when_account_is_not_authorized ___________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ee0ca4fa970>
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-282/test_main_returns_failure_when0')
+capsys = <_pytest.capture.CaptureFixture object at 0x7ee0ca4cca50>
+
+    async def test_main_returns_failure_when_account_is_not_authorized(
+        monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+>       module, _settings_obj, _session_path = _install_module(monkeypatch, tmp_path)
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/test_authorize_telegram.py:287: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/unit/test_authorize_telegram.py:109: in _install_module
+    settings = _settings(monkeypatch, TELEGRAM_SESSION_PATH=str(session_path), **env)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ee0ca4fa970>
+env = {'TELEGRAM_SESSION_PATH': '/tmp/pytest-of-homus/pytest-282/test_main_returns_failure_when0/account.session'}
+
+    def _settings(monkeypatch: pytest.MonkeyPatch, **env: str) -> Settings:
+        for key, value in env.items():
+            monkeypatch.setenv(key, value)
+        # The conftest fixture disables the dotenv file; only the dummy env applies.
+>       return Settings.model_validate({})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for Settings
+E       TELEGRAM_SESSION_PATH
+E         Value error, TELEGRAM_SESSION_PATH must stay under runtime/telethon/ [type=value_error, input_value='/tmp/pytest-of-homus/pyt...e_when0/account.session', input_type=str]
+E           For further information visit https://errors.pydantic.dev/2.13/v/value_error
+
+tests/unit/test_authorize_telegram.py:91: ValidationError
+____________ test_main_reports_interrupted_input_without_traceback _____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ee0ca4fa890>
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-282/test_main_reports_interrupted_0')
+capsys = <_pytest.capture.CaptureFixture object at 0x7ee0ca4cccd0>
+
+    async def test_main_reports_interrupted_input_without_traceback(
+        monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+>       module, _settings_obj, _session_path = _install_module(monkeypatch, tmp_path)
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/test_authorize_telegram.py:308: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/unit/test_authorize_telegram.py:109: in _install_module
+    settings = _settings(monkeypatch, TELEGRAM_SESSION_PATH=str(session_path), **env)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ee0ca4fa890>
+env = {'TELEGRAM_SESSION_PATH': '/tmp/pytest-of-homus/pytest-282/test_main_reports_interrupted_0/account.session'}
+
+    def _settings(monkeypatch: pytest.MonkeyPatch, **env: str) -> Settings:
+        for key, value in env.items():
+            monkeypatch.setenv(key, value)
+        # The conftest fixture disables the dotenv file; only the dummy env applies.
+>       return Settings.model_validate({})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for Settings
+E       TELEGRAM_SESSION_PATH
+E         Value error, TELEGRAM_SESSION_PATH must stay under runtime/telethon/ [type=value_error, input_value='/tmp/pytest-of-homus/pyt...upted_0/account.session', input_type=str]
+E           For further information visit https://errors.pydantic.dev/2.13/v/value_error
+
+tests/unit/test_authorize_telegram.py:91: ValidationError
+=========================== short test summary info ============================
+FAILED tests/acceptance/test_us26_authorize_script.py::test_us26_session_path_is_normalized[absolute-with-suffix]
+FAILED tests/acceptance/test_us26_authorize_script.py::test_us26_build_client_uses_settings_transport_kwargs
+FAILED tests/integration/test_forwarding_chain.py::test_send_intent_is_committed_before_network_io
+FAILED tests/unit/application/test_forward_message.py::test_lost_cas_after_publish_does_not_react_and_reports_failure
+FAILED tests/unit/application/test_forward_message.py::test_native_connection_reset_is_ambiguous
+FAILED tests/unit/test_authorize_telegram.py::test_session_file_for_appends_without_truncating_dotted_names
+FAILED tests/unit/test_authorize_telegram.py::test_main_authorizes_and_reports_only_non_sensitive_identity
+FAILED tests/unit/test_authorize_telegram.py::test_main_returns_failure_when_account_is_not_authorized
+FAILED tests/unit/test_authorize_telegram.py::test_main_reports_interrupted_input_without_traceback
+9 failed, 470 passed, 4 deselected in 10.47s

@@ -16,6 +16,7 @@ from pathlib import Path
 from types import ModuleType
 
 import pytest
+from pydantic import ValidationError
 from telethon import TelegramClient
 
 from tests.acceptance._fakes import settings_from_env
@@ -98,9 +99,9 @@ def test_us26_prompts_read_phone_code_and_two_factor_password(
             "owner-account", Path("runtime/telethon/owner-account.session"), id="relative"
         ),
         pytest.param(
-            "/tmp/account.session",
-            Path("/tmp/account.session"),
-            id="absolute-with-suffix",
+            "owner.account",
+            Path("runtime/telethon/owner.account.session"),
+            id="dotted-name-keeps-stem",
         ),
     ],
 )
@@ -112,6 +113,16 @@ def test_us26_session_path_is_normalized(
 
     assert module.session_file_for(settings) == expected
     assert str(module.session_file_for(settings)).endswith(".session")
+
+
+def test_us26_session_outside_runtime_dir_is_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
+    def build() -> object:
+        return settings_from_env(
+            monkeypatch, TELEGRAM_SESSION_PATH="/tmp/elsewhere/account.session"
+        )
+
+    with pytest.raises(ValidationError):
+        build()
 
 
 def test_us26_reauthorization_overwrites_the_previous_account_session(tmp_path: Path) -> None:
@@ -144,7 +155,9 @@ def test_us26_build_client_uses_settings_transport_kwargs(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     module = importlib.import_module("authorize_telegram")
-    settings = settings_from_env(monkeypatch, TELEGRAM_SESSION_PATH=str(tmp_path / "acc.session"))
+    monkeypatch.chdir(tmp_path)
+    session_path = tmp_path / "runtime" / "telethon" / "acc.session"
+    settings = settings_from_env(monkeypatch, TELEGRAM_SESSION_PATH=str(session_path))
     captured: dict[str, object] = {}
 
     class StubClient:
@@ -156,10 +169,10 @@ def test_us26_build_client_uses_settings_transport_kwargs(
 
     monkeypatch.setattr(module, "TelegramClient", StubClient)
 
-    client = module.build_client(settings, tmp_path / "acc.session")
+    client = module.build_client(settings, session_path)
 
     assert isinstance(client, StubClient)
-    assert captured["session"] == str(tmp_path / "acc.session")
+    assert captured["session"] == str(session_path)
     assert captured["api_id"] == settings.TELEGRAM_API_ID
     assert captured["kwargs"] == client_connection_kwargs(settings)
 

@@ -8,10 +8,14 @@ from __future__ import annotations
 
 import logging
 import sys
+from collections.abc import Iterable
 
 from loguru import logger
 
 from config import Settings
+
+_MIN_SECRET_LENGTH = 8
+_REDACTED = "<redacted>"
 
 _NOISY_LOGGER_PREFIXES: tuple[str, ...] = (
     "aiogram",
@@ -30,6 +34,16 @@ _CONSOLE_FORMAT = (
 )
 
 _FILE_FORMAT = "{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}"
+
+
+def redact_secrets(text: str, secrets: Iterable[str]) -> str:
+    """Replace every non-empty secret occurrence of length >= 8 with a placeholder."""
+    redacted = str(text)
+    for raw_secret in secrets:
+        secret = str(raw_secret)
+        if len(secret) >= _MIN_SECRET_LENGTH:
+            redacted = redacted.replace(secret, _REDACTED)
+    return redacted
 
 
 class _InterceptHandler(logging.Handler):

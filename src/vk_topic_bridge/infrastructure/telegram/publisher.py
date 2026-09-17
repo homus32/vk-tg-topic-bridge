@@ -49,8 +49,13 @@ _CAPABILITY_FLAGS: tuple[tuple[str, str], ...] = (
 )
 
 # Failed or hanging calls: the message may exist, so they must not be retried blindly.
+# The bare ``ConnectionError`` family (``ConnectionResetError``, ``ConnectionAbortedError``,
+# ``BrokenPipeError``) belongs here too: a native transport reset is an ``OSError``, not an
+# ``aiohttp.ClientError``, and after send intent a reset cannot prove the Bot API created no
+# message. Letting it escape raw would leave the delivery unrecorded instead of ambiguous.
 _AMBIGUOUS_FAILURES: tuple[type[BaseException], ...] = (
     TimeoutError,
+    ConnectionError,
     aiohttp.ClientError,
     TelegramRetryAfter,
     TelegramNetworkError,
@@ -67,10 +72,20 @@ _REJECTED_FAILURES: tuple[type[BaseException], ...] = (
 
 _AMBIGUOUS_CODES = {
     TimeoutError: "bot_api_timeout",
+    ConnectionError: "bot_api_connection_reset",
     TelegramRetryAfter: "bot_api_retry_after",
     TelegramNetworkError: "bot_api_network",
     TelegramServerError: "bot_api_server",
 }
+
+
+def _ambiguous_code(exc: BaseException) -> str:
+    """Resolve the closest taxonomy entry for a subclass failure (e.g. ``ConnectionResetError``)."""
+    for cls in type(exc).__mro__:
+        code = _AMBIGUOUS_CODES.get(cls)
+        if code is not None:
+            return code
+    return "bot_api_connection"
 
 
 def _safe_error_text(exc: BaseException) -> str:
@@ -84,7 +99,7 @@ def _classify(exc: BaseException) -> PublicationAmbiguousError | PublicationReje
     if isinstance(exc, _REJECTED_FAILURES):
         return PublicationRejectedError(_safe_error_text(exc), code="bot_api_rejected")
     if isinstance(exc, _AMBIGUOUS_FAILURES):
-        code = _AMBIGUOUS_CODES.get(type(exc), "bot_api_connection")
+        code = _ambiguous_code(exc)
         return PublicationAmbiguousError(_safe_error_text(exc), code=code)
     if isinstance(exc, TelegramAPIError):
         # Unknown API error: cannot prove that no message was created, so fail closed.

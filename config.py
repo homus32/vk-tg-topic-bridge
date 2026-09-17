@@ -22,6 +22,13 @@ DATABASE_URL_PREFIX = "sqlite+aiosqlite:///"
 LOOPBACK_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
 
 
+def _with_session_suffix(path: Path) -> Path:
+    """Append `.session` without truncating a dotted stem (unlike ``Path.with_suffix``)."""
+    if path.name.endswith(SESSION_SUFFIX):
+        return path
+    return path.with_name(f"{path.name}{SESSION_SUFFIX}")
+
+
 @dataclass(frozen=True, slots=True)
 class MtProxyTransport:
     host: str
@@ -121,12 +128,12 @@ class Settings(BaseSettings):
     def _normalize_session_path(cls, value: str) -> str:
         path = Path(value)
         if path.is_absolute():
-            return str(path)
+            resolved = path.resolve()
+            if not resolved.is_relative_to(RUNTIME_SESSION_DIR.resolve()):
+                raise ValueError("TELEGRAM_SESSION_PATH must stay under runtime/telethon/")
+            return str(_with_session_suffix(resolved))
         # A relative value is only a hint: the session must never land outside runtime/.
-        path = RUNTIME_SESSION_DIR / path.name
-        if path.suffix != SESSION_SUFFIX:
-            path = path.with_suffix(SESSION_SUFFIX)
-        return str(path)
+        return str(_with_session_suffix(RUNTIME_SESSION_DIR / path.name))
 
     @field_validator("DATABASE_URL")
     @classmethod

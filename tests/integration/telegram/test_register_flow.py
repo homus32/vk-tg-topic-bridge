@@ -40,8 +40,8 @@ class FakeRegisterChat:
 class FakeMessage:
     """Minimal Message stand-in: exposes chat identity and records answers."""
 
-    def __init__(self) -> None:
-        self.chat = SimpleNamespace(id=CHAT_ID, title=CHAT_TITLE)
+    def __init__(self, chat_type: str = "supergroup") -> None:
+        self.chat = SimpleNamespace(id=CHAT_ID, title=CHAT_TITLE, type=chat_type)
         self.answers: list[str] = []
 
     async def answer(self, text: str, **kwargs: object) -> None:
@@ -127,3 +127,37 @@ async def test_generic_provisioning_error_is_reported_without_raising() -> None:
 
     assert len(message.answers) == 1
     assert message.answers[0].strip() != ""
+
+
+async def test_private_chat_registration_is_rejected_without_persisting() -> None:
+    message = FakeMessage(chat_type="private")
+    register_chat = FakeRegisterChat(_result(ready=True, topics=_topics(1)))
+
+    await handle_register(cast(Message, message), register_chat)
+
+    assert len(message.answers) == 1
+    assert "в целевом чате" in message.answers[0]
+    assert register_chat.calls == []
+
+
+async def test_channel_chat_registration_is_rejected_without_persisting() -> None:
+    message = FakeMessage(chat_type="channel")
+    register_chat = FakeRegisterChat(_result(ready=True, topics=_topics(1)))
+
+    await handle_register(cast(Message, message), register_chat)
+
+    assert len(message.answers) == 1
+    assert "в целевом чате" in message.answers[0]
+    assert register_chat.calls == []
+
+
+async def test_supergroup_registration_reaches_the_use_case_once() -> None:
+    message = FakeMessage(chat_type="supergroup")
+    register_chat = FakeRegisterChat(_result(ready=True, topics=_topics(2)))
+
+    await handle_register(cast(Message, message), register_chat)
+
+    assert len(register_chat.calls) == 1
+    assert register_chat.calls[0] == (CHAT_ID, CHAT_TITLE)
+    assert len(message.answers) == 1
+    assert "зарегистрирован" in message.answers[0]

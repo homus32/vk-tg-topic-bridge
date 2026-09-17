@@ -1,0 +1,59 @@
+.................F.F......                                               [100%]
+=================================== FAILURES ===================================
+________ test_lost_cas_after_publish_does_not_react_and_reports_failure ________
+
+    async def test_lost_cas_after_publish_does_not_react_and_reports_failure() -> None:
+        harness = _Harness()
+        harness.ledger.fail_mark_published = True
+    
+        outcome = await harness.use_case.execute(_source("@all Привет"))
+    
+        assert len(harness.publisher.calls) == 1
+>       assert harness.vk.reaction_calls == []
+E       assert [(222, 333)] == []
+E         
+E         Left contains one more item: (222, 333)
+E         Use -v to get more diff
+
+tests/unit/application/test_forward_message.py:789: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  vk_topic_bridge.application.forwarding.forward_message:forward_message.py:157 mark_published lost CAS for delivery 1
+__________________ test_native_connection_reset_is_ambiguous ___________________
+
+    async def test_native_connection_reset_is_ambiguous() -> None:
+        bot = _ResetBot()
+        harness = _Harness(bot=bot)
+    
+>       outcome = await harness.use_case.execute(_source("@all Привет"))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/application/test_forward_message.py:815: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/vk_topic_bridge/application/forwarding/forward_message.py:135: in execute
+    result = await self._publisher.publish(publication)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/vk_topic_bridge/infrastructure/telegram/publisher.py:130: in publish
+    message = await _send_message(self._bot, destination, publication.html_text)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/vk_topic_bridge/infrastructure/telegram/publisher.py:119: in _send_message
+    raise _classify(exc) from exc
+          ^^^^^^^^^^^^^^
+src/vk_topic_bridge/infrastructure/telegram/publisher.py:92: in _classify
+    raise exc
+src/vk_topic_bridge/infrastructure/telegram/publisher.py:109: in _send_message
+    return await bot.send_message(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <application.test_forward_message._ResetBot object at 0x707c495f1940>
+_kwargs = {'chat_id': 100, 'text': '<a href="https://vk.com/id1">Ivan Petrov</a>\n\n@all Привет\n\n#извк', 'message_thread_id': ...r_large_media=<Default('link_preview_prefer_large_media')>, show_above_text=<Default('link_preview_show_above_text')>)}
+
+    async def send_message(self, **_kwargs: object) -> Message:
+        self.calls += 1
+>       raise ConnectionResetError("reset by peer")
+E       ConnectionResetError: reset by peer
+
+tests/unit/application/test_forward_message.py:359: ConnectionResetError
+=========================== short test summary info ============================
+FAILED tests/unit/application/test_forward_message.py::test_lost_cas_after_publish_does_not_react_and_reports_failure
+FAILED tests/unit/application/test_forward_message.py::test_native_connection_reset_is_ambiguous
+2 failed, 24 passed in 4.27s

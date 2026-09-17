@@ -1,0 +1,34 @@
+........................................................................ [ 15%]
+........................................................................ [ 30%]
+..........................................F............................. [ 46%]
+........................................................................ [ 61%]
+........................................................................ [ 76%]
+........................................................................ [ 92%]
+....................................                                     [100%]
+=================================== FAILURES ===================================
+_____________ test_replaying_the_same_event_does_not_publish_again _____________
+
+harness = ChainHarness(session_factory=async_sessionmaker(class_='AsyncSession', bind=<sqlalchemy.ext.asyncio.engine.AsyncEngine...g object at 0x77b9476d62c0>, consumer=<vk_topic_bridge.bootstrap.vk_consumer.VkEventConsumer object at 0x77b9476d68b0>)
+
+    async def test_replaying_the_same_event_does_not_publish_again(harness: ChainHarness) -> None:
+        # TEMPORARY MUTATION RED PROBE: delete the ledger row to simulate a lost idempotency key.
+        await harness.deliver(_update())
+        async with harness.session_factory() as session:
+            await session.execute(text("DELETE FROM delivery_records"))
+            await session.commit()
+        await harness.deliver(_update())
+    
+>       assert len(harness.publisher.publications) == 1
+E       assert 2 == 1
+E        +  where 2 = len([Publication(chat_id=-1001234567890, message_thread_id=7, html_text='<a href="https://vk.com/id555">Иван Петров</a>\n\...ivanov'), text='@all #вертикальныйсрез Сообщение для полной цепочки', has_all=True, has_hashtag=True, attachments=()))])
+E        +    where [Publication(chat_id=-1001234567890, message_thread_id=7, html_text='<a href="https://vk.com/id555">Иван Петров</a>\n\...ivanov'), text='@all #вертикальныйсрез Сообщение для полной цепочки', has_all=True, has_hashtag=True, attachments=()))] = <tests.acceptance._fakes.RecordingPublisher object at 0x77b9469cb310>.publications
+E        +      where <tests.acceptance._fakes.RecordingPublisher object at 0x77b9469cb310> = ChainHarness(session_factory=async_sessionmaker(class_='AsyncSession', bind=<sqlalchemy.ext.asyncio.engine.AsyncEngine...g object at 0x77b9476d62c0>, consumer=<vk_topic_bridge.bootstrap.vk_consumer.VkEventConsumer object at 0x77b9476d68b0>).publisher
+
+tests/integration/test_forwarding_chain.py:239: AssertionError
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 0001, create bridge settings, telegram topics, vk topic aliases and delivery records
+=========================== short test summary info ============================
+FAILED tests/integration/test_forwarding_chain.py::test_replaying_the_same_event_does_not_publish_again
+1 failed, 467 passed, 4 deselected in 11.26s

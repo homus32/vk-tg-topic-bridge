@@ -22,6 +22,8 @@ from vk_topic_bridge.application.errors import ProvisioningError
 
 REGISTER_COMMAND = "register"
 
+REGISTERABLE_CHAT_TYPES: frozenset[str] = frozenset({"group", "supergroup"})
+
 MISSING_CAPABILITY_LABELS: dict[str, str] = {
     "can_send_text": "отправка текста (can_send_text)",
     "can_send_photo": "отправка фото (can_send_photo)",
@@ -40,8 +42,22 @@ def _capability_label(name: str) -> str:
     return MISSING_CAPABILITY_LABELS.get(name, name)
 
 
+def _is_registerable_chat(chat_type: str) -> bool:
+    """Only group/supergroup chats are valid registration targets (D16)."""
+    return chat_type in REGISTERABLE_CHAT_TYPES
+
+
 async def handle_register(message: Message, register_chat: RegisterChatUseCase) -> None:
     """Execute registration for the current chat and report the precise outcome."""
+    # aiogram always sets chat.type; absent only in minimal message doubles.
+    chat_type: str | None = getattr(message.chat, "type", None)
+    if chat_type is not None and not _is_registerable_chat(chat_type):
+        await message.answer(
+            "Команда /register работает только в целевом чате: добавьте бота "
+            "в группу или супергруппу и отправьте команду там."
+        )
+        return
+
     chat_id = message.chat.id
     title = message.chat.title
 

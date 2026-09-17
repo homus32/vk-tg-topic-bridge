@@ -160,8 +160,12 @@ class FakeAdminPort:
 class FakeTelethonAdapter:
     """TelethonAdapter-shape fake: revalidation answers for a persisted chat."""
 
-    def __init__(self, *, topic_id: int | None = 7) -> None:
+    def __init__(
+        self, *, topic_id: int | None = 7, is_closed: bool = False, is_hidden: bool = False
+    ) -> None:
         self.topic_id = topic_id
+        self.is_closed = is_closed
+        self.is_hidden = is_hidden
 
     async def is_authorized(self) -> bool:
         return True
@@ -178,8 +182,8 @@ class FakeTelethonAdapter:
                 topic_id=self.topic_id,
                 title="Новости",
                 is_general=self.topic_id is None,
-                is_closed=False,
-                is_hidden=False,
+                is_closed=self.is_closed,
+                is_hidden=self.is_hidden,
             )
         ]
 
@@ -431,6 +435,72 @@ async def test_persisted_destination_advances_to_forwarding_enabled(
 
     assert healthy.readiness.current() is ReadinessState.FORWARDING_ENABLED
     await container.engine.dispose()
+
+
+async def test_persisted_destination_missing_from_topics_is_fatal(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    startup = _module("vk_topic_bridge.bootstrap.startup")
+    settings = _settings(tmp_path)
+    container = _container(settings)
+    await asyncio.to_thread(_upgrade_to_head, monkeypatch, settings)
+    async with container.uow_factory() as uow:
+        await uow.bridge_settings.upsert_chat(-1001234567890, "Тестовый чат")
+        await uow.bridge_settings.set_messages_topic(99)
+        await uow.commit()
+    missing = replace(
+        container,
+        admin_port=cast(TelegramAdminPort, FakeAdminPort()),
+        telethon_adapter=cast(TelethonAdapter, FakeTelethonAdapter(topic_id=7)),
+    )
+
+    with pytest.raises(FatalStartupError) as excinfo:
+        await startup.run_startup_checks(startup.StartupDeps(settings=settings, container=missing))
+
+    assert excinfo.value.reason is FatalStartupReason.TOPICS_UNAVAILABLE
+    assert "99" in str(excinfo.value)
+    assert missing.readiness.current() is not ReadinessState.FORWARDING_ENABLED
+    await container.engine.dispose()
+
+
+async def test_persisted_destination_closed_topic_is_fatal(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    startup = _module("vk_topic_bridge.bootstrap.startup")
+    settings = _settings(tmp_path)
+    container = _container(settings)
+    await asyncio.to_thread(_upgrade_to_head, monkeypatch, settings)
+    async with container.uow_factory() as uow:
+        await uow.bridge_settings.upsert_chat(-1001234567890, "Тестовый чат")
+        await uow.bridge_settings.set_messages_topic(7)
+        await uow.commit()
+    closed = replace(
+        container,
+        admin_port=cast(TelegramAdminPort, FakeAdminPort()),
+        telethon_adapter=cast(TelethonAdapter, FakeTelethonAdapter(topic_id=7, is_closed=True)),
+    )
+
+    with pytest.raises(FatalStartupError) as excinfo:
+        await startup.run_startup_checks(startup.StartupDeps(settings=settings, container=closed))
+
+    assert excinfo.value.reason is FatalStartupReason.TOPICS_UNAVAILABLE
+    assert "7" in str(excinfo.value)
+    assert closed.readiness.current() is not ReadinessState.FORWARDING_ENABLED
+    await container.engine.dispose()
+
+
+def test_redact_secrets_replaces_secret_values() -> None:
+    logging_module = _module("logger")
+    secret = "vk1.a.SECRETVALUE123"
+
+    redacted = logging_module.redact_secrets(f"boom {secret} x", [secret])
+
+    assert "<redacted>" in redacted
+    assert secret not in redacted
+
+    short = "abc"
+    assert logging_module.redact_secrets(f"boom {short} x", [short]) == f"boom {short} x"
+    assert logging_module.redact_secrets("clean", []) == "clean"
 
 
 async def test_readiness_aware_register_chat_advances_topics_ready_when_ready(
