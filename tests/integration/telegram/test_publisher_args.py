@@ -12,7 +12,7 @@ from typing import cast
 import aiohttp
 import pytest
 from aiogram import Bot
-from aiogram.enums import ChatMemberStatus
+from aiogram.enums import ChatMemberStatus, ParseMode
 from aiogram.exceptions import (
     TelegramBadRequest,
     TelegramConflictError,
@@ -413,3 +413,46 @@ async def test_adapters_satisfy_frozen_ports() -> None:
 
     assert isinstance(publisher, TelegramPublisher)
     assert isinstance(admin, TelegramAdminPort)
+
+
+# --- parse-mode contract at the Bot API boundary --------------------------------
+
+PLAIN_REPLY = "Укажите номер темы: /set_topic <номер>. Список тем — /topics."
+
+
+async def test_owner_facing_text_is_sent_without_parse_mode() -> None:
+    """Owner replies must not be parsed as HTML: '<' in text stays literal."""
+    fake = FakeBot()
+    publisher, _ = _publisher(fake)
+
+    await publisher.send_text(CHAT_ID, PLAIN_REPLY, message_thread_id=7)
+
+    kwargs = fake.send_message_calls[0]
+    assert kwargs["text"] == PLAIN_REPLY
+    assert kwargs["parse_mode"] is None
+
+
+async def test_publication_is_sent_with_html_parse_mode() -> None:
+    """The escaped VK publication (author link) requires HTML parsing."""
+    fake = FakeBot()
+    publisher, _ = _publisher(fake)
+    publication = _publication(7)
+
+    await publisher.publish(publication)
+
+    kwargs = fake.send_message_calls[0]
+    assert kwargs["text"] == publication.html_text
+    assert kwargs["parse_mode"] is ParseMode.HTML
+
+
+async def test_no_default_parse_mode_bot_sends_raw_brackets_verbatim() -> None:
+    """Guard the root cause: the Bot must not carry a global HTML default."""
+    from config import Settings
+    from vk_topic_bridge.infrastructure.telegram.bot_api_factory import create_bot
+
+    settings = Settings.model_validate({})
+    bot = create_bot(settings)
+    try:
+        assert bot.default.parse_mode is None
+    finally:
+        await bot.session.close()

@@ -1,0 +1,50 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+________________ test_topics_reply_contains_no_raw_html_markup _________________
+
+    async def test_topics_reply_contains_no_raw_html_markup() -> None:
+        message = FakeMessage()
+    
+        await handle_topics(cast(Message, message), _topics_reader)
+    
+        reply = message.answers[0]
+>       assert not _reply_has_raw_html(reply), f"raw '<' would break HTML parse mode: {reply!r}"
+E       AssertionError: raw '<' would break HTML parse mode: 'Темы чата:\n1. General (id: 1)\n2. Новости (id: 7)\n3. Важное (id: 9)\n\nВыберите тему назначения командой /set_topic <номер>.'
+E       assert not True
+E        +  where True = _reply_has_raw_html('Темы чата:\n1. General (id: 1)\n2. Новости (id: 7)\n3. Важное (id: 9)\n\nВыберите тему назначения командой /set_topic <номер>.')
+
+tests/integration/telegram/test_destination_flow.py:205: AssertionError
+______________ test_topic_title_markup_is_escaped_in_topics_reply ______________
+
+    async def test_topic_title_markup_is_escaped_in_topics_reply() -> None:
+        message = FakeMessage()
+    
+        async def reader(_chat_id: int) -> list[TopicInfo]:
+            return [
+                TopicInfo(
+                    topic_id=7,
+                    title="<b>Важное</b> & Co",
+                    is_general=False,
+                    is_closed=False,
+                    is_hidden=False,
+                )
+            ]
+    
+        await handle_topics(cast(Message, message), reader)
+    
+        reply = message.answers[0]
+>       assert "<b>" not in reply
+E       AssertionError: assert '<b>' not in 'Темы чата:\...pic <номер>.'
+E         
+E         '<b>' is contained here:
+E           Темы чата:
+E           1. <b>Важное</b> & Co (id: 7)
+E         ?    +++
+E           
+E           Выберите тему назначения командой /set_topic <номер>.
+
+tests/integration/telegram/test_destination_flow.py:225: AssertionError
+=========================== short test summary info ============================
+FAILED tests/integration/telegram/test_destination_flow.py::test_topics_reply_contains_no_raw_html_markup
+FAILED tests/integration/telegram/test_destination_flow.py::test_topic_title_markup_is_escaped_in_topics_reply
+2 failed, 492 deselected in 3.88s

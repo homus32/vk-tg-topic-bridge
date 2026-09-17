@@ -106,3 +106,19 @@ async def test_wall_topic_is_never_touched() -> None:
     await harness.use_case.execute(CHAT_ID, NEWS_TOPIC, RUN_ID)
 
     assert harness.settings.state.telegram_wall_topic_id == 99
+
+
+GENERAL_TOPIC = TopicInfo(
+    topic_id=None, title="General", is_general=True, is_closed=False, is_hidden=False
+)
+
+
+async def test_general_topic_is_rejected_before_any_send_or_persistence() -> None:
+    harness = _build()
+
+    with pytest.raises(ProvisioningError):
+        await harness.use_case.execute(CHAT_ID, GENERAL_TOPIC, RUN_ID)
+
+    assert harness.admin.calls == []
+    assert harness.settings.state.telegram_messages_topic_id is None
+    assert harness.uow.committed is False

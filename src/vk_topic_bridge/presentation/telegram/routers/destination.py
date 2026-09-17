@@ -56,10 +56,12 @@ def _is_target_chat(message: Message) -> bool:
 
 
 def _format_topics(topics: list[TopicInfo]) -> str:
-    lines = [
-        f"{index}. {topic.title} (id: {topic.topic_id})"
-        for index, topic in enumerate(topics, start=1)
-    ]
+    lines: list[str] = []
+    for index, topic in enumerate(topics, start=1):
+        if topic.topic_id is None:
+            lines.append(f"{index}. {topic.title} (служебная тема, не выбирается)")
+        else:
+            lines.append(f"{index}. {topic.title} (id: {topic.topic_id})")
     return "\n".join(lines)
 
 
@@ -124,6 +126,12 @@ async def handle_set_topic(
         return
 
     topic = topics[ordinal - 1]
+    if topic.topic_id is None:
+        await message.answer(
+            f"Тема «{topic.title}» служебная и не может быть темой назначения. "
+            f"Выберите именованную тему: список — /{TOPICS_COMMAND}."
+        )
+        return
     try:
         message_id = await select_destination.execute(message.chat.id, topic, run_id_factory())
     except ProvisioningError as error:

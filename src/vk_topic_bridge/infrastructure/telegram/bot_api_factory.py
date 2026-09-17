@@ -2,15 +2,18 @@
 
 The proxy decision itself lives in ``Settings.bot_api_proxy_url()`` (frozen contract);
 this module only turns that decision into an ``AiohttpSession``.
+
+The Bot deliberately keeps ``parse_mode`` unset: VK publication text is the only HTML
+payload (it is escaped in the domain composer and sent with an explicit parse mode),
+while owner-facing replies must reach Telegram as plain text so a literal ``<`` never
+becomes an unintended tag.
 """
 
 from __future__ import annotations
 
 from aiogram import Bot
-from aiogram.client.default import DefaultBotProperties
 from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.client.telegram import TelegramAPIServer
-from aiogram.enums import ParseMode
 
 from config import LOOPBACK_HOSTS, Settings
 
@@ -30,9 +33,8 @@ def create_bot_session(settings: Settings) -> AiohttpSession:
 
 
 def create_bot(settings: Settings) -> Bot:
-    """Build the aiogram Bot with HTML rendering enabled by default."""
+    """Build the aiogram Bot; no default parse mode is applied (plain text by default)."""
     return Bot(
         token=settings.TELEGRAM_BOT_TOKEN.get_secret_value(),
         session=create_bot_session(settings),
-        default=DefaultBotProperties(parse_mode=ParseMode.HTML),
     )

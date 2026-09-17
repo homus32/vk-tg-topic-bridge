@@ -1,0 +1,16 @@
+# RED: realBot API rejected /topics because a global parse_mode=HTML parsed the literal "<номер>"
+
+## Production traceback (user run, 2026-09-18 09:26):
+aiogram.exceptions.TelegramBadRequest: Telegram server says - Bad Request:
+can't parse entities: Unsupported start tag "номер" at byte offset 246
+  File ".../presentation/telegram/routers/destination.py", line 89, in handle_topics
+    await message.answer(...)
+
+## Root cause (empirically verified against aiogram 3.31):
+- create_bot() applied DefaultBotProperties(parse_mode=ParseMode.HTML) globally.
+- Every Message.answer() therefore sent parse_mode=HTML, including owner replies.
+- Literal '<номер>' and any '<' in chat/topic titles became an unintended HTML tag.
+
+## Test-level RED (before fix):
+FAILED tests/integration/telegram/test_destination_flow.py::test_topics_reply_contains_no_raw_html_markup
+  Ответ содержал: "Выберите тему назначения командой /set_topic <номер>."

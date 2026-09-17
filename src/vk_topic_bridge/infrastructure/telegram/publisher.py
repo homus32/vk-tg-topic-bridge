@@ -13,7 +13,7 @@ import re
 
 import aiohttp
 from aiogram import Bot
-from aiogram.enums import ChatMemberStatus
+from aiogram.enums import ChatMemberStatus, ParseMode
 from aiogram.exceptions import (
     TelegramAPIError,
     TelegramBadRequest,
@@ -107,11 +107,18 @@ def _classify(exc: BaseException) -> PublicationAmbiguousError | PublicationReje
     raise exc
 
 
-async def _send_message(bot: Bot, destination: Destination, text: str) -> Message:
+async def _send_message(
+    bot: Bot,
+    destination: Destination,
+    text: str,
+    *,
+    parse_mode: ParseMode | None = None,
+) -> Message:
     """Call ``sendMessage``; the General topic is addressed by omitting the thread id.
 
     The two calls are deliberately separate: passing ``message_thread_id=None`` is not
-    equivalent to omitting the field for all Bot API servers.
+    equivalent to omitting the field for all Bot API servers. ``parse_mode`` is explicit
+    per call: only the escaped VK publication uses HTML, owner-facing text stays plain.
     """
     preview = LinkPreviewOptions(is_disabled=True)
     try:
@@ -119,12 +126,14 @@ async def _send_message(bot: Bot, destination: Destination, text: str) -> Messag
             return await bot.send_message(
                 chat_id=destination.chat_id,
                 text=text,
+                parse_mode=parse_mode,
                 link_preview_options=preview,
             )
         return await bot.send_message(
             chat_id=destination.chat_id,
             text=text,
             message_thread_id=destination.message_thread_id,
+            parse_mode=parse_mode,
             link_preview_options=preview,
         )
     except asyncio.CancelledError:
@@ -142,7 +151,9 @@ class BotApiPublisher:
 
     async def publish(self, publication: Publication) -> PublicationResult:
         destination = Destination(publication.chat_id, publication.message_thread_id)
-        message = await _send_message(self._bot, destination, publication.html_text)
+        message = await _send_message(
+            self._bot, destination, publication.html_text, parse_mode=ParseMode.HTML
+        )
         return PublicationResult(
             chat_id=publication.chat_id,
             message_thread_id=publication.message_thread_id,

@@ -11,7 +11,6 @@ from types import ModuleType
 import pytest
 from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.client.telegram import PRODUCTION
-from aiogram.enums import ParseMode
 
 from config import Settings
 
@@ -83,7 +82,7 @@ def test_absent_url_falls_back_to_official_api(monkeypatch: pytest.MonkeyPatch) 
     assert session.proxy is None
 
 
-async def test_create_bot_uses_token_custom_server_and_html_default(
+async def test_create_bot_uses_token_custom_server_and_no_global_parse_mode(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     factory = _factory()
@@ -98,5 +97,6 @@ async def test_create_bot_uses_token_custom_server_and_html_default(
     assert bot.token == BOT_TOKEN
     assert isinstance(bot.session, AiohttpSession)
     assert bot.session.api.base.startswith("http://127.0.0.1:8081")
-    assert bot.default.parse_mode is ParseMode.HTML
+    # A global parse mode would make every owner reply HTML-parsed; publications opt in.
+    assert bot.default.parse_mode is None
     await bot.session.close()

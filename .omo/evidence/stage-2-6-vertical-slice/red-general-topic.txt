@@ -1,0 +1,12 @@
+# RED: General topic could be persisted as the destination, leaving forwarding disabled after restart
+
+## Test-level RED (before fix):
+FAILED tests/unit/application/test_select_destination.py::test_general_topic_is_rejected_before_any_send_or_persistence
+>       with pytest.raises(ProvisioningError):
+E       Failed: DID NOT RAISE ProvisioningError
+tests/unit/application/test_select_destination.py:119: Failed
+
+## Why it matters:
+General has topic_id None; telegram_messages_topic_id=None means "not configured".
+Selecting General wrote NULL -> after restart startup skipped FORWARDING_ENABLED,
+so forwarding silently stayed disabled even though the test send had succeeded.
