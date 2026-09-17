@@ -1,0 +1,19 @@
+================================================================================
+GREEN (exact plan command): uv run --locked pytest tests/unit/test_logger.py -q
+216 passed, 32 warnings in 8.04s
+GREEN_EXIT=0
+--- focused 14 tests (--no-cov before path) ---
+..............                                                           [100%]
+14 passed in 0.20s
+--- plan QA selector (intercept or file_sink or library_filter) ---
+...........                                                              [100%]
+11 passed, 3 deselected in 0.18s
+--- ruff format --check ---
+2 files already formatted
+--- ruff check ---
+All checks passed!
+--- basedpyright logger.py ---
+0 errors, 0 warnings, 0 notes
+--- regression: uv run --locked pytest -q ---
+216 passed, 32 warnings in 3.58s
+HEAD=2c6f4f5

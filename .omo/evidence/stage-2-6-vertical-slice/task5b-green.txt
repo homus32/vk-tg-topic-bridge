@@ -1,0 +1,211 @@
+........................................................................ [ 33%]
+........................................................................ [ 66%]
+........................................................................ [100%]
+=============================== warnings summary ===============================
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/enum.py:300: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x78dcb2460b80>
+    or not issubclass(enum_class, Flag)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/enum.py:300: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x78dcb23c3970>
+    or not issubclass(enum_class, Flag)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/enum.py:300: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x78dcb23c08b0>
+    or not issubclass(enum_class, Flag)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/enum.py:300: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x78dcb2115d50>
+    or not issubclass(enum_class, Flag)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/enum.py:300: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x78dcb21157b0>
+    or not issubclass(enum_class, Flag)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/enum.py:300: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x78dcb2117790>
+    or not issubclass(enum_class, Flag)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/enum.py:300: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x78dcb21144f0>
+    or not issubclass(enum_class, Flag)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/enum.py:300: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x78dcb2115c60>
+    or not issubclass(enum_class, Flag)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/enum.py:300: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x78dcb2028130>
+    or not issubclass(enum_class, Flag)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/enum.py:300: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x78dcb2028b80>
+    or not issubclass(enum_class, Flag)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/enum.py:300: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x78dcb2028c70>
+    or not issubclass(enum_class, Flag)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/enum.py:300: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x78dcb202ad40>
+    or not issubclass(enum_class, Flag)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/enum.py:300: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x78dcb202a200>
+    or not issubclass(enum_class, Flag)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/enum.py:300: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x78dcb202bc40>
+    or not issubclass(enum_class, Flag)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/enum.py:300: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x78dcb202bd30>
+    or not issubclass(enum_class, Flag)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/enum.py:300: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x78dcb1f4d030>
+    or not issubclass(enum_class, Flag)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/enum.py:300: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x78dcb1f4c040>
+    or not issubclass(enum_class, Flag)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/enum.py:300: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x78dcb1f4e3e0>
+    or not issubclass(enum_class, Flag)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/enum.py:300: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x78dcb1f4e2f0>
+    or not issubclass(enum_class, Flag)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/enum.py:300: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x78dcb1f4c4f0>
+    or not issubclass(enum_class, Flag)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/enum.py:300: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x78dcb1f4c5e0>
+    or not issubclass(enum_class, Flag)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/enum.py:300: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x78dcb1f4c6d0>
+    or not issubclass(enum_class, Flag)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/enum.py:300: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x78dcb1e345e0>
+    or not issubclass(enum_class, Flag)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/enum.py:300: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x78dcb1e346d0>
+    or not issubclass(enum_class, Flag)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/enum.py:300: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x78dcb1e34220>
+    or not issubclass(enum_class, Flag)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/enum.py:300: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x78dcb1e34b80>
+    or not issubclass(enum_class, Flag)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/enum.py:300: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x78dcb1d4cd60>
+    or not issubclass(enum_class, Flag)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/enum.py:300: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x78dcb1d4c8b0>
+    or not issubclass(enum_class, Flag)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/enum.py:300: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x78dcb1d4c7c0>
+    or not issubclass(enum_class, Flag)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/enum.py:300: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x78dcb1d4d8a0>
+    or not issubclass(enum_class, Flag)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/enum.py:300: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x78dcb1c5c8b0>
+    or not issubclass(enum_class, Flag)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_smoke.py::test_runtime_module_imports[aiogram]
+  /home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/enum.py:300: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x78dcb1c5c400>
+    or not issubclass(enum_class, Flag)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.14.3-final-0 ________________
+
+Name                                               Stmts   Miss Branch BrPart  Cover   Missing
+----------------------------------------------------------------------------------------------
+tests/integration/db/__init__.py                       0      0      0      0   100%
+tests/integration/db/test_delivery_repository.py     247      0      0      0   100%
+tests/integration/db/test_engine_pragmas.py           28      0      2      0   100%
+tests/integration/db/test_migrations.py              127      0      2      0   100%
+tests/integration/db/test_repositories.py            168      0      0      0   100%
+----------------------------------------------------------------------------------------------
+TOTAL                                                570      0      4      0   100%
+216 passed, 32 warnings in 5.68s
+2c6f4f5
