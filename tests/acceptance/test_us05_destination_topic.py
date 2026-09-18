@@ -27,9 +27,9 @@ RUN_ID = "gate-topic-run-1"
 async def test_us05_ac051_selected_topic_is_persisted_after_confirmed_send() -> None:
     harness = make_destination_harness(test_message_id=555)
 
-    message_id = await harness.use_case.execute(CHAT_ID, NEWS_TOPIC, RUN_ID)
+    result = await harness.use_case.execute(CHAT_ID, NEWS_TOPIC, "messages", RUN_ID)
 
-    assert message_id == 555
+    assert result.message_id == 555
     assert harness.admin.test_sends == [
         (CHAT_ID, MESSAGES_TOPIC_ID, f"destination check for run {RUN_ID} (topic 7)")
     ]
@@ -45,7 +45,7 @@ async def test_us05_ac051_topic_is_not_persisted_without_confirmed_send() -> Non
 
     error: BaseException | None = None
     try:
-        await harness.use_case.execute(CHAT_ID, NEWS_TOPIC, RUN_ID)
+        await harness.use_case.execute(CHAT_ID, NEWS_TOPIC, "messages", RUN_ID)
     except RuntimeError as exc:
         error = exc
 
@@ -61,7 +61,7 @@ async def test_us05_ac051_zero_message_id_is_not_a_confirmation() -> None:
 
     error: BaseException | None = None
     try:
-        await harness.use_case.execute(CHAT_ID, NEWS_TOPIC, RUN_ID)
+        await harness.use_case.execute(CHAT_ID, NEWS_TOPIC, "messages", RUN_ID)
     except ProvisioningError as exc:
         error = exc
 

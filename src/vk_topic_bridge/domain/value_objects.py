@@ -4,6 +4,8 @@ from dataclasses import dataclass
 
 from vk_topic_bridge.domain.enums import AttachmentKind, SourceType
 
+type PublicationSource = SourceMessage | SourceWallPost
+
 
 @dataclass(frozen=True, slots=True)
 class Author:
@@ -81,14 +83,41 @@ class TopicInfo:
 
 
 @dataclass(frozen=True, slots=True)
+class SourceWallPost:
+    """Normalized ``wall_post_new`` event after attachment mapping.
+
+    TODO(finish): constructed by the wall normalizer in ``infrastructure/vk/mapper.py``
+    from the raw payload; ``text`` is the raw VK text (unescaped); ``author`` is the
+    resolved profile of ``from_id``/community when resolvable, otherwise a zero-id
+    placeholder author with empty names (wall posts may be community-authored).
+    ``url`` comes from ``wall_post_url(owner_id, post_id)`` (domain/wall_post.py).
+    """
+
+    source_type: SourceType
+    source_key: str
+    group_id: int
+    owner_id: int
+    post_id: int
+    author: Author
+    text: str
+    url: str
+    attachments: tuple[Attachment, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class Publication:
-    """Composed Telegram publication ready for the Bot API publisher."""
+    """Composed Telegram publication ready for the Bot API publisher.
+
+    ``source`` is the normalized origin of this publication: a ``SourceMessage`` for
+    message flows or a ``SourceWallPost`` for wall flows (the wall post keeps its own
+    identity and is never forced into the message-only union).
+    """
 
     chat_id: int
     message_thread_id: int | None
     html_text: str
     has_all: bool
-    source: SourceMessage
+    source: PublicationSource
 
 
 @dataclass(frozen=True, slots=True)

@@ -7,25 +7,32 @@ production logic while observing only fake-visible outcomes.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, replace
 from types import TracebackType
-from typing import Self
+from typing import Any, Self, cast
 
 import pytest
 
 from config import Settings
 from tests.acceptance._ledger import DeliveryLedger
+from vk_topic_bridge.application.admin.destination_admin import SelectDestinationV2
 from vk_topic_bridge.application.admin.refresh_topics import RefreshTopics
 from vk_topic_bridge.application.admin.register_chat import RegisterChat
-from vk_topic_bridge.application.admin.select_destination import SelectDestination
 from vk_topic_bridge.application.dto.infrastructure import ChatAccessInfo, LongPollInfo
-from vk_topic_bridge.application.dto.readiness import ReadinessState
 from vk_topic_bridge.application.dto.settings import BridgeSettingsState, ToggleKind
 from vk_topic_bridge.application.forwarding.forward_message import ForwardVkMessage
+from vk_topic_bridge.application.forwarding.forward_wall import ForwardWallPost
+from vk_topic_bridge.application.notifications.owner_notifier import OwnerNotifier
 from vk_topic_bridge.application.readiness import InMemoryReadinessGate
-from vk_topic_bridge.domain.enums import SourceType
+from vk_topic_bridge.domain.enums import AttachmentKind, SourceType
+from vk_topic_bridge.domain.errors import AttachmentDownloadFailed
 from vk_topic_bridge.domain.policies.forwarding_policy import decide
+from vk_topic_bridge.domain.publication import (
+    OperationOutcome,
+    OperationStatus,
+    PublicationPlan,
+)
 from vk_topic_bridge.domain.value_objects import (
     Attachment,
     Author,
@@ -33,13 +40,16 @@ from vk_topic_bridge.domain.value_objects import (
     Publication,
     PublicationResult,
     SourceMessage,
+    SourceWallPost,
     TopicInfo,
 )
+from vk_topic_bridge.presentation.vk.handlers import VkUiDispatcher
 
 CHAT_ID = -1001234567890
 CHAT_TITLE = "Тестовый чат"
 MESSAGES_TOPIC_ID = 7
-PEER_ID = 222
+OWNER_ID = 111
+PEER_ID = 2_000_000_222
 CONVERSATION_MESSAGE_ID = 333
 GROUP_ID = 111
 SOURCE_KEY = f"{GROUP_ID}:{PEER_ID}:{CONVERSATION_MESSAGE_ID}"
@@ -145,20 +155,31 @@ class FakeTopicsRepository:
             topic for topic in self.by_chat.get(chat_id, []) if topic.topic_id in seen
         ]
 
+    async def delete_chat(self, chat_id: int) -> None:
+        self.by_chat.pop(chat_id, None)
+
 
 class FakeAliasesRepository:
-    """Alias port placeholder: aliases belong to Stage 8 and are never used here."""
+    """``VkAliasRepository`` over one in-memory per-user map (normalized aliases)."""
+
+    def __init__(self) -> None:
+        self.rows: dict[int, dict[int | None, str]] = {}
 
     async def list_for_user(self, vk_user_id: int) -> list[tuple[int | None, str]]:
-        return []
+        return list(self.rows.get(vk_user_id, {}).items())
 
     async def upsert(
         self, vk_user_id: int, topic_id: int | None, alias: str, alias_normalized: str
     ) -> None:
-        raise AssertionError("alias persistence is deferred to Stage 8")
+        self.rows.setdefault(vk_user_id, {})[topic_id] = alias_normalized
 
     async def delete(self, vk_user_id: int, topic_id: int | None) -> None:
-        raise AssertionError("alias persistence is deferred to Stage 8")
+        self.rows.get(vk_user_id, {}).pop(topic_id, None)
+
+    async def delete_all(self) -> int:
+        count = sum(len(entries) for entries in self.rows.values())
+        self.rows.clear()
+        return count
 
 
 class FakeUnitOfWork:
@@ -190,7 +211,12 @@ class FakeUnitOfWork:
 
 
 class RecordingPublisher:
-    """``TelegramPublisher`` recording every confirmed publication and owner message."""
+    """``TelegramPublisher``/``TelegramPublisherPlan`` double recording every call.
+
+    ``publications`` holds the base publication of every executed plan, and ``sent_text``
+    records owner-facing plain-text sends, so both the forwarding pipeline and the
+    notifier can be asserted from one fake.
+    """
 
     def __init__(
         self,
@@ -201,6 +227,7 @@ class RecordingPublisher:
         self.error = error
         self.message_ids = message_ids
         self.publications: list[Publication] = []
+        self.plans: list[PublicationPlan] = []
         self.sent_text: list[tuple[int, str, int | None]] = []
 
     async def publish(self, publication: Publication) -> PublicationResult:
@@ -211,6 +238,20 @@ class RecordingPublisher:
             chat_id=publication.chat_id,
             message_thread_id=publication.message_thread_id,
             message_ids=self.message_ids,
+        )
+
+    async def publish_plan(self, plan: PublicationPlan) -> tuple[OperationOutcome, ...]:
+        self.plans.append(plan)
+        self.publications.append(plan.base)
+        if self.error is not None:
+            raise self.error
+        return tuple(
+            OperationOutcome(
+                operation=operation,
+                status=OperationStatus.PUBLISHED,
+                message_ids=self.message_ids,
+            )
+            for operation in plan.operations
         )
 
     async def send_text(self, chat_id: int, text: str, message_thread_id: int | None = None) -> int:
@@ -306,6 +347,16 @@ class FakeVkGateway:
     async def get_author(self, user_id: int) -> Author:
         return Author(user_id=user_id, first_name="Иван", last_name="Петров", screen_name=None)
 
+    async def normalize_event(
+        self, raw_event: Mapping[str, object], author: Author
+    ) -> SourceMessage:
+        raise AssertionError("normalize_event is not used by this harness")
+
+    async def normalize_wall_event(
+        self, raw_event: Mapping[str, object], author: Author
+    ) -> SourceWallPost:
+        raise AssertionError("normalize_wall_event is not used by this harness")
+
     async def set_reaction(self, peer_id: int, conversation_message_id: int) -> None:
         self.reaction_calls.append((peer_id, conversation_message_id))
         if self.error is not None:
@@ -375,20 +426,20 @@ class DestinationHarness:
     uow: FakeUnitOfWork
     settings: FakeSettingsRepository
     admin: FakeAdminPort
-    use_case: SelectDestination
+    use_case: SelectDestinationV2
 
 
 def make_destination_harness(
     *, test_message_id: int = 555, test_error: BaseException | None = None
 ) -> DestinationHarness:
-    """Wire ``SelectDestination`` over fake ports, ready for acceptance assertions."""
+    """Wire ``SelectDestinationV2`` over fake ports, ready for acceptance assertions."""
     uow = FakeUnitOfWork()
     admin = FakeAdminPort(test_message_id=test_message_id, test_error=test_error)
     return DestinationHarness(
         uow=uow,
         settings=uow.bridge_settings,
         admin=admin,
-        use_case=SelectDestination(lambda: uow, admin),
+        use_case=SelectDestinationV2(lambda: uow, admin),
     )
 
 
@@ -404,17 +455,23 @@ class ForwardingHarness:
     readiness: InMemoryReadinessGate
     uow: FakeUnitOfWork
     use_case: ForwardVkMessage
+    downloader: FakeDownloader
 
 
 def make_forwarding_harness(
     *,
     registered: bool = True,
     topic_id: int | None = MESSAGES_TOPIC_ID,
+    topic_configured: bool = True,
     auto_forward_all: bool = True,
     auto_forward_hashtags: bool = True,
     publisher_error: BaseException | None = None,
     vk_error: Exception | None = None,
-    forwarding_enabled: bool = True,
+    availability: list[TopicInfo] | None = None,
+    with_notifier: bool = False,
+    downloader_error: BaseException | None = None,
+    downloader_fail_refs: frozenset[str] = frozenset(),
+    with_downloader: bool = True,
 ) -> ForwardingHarness:
     """Wire ``ForwardVkMessage`` over fake ports, ready for acceptance assertions."""
     uow = FakeUnitOfWork()
@@ -424,19 +481,24 @@ def make_forwarding_harness(
             telegram_chat_id=CHAT_ID,
             telegram_chat_title=CHAT_TITLE,
             telegram_messages_topic_id=topic_id,
+            telegram_messages_topic_configured=topic_configured,
             auto_forward_all=auto_forward_all,
             auto_forward_hashtags=auto_forward_hashtags,
         )
     publisher = RecordingPublisher(error=publisher_error)
     vk = FakeVkGateway(error=vk_error)
     readiness = InMemoryReadinessGate()
-    if forwarding_enabled:
-        readiness.advance(ReadinessState.FORWARDING_ENABLED)
+    notifier = OwnerNotifier(frozenset({OWNER_ID}), publisher) if with_notifier else None
+    downloader = FakeDownloader(error=downloader_error, fail_refs=downloader_fail_refs)
+    uow.telegram_topics.by_chat[CHAT_ID] = (
+        list(availability) if availability is not None else list(SAMPLE_TOPICS)
+    )
     use_case = ForwardVkMessage(
         uow_factory=lambda: uow,
-        publisher=publisher,
+        plan_publisher=publisher,
         vk=vk,
-        readiness=readiness,
+        downloader=downloader if with_downloader else None,
+        notifier=notifier,
     )
     return ForwardingHarness(
         settings=uow.bridge_settings,
@@ -447,4 +509,278 @@ def make_forwarding_harness(
         readiness=readiness,
         uow=uow,
         use_case=use_case,
+        downloader=downloader,
     )
+
+
+class FakeDownloader:
+    """``VkMediaDownloaderPort`` recording every call; ``fail_refs`` raises per source ref."""
+
+    def __init__(
+        self, *, error: BaseException | None = None, fail_refs: frozenset[str] = frozenset()
+    ) -> None:
+        self.error = error
+        self.fail_refs = fail_refs
+        self.resolved: list[tuple[str, AttachmentKind]] = []
+        self.downloaded: list[str] = []
+
+    async def resolve_url(self, source_ref: str, kind: AttachmentKind) -> str:
+        self.resolved.append((source_ref, kind))
+        if self.error is not None:
+            raise self.error
+        return f"https://cdn.example/{source_ref}"
+
+    async def download(self, source_ref: str, url: str) -> str:
+        if self.error is not None:
+            raise self.error
+        if source_ref in self.fail_refs:
+            raise AttachmentDownloadFailed(f"fake download failure for {source_ref}")
+        self.downloaded.append(source_ref)
+        return f"/tmp/fake/{source_ref}.bin"
+
+
+@dataclass(slots=True)
+class WallHarness:
+    """Real wall forwarding use case wired to fakes, plus every recorded outcome."""
+
+    settings: FakeSettingsRepository
+    topics: FakeTopicsRepository
+    ledger: DeliveryLedger
+    publisher: RecordingPublisher
+    uow: FakeUnitOfWork
+    use_case: ForwardWallPost
+    downloader: FakeDownloader
+
+
+WALL_TOPIC_ID = 12
+
+
+def make_wall_harness(
+    *,
+    registered: bool = True,
+    wall_topic_id: int | None = WALL_TOPIC_ID,
+    wall_topic_configured: bool = True,
+    auto_forward_wall: bool = True,
+    publisher_error: BaseException | None = None,
+    availability: list[TopicInfo] | None = None,
+    with_notifier: bool = False,
+) -> WallHarness:
+    """Wire ``ForwardWallPost`` over fake ports, ready for acceptance assertions."""
+    uow = FakeUnitOfWork()
+    if registered:
+        uow.bridge_settings.state = replace(
+            BridgeSettingsState.defaults(),
+            telegram_chat_id=CHAT_ID,
+            telegram_chat_title=CHAT_TITLE,
+            telegram_wall_topic_id=wall_topic_id,
+            telegram_wall_topic_configured=wall_topic_configured,
+            auto_forward_wall=auto_forward_wall,
+        )
+    publisher = RecordingPublisher(error=publisher_error)
+    notifier = OwnerNotifier(frozenset({OWNER_ID}), publisher) if with_notifier else None
+    if availability is not None:
+        snapshot = list(availability)
+    else:
+        snapshot = list(SAMPLE_TOPICS)
+        if wall_topic_id is not None and all(t.topic_id != wall_topic_id for t in snapshot):
+            snapshot.append(
+                TopicInfo(
+                    topic_id=wall_topic_id,
+                    title="Стена",
+                    is_general=False,
+                    is_closed=False,
+                    is_hidden=False,
+                )
+            )
+    uow.telegram_topics.by_chat[CHAT_ID] = snapshot
+    downloader = FakeDownloader()
+    use_case = ForwardWallPost(
+        uow_factory=lambda: uow,
+        plan_publisher=publisher,
+        downloader=downloader,
+        notifier=notifier,
+    )
+    return WallHarness(
+        settings=uow.bridge_settings,
+        topics=uow.telegram_topics,
+        ledger=uow.deliveries,
+        publisher=publisher,
+        uow=uow,
+        use_case=use_case,
+        downloader=downloader,
+    )
+
+
+WALL_GROUP_ID = 111
+WALL_OWNER_ID = -999
+WALL_POST_ID = 5
+
+
+def make_wall_post(
+    text: str = "текст поста", *, attachments: tuple[Attachment, ...] = ()
+) -> SourceWallPost:
+    """Build a normalized wall post with the real wall source key and url."""
+    return SourceWallPost(
+        source_type=SourceType.VK_WALL,
+        source_key=f"{WALL_GROUP_ID}:{WALL_OWNER_ID}:{WALL_POST_ID}",
+        group_id=WALL_GROUP_ID,
+        owner_id=WALL_OWNER_ID,
+        post_id=WALL_POST_ID,
+        author=Author(
+            user_id=WALL_OWNER_ID, first_name="Сообщество", last_name="", screen_name=None
+        ),
+        text=text,
+        url=f"https://vk.com/wall{WALL_OWNER_ID}_{WALL_POST_ID}",
+        attachments=attachments,
+    )
+
+
+class FakeVkUiSend:
+    """``VkManualUiPort`` recording every DM and keyboard emitted by the dispatcher."""
+
+    def __init__(self) -> None:
+        self.messages: list[tuple[int, str, str | None]] = []
+
+    async def send_user_message(self, user_id: int, text: str, keyboard_json: str | None) -> int:
+        self.messages.append((user_id, text, keyboard_json))
+        return len(self.messages)
+
+    @property
+    def last_text(self) -> str:
+        assert self.messages, "no UI message was sent"
+        return self.messages[-1][1]
+
+    @property
+    def last_keyboard(self) -> str | None:
+        assert self.messages, "no UI message was sent"
+        return self.messages[-1][2]
+
+
+VK_USER_ID = 555
+VK_PEER_ID = VK_USER_ID
+
+
+class VkUiHarness:
+    """Real ``VkUiDispatcher`` wired to fakes, plus every emitted UI reply."""
+
+    uow: FakeUnitOfWork
+    send: FakeVkUiSend
+    publisher: RecordingPublisher
+    dispatcher: VkUiDispatcher
+
+    def __init__(
+        self,
+        uow: FakeUnitOfWork,
+        send: FakeVkUiSend,
+        publisher: RecordingPublisher,
+        dispatcher: VkUiDispatcher,
+    ) -> None:
+        self.uow = uow
+        self.send = send
+        self.publisher = publisher
+        self.dispatcher = dispatcher
+
+
+def make_test_source_resolver() -> object:
+    """Async resolver mirroring production: DM content, first forward's text when present."""
+    from vk_topic_bridge.domain.enums import SourceType as _SourceType
+    from vk_topic_bridge.domain.value_objects import (
+        Author as _Author,
+    )
+    from vk_topic_bridge.domain.value_objects import (
+        SourceMessage as _SourceMessage,
+    )
+
+    async def resolve(ui_message: object) -> _SourceMessage | None:
+        raw = getattr(ui_message, "raw", None)
+        if not isinstance(raw, Mapping):
+            return None
+        from_id = getattr(ui_message, "from_id", 0)
+        cmid = getattr(ui_message, "conversation_message_id", None)
+        peer_id = getattr(ui_message, "peer_id", 0)
+        if not isinstance(cmid, int):
+            return None
+        fwd_raw = raw.get("fwd_messages")
+        fwd = fwd_raw[0] if isinstance(fwd_raw, list) and fwd_raw else None
+        content = fwd if isinstance(fwd, Mapping) else raw
+        text = content.get("text", "")
+        return _SourceMessage(
+            source_type=_SourceType.VK_MESSAGE,
+            source_key=f"manual:{from_id}:{cmid}",
+            group_id=0,
+            peer_id=peer_id,
+            conversation_message_id=cmid,
+            author=_Author(user_id=from_id, first_name="", last_name="", screen_name=None),
+            text=text if isinstance(text, str) else "",
+            has_all=False,
+            has_hashtag=False,
+            attachments=(),
+        )
+
+    return resolve
+
+
+def make_vk_ui_harness(
+    *,
+    registered: bool = True,
+    topics: list[TopicInfo] | None = None,
+    publisher_error: BaseException | None = None,
+) -> VkUiHarness:
+    """Wire the real VK UI dispatcher over fake ports, ready for acceptance assertions."""
+    from vk_topic_bridge.application.manual.aliasing import AliasManager, ManualForwarding
+    from vk_topic_bridge.application.manual.publish_manual import PublishManualMessage
+    from vk_topic_bridge.presentation.vk.states import VkSessionStore
+
+    uow = FakeUnitOfWork()
+    if registered:
+        uow.bridge_settings.state = replace(
+            BridgeSettingsState.defaults(),
+            telegram_chat_id=CHAT_ID,
+            telegram_chat_title=CHAT_TITLE,
+        )
+    uow.telegram_topics.by_chat[CHAT_ID] = (
+        list(topics) if topics is not None else list(SAMPLE_TOPICS)
+    )
+    publisher = RecordingPublisher(error=publisher_error)
+    send = FakeVkUiSend()
+    dispatcher = VkUiDispatcher(
+        VkSessionStore(),
+        send,
+        ManualForwarding(lambda: uow),
+        AliasManager(lambda: uow),
+        PublishManualMessage(
+            uow_factory=lambda: uow,
+            publisher=publisher,
+            plan_publisher=publisher,
+        ),
+        source_resolver=cast("Any", make_test_source_resolver()),
+    )
+    return VkUiHarness(uow=uow, send=send, publisher=publisher, dispatcher=dispatcher)
+
+
+def make_vk_ui_message(
+    text: str = "",
+    *,
+    fwd_count: int = 0,
+    from_id: int = VK_USER_ID,
+) -> dict[str, object]:
+    """Raw ``message_new`` update shaped like the Long Poll payload the consumer passes on."""
+    if fwd_count:
+        fwd = [
+            {"id": index + 1, "conversation_message_id": index + 1} for index in range(fwd_count)
+        ]
+    else:
+        fwd = []
+    return {
+        "type": "message_new",
+        "group_id": WALL_GROUP_ID,
+        "object": {
+            "message": {
+                "from_id": from_id,
+                "peer_id": from_id,
+                "conversation_message_id": 9001,
+                "text": text,
+                "fwd_messages": fwd,
+            }
+        },
+    }

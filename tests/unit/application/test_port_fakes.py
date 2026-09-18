@@ -35,6 +35,7 @@ from vk_topic_bridge.domain.value_objects import (
     Publication,
     PublicationResult,
     SourceMessage,
+    SourceWallPost,
     TopicInfo,
 )
 
@@ -115,6 +116,9 @@ class FakeTelegramTopicsRepository:
             topic for topic in self.by_chat.get(chat_id, []) if topic.topic_id in seen
         ]
 
+    async def delete_chat(self, chat_id: int) -> None:
+        self.by_chat.pop(chat_id, None)
+
 
 class FakeVkAliasRepository:
     def __init__(self) -> None:
@@ -130,6 +134,11 @@ class FakeVkAliasRepository:
 
     async def delete(self, vk_user_id: int, topic_id: int | None) -> None:
         self.by_user.get(vk_user_id, {}).pop(topic_id, None)
+
+    async def delete_all(self) -> int:
+        deleted = sum(len(rows) for rows in self.by_user.values())
+        self.by_user.clear()
+        return deleted
 
 
 class FakeDeliveryRepository:
@@ -191,6 +200,12 @@ class FakeDeliveryRepository:
     async def list_ambiguous(self) -> list[DeliveryRecord]:
         return []
 
+    async def list_failed_terminal(self, limit: int = 20) -> list[DeliveryRecord]:
+        return []
+
+    async def mark_reviewed(self, delivery_id: int) -> bool:
+        return False
+
 
 class FakeTelegramPublisher:
     def __init__(self) -> None:
@@ -249,6 +264,12 @@ class FakeVkGateway:
 
     async def get_author(self, user_id: int) -> Author:
         return Author(user_id=user_id, first_name="Ivan", last_name="Petrov", screen_name=None)
+
+    async def normalize_event(self, raw_event: object, author: Author) -> SourceMessage:
+        raise AssertionError("normalize_event is not used by this fake")
+
+    async def normalize_wall_event(self, raw_event: object, author: Author) -> SourceWallPost:
+        raise AssertionError("normalize_wall_event is not used by this fake")
 
     async def set_reaction(self, peer_id: int, conversation_message_id: int) -> None:
         return None

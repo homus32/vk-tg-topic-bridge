@@ -1,7 +1,8 @@
-"""``/start`` onboarding: instruct until a chat is registered, confirm afterwards.
+"""``/start`` onboarding compatibility module.
 
-The handler only reads the persisted settings snapshot through an injected reader and
-replies; provisioning stays in the ``/register`` use case (US-02 AC-02.1).
+The real /start handling moved to ``routers/root.py`` (FSM reset + keyboard rendering).
+This module keeps the historically imported ``ONBOARDING_TEXT`` and ``handle_start``
+entry points for acceptance tests and wiring convenience; it has no placeholder logic.
 """
 
 from __future__ import annotations
@@ -13,39 +14,31 @@ from aiogram.filters import Command
 from aiogram.types import Message
 
 from vk_topic_bridge.application.dto.settings import BridgeSettingsState
-from vk_topic_bridge.presentation.telegram.keyboards import owner_main_keyboard
+from vk_topic_bridge.presentation.telegram.routers.root import (
+    ONBOARDING_TEXT,
+    render_root_state,
+)
 
 START_COMMAND = "start"
 
-# TODO(stage-7): /start only prints onboarding steps until the Admin UI wizard exists;
-# Stage 7 replaces this text-only reply with the permanent owner keyboard (US-02 AC-02.3).
-
 type SettingsReader = Callable[[], Awaitable[BridgeSettingsState | None]]
 
-ONBOARDING_TEXT = (
-    "Чат ещё не зарегистрирован.\n\n"
-    "1. Добавьте бота в целевой чат.\n"
-    "2. Выдайте боту права на публикацию сообщений (текст, фото, видео, документы).\n"
-    "3. Отправьте команду /register внутри этого чата."
-)
+__all__ = [
+    "ONBOARDING_TEXT",
+    "START_COMMAND",
+    "SettingsReader",
+    "build_start_router",
+    "handle_start",
+]
 
 
 async def handle_start(message: Message, settings_reader: SettingsReader) -> None:
-    """Reply with onboarding steps or confirm the registered chat."""
-    state = await settings_reader()
-    if state is None or state.telegram_chat_id is None:
-        await message.answer(ONBOARDING_TEXT)
-        return
-
-    title = state.telegram_chat_title or str(state.telegram_chat_id)
-    await message.answer(
-        f"Чат «{title}» зарегистрирован.",
-        reply_markup=owner_main_keyboard(),
-    )
+    """Reply with onboarding steps or the registered-chat keyboard."""
+    await render_root_state(message, await settings_reader())
 
 
 def build_start_router(settings_reader: SettingsReader) -> Router:
-    """Build the router for ``/start``; the reader is bound as a handler dependency."""
+    """Legacy /start router; prefer ``build_root_router`` (FSM reset + hints)."""
     router = Router(name="start")
 
     async def start(message: Message) -> None:

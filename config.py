@@ -73,6 +73,8 @@ class Settings(BaseSettings):
     SOCKS5_PROXY_URL: str | None = None
     VK_GROUP_TOKEN: SecretStr = Field(min_length=1)
     VK_GROUP_ID: int | None = None
+    VK_MEDIA_DIR: Path = Path("runtime/media")
+    VK_CURSOR_DIR: Path = Path("runtime/vk_cursor")
     DATABASE_URL: str = DEFAULT_DATABASE_URL
     LOG_LEVEL: str = "INFO"
     LOG_LEVEL_LIBS: str = "WARNING"

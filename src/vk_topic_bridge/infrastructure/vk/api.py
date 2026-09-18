@@ -4,6 +4,7 @@ The constructor accepts any object exposing ``async request(method, data)`` so t
 whole gateway is testable with a fake API and never reaches into SDK model types.
 """
 
+import random
 from collections.abc import Mapping
 from typing import Protocol
 
@@ -12,7 +13,7 @@ from vkbottle import VKAPIError
 from config import Settings
 from vk_topic_bridge.application.dto.infrastructure import LongPollInfo
 from vk_topic_bridge.domain.errors import RecoverableInfraError
-from vk_topic_bridge.domain.value_objects import Author, SourceMessage
+from vk_topic_bridge.domain.value_objects import Author, SourceMessage, SourceWallPost
 from vk_topic_bridge.infrastructure.vk import mapper
 
 # VK reaction ids are not documented per-emoji; 👍 must be confirmed live at the
@@ -142,6 +143,22 @@ class VkApiGateway:
             },
         )
 
+    async def send_user_message(self, user_id: int, text: str, keyboard_json: str | None) -> int:
+        """``messages.send`` to one user DM; returns the sent message id.
+
+        ``random_id`` is always generated: VK uses it to deduplicate an identical
+        retried send, which matters because this call is the UI reply transport.
+        """
+        params: dict[str, object] = {
+            "peer_id": user_id,
+            "message": text,
+            "random_id": random.getrandbits(31),
+        }
+        if keyboard_json is not None:
+            params["keyboard"] = keyboard_json
+        response = await self._request("messages.send", params)
+        return response if isinstance(response, int) else 0
+
     async def normalize_event(
         self, raw_event: Mapping[str, object], author: Author
     ) -> SourceMessage:
@@ -165,3 +182,17 @@ class VkApiGateway:
                 raise ValueError(msg)
             return await self.get_full_message(peer_id, cmid)
         return mapper.map_message(group_id=group_id, message=obj, author=author)
+
+    async def normalize_wall_event(
+        self, raw_event: Mapping[str, object], author: Author
+    ) -> SourceWallPost:
+        """Map one ``wall_post_new`` event into the domain wall-post form."""
+        group_id = raw_event.get("group_id")
+        if not isinstance(group_id, int) or isinstance(group_id, bool):
+            msg = "VK wall event is missing integer group_id"
+            raise ValueError(msg)
+        obj = mapper.extract_wall_payload(raw_event)
+        if obj is None:
+            msg = "VK wall event payload is missing the object mapping"
+            raise ValueError(msg)
+        return mapper.map_wall_post(group_id=group_id, payload=obj, author=author)

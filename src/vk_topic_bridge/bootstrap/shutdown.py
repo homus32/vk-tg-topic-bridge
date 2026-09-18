@@ -43,6 +43,7 @@ async def shutdown(container: AppContainer) -> None:
     failures: list[str] = []
     await _run_step("vk_polling_stop", container.vk_polling_stop, failures)
     await _run_step("polling_stop", container.polling_stop, failures)
+    await _run_step("http_session_close", container.http_session.close, failures)
     await _run_step("bot_session", container.bot.session.close, failures)
     client = container.telethon_client
     if isinstance(client, _Disconnectable):

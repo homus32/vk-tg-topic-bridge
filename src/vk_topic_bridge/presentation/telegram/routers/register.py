@@ -9,23 +9,15 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from aiogram import Router
-from aiogram.filters import Command
 from aiogram.types import Message
 
 from vk_topic_bridge.application.admin.register_chat import (
     MissingCapabilitiesError,
-    RegisterChat,
     RegisterChatResult,
 )
 from vk_topic_bridge.application.errors import ProvisioningError
 
 REGISTER_COMMAND = "register"
-
-# TODO(stage-7): /register is the temporary pre-Stage-7 provisioning entry point — the
-# Telegram Admin UI wizard will learn the chat through the same RegisterChat use case.
-# The command deliberately takes no role arguments (never /register messages|wall, D11/D16)
-# and only records the owner-authorized chat plus its capabilities.
 
 REGISTERABLE_CHAT_TYPES: frozenset[str] = frozenset({"group", "supergroup"})
 
@@ -93,14 +85,3 @@ async def handle_register(message: Message, register_chat: RegisterChatUseCase) 
     await message.answer(
         f"Чат зарегистрирован. Найдено тем: {len(result.topics)}. Список тем обновлён."
     )
-
-
-def build_register_router(register_chat: RegisterChat) -> Router:
-    """Build the router for the registration command bound to a use case instance."""
-    router = Router(name="register")
-
-    async def register(message: Message) -> None:
-        await handle_register(message, register_chat)
-
-    router.message.register(register, Command(REGISTER_COMMAND))
-    return router

@@ -177,3 +177,96 @@ def test_first_peer_guard_binds_once_and_rejects_other() -> None:
     guard.reset()
     assert guard.current() is None
     assert guard.bind(222) is True
+
+
+def _manual_dm(**overrides: object) -> dict[str, object]:
+    base: dict[str, object] = {
+        "id": 1,
+        "from_id": 555,
+        "peer_id": 555,
+        "conversation_message_id": 9001,
+        "text": "",
+    }
+    base.update(overrides)
+    return base
+
+
+def _forwarded(**overrides: object) -> dict[str, object]:
+    base: dict[str, object] = {
+        "id": 2,
+        "from_id": 777,
+        "peer_id": PEER_ID,
+        "conversation_message_id": 42,
+        "text": "пересланный текст",
+        "attachments": [
+            {
+                "type": "photo",
+                "photo": {"owner_id": -1, "id": 5, "access_key": "abc"},
+            }
+        ],
+    }
+    base.update(overrides)
+    return base
+
+
+def test_extract_forwarded_payload_returns_first_forward_only() -> None:
+    mapper = _mapper()
+
+    forwarded = _forwarded()
+    payload = mapper.extract_forwarded_payload(
+        _manual_dm(fwd_messages=[forwarded, _forwarded(id=3)])
+    )
+
+    assert payload is forwarded
+
+
+def test_extract_forwarded_payload_absent_returns_none() -> None:
+    mapper = _mapper()
+
+    assert mapper.extract_forwarded_payload(_manual_dm()) is None
+    assert mapper.extract_forwarded_payload(_manual_dm(fwd_messages=[])) is None
+
+
+def test_map_manual_source_uses_forwarded_text_and_attachments() -> None:
+    mapper = _mapper()
+
+    source = mapper.map_manual_source(
+        message=_manual_dm(fwd_messages=[_forwarded()]),
+        fwd=_forwarded(),
+        author=_author(),
+        initiator_id=555,
+    )
+
+    assert source is not None
+    assert source.text == "пересланный текст"
+    assert len(source.attachments) == 1
+    assert source.attachments[0].source_ref == "-1_5"
+    assert source.source_key == "manual:555:9001"
+    assert source.conversation_message_id == 9001
+
+
+def test_map_manual_source_without_forward_uses_dm_content() -> None:
+    mapper = _mapper()
+
+    source = mapper.map_manual_source(
+        message=_manual_dm(text="текст без пересылки"),
+        fwd=None,
+        author=_author(),
+        initiator_id=555,
+    )
+
+    assert source is not None
+    assert source.text == "текст без пересылки"
+    assert source.attachments == ()
+
+
+def test_map_manual_source_without_cmid_returns_none() -> None:
+    mapper = _mapper()
+
+    message = _manual_dm()
+    del message["conversation_message_id"]
+
+    assert (
+        mapper.map_manual_source(message=message, fwd=None, author=_author(), initiator_id=555)
+        is None
+    )

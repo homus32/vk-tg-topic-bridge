@@ -5,10 +5,9 @@ from collections.abc import Sequence
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from types import TracebackType
-from typing import Self, cast
+from typing import Self
 
 import pytest
-from aiogram import Bot
 from aiogram.types import Message
 
 from vk_topic_bridge.application.dto.delivery import (
@@ -17,26 +16,28 @@ from vk_topic_bridge.application.dto.delivery import (
     ReserveRequest,
 )
 from vk_topic_bridge.application.dto.infrastructure import LongPollInfo
-from vk_topic_bridge.application.dto.readiness import ReadinessState
 from vk_topic_bridge.application.dto.settings import BridgeSettingsState, ToggleKind
 from vk_topic_bridge.application.errors import (
     PublicationAmbiguousError,
     PublicationRejectedError,
-    ReadinessError,
 )
 from vk_topic_bridge.application.forwarding.forward_message import (
     ForwardOutcome,
     ForwardVkMessage,
 )
 from vk_topic_bridge.domain.enums import PublicationStatus, ReactionStatus, SourceType
+from vk_topic_bridge.domain.publication import (
+    OperationOutcome,
+    OperationStatus,
+    PublicationPlan,
+)
 from vk_topic_bridge.domain.value_objects import (
     Author,
     Publication,
-    PublicationResult,
     SourceMessage,
+    SourceWallPost,
     TopicInfo,
 )
-from vk_topic_bridge.infrastructure.telegram.publisher import BotApiPublisher
 
 _NOW = datetime(2026, 9, 18, 12, 0, tzinfo=UTC)
 _SOURCE_KEY = "111:222:333"
@@ -297,6 +298,25 @@ class _FakeLedger:
             r for r in self.records.values() if r.publication_status is PublicationStatus.AMBIGUOUS
         ]
 
+    async def list_failed_terminal(self, limit: int = 20) -> list[DeliveryRecord]:
+        terminal = [
+            r
+            for r in self.records.values()
+            if r.publication_status
+            in (PublicationStatus.FAILED_PERMANENT, PublicationStatus.AMBIGUOUS)
+        ]
+        return terminal[:limit]
+
+    async def mark_reviewed(self, delivery_id: int) -> bool:
+        key, record = self._find(delivery_id)
+        if (
+            record.publication_status is not PublicationStatus.AMBIGUOUS
+            or not record.review_required
+        ):
+            return False
+        self.records[key] = replace(record, review_required=False)
+        return True
+
     def _find(self, delivery_id: int) -> tuple[str, DeliveryRecord]:
         for key, record in self.records.items():
             if record.id == delivery_id:
@@ -308,6 +328,8 @@ class _FakeLedger:
 
 
 class _FakePublisher:
+    """Plan publisher double recording the base publication of every executed plan."""
+
     def __init__(
         self,
         *,
@@ -317,17 +339,22 @@ class _FakePublisher:
         self.error = error
         self.message_ids = message_ids
         self.calls: list[Publication] = []
+        self.plans: list[PublicationPlan] = []
 
-    async def publish(self, publication: Publication) -> PublicationResult:
-        self.calls.append(publication)
+    async def publish_plan(self, plan: PublicationPlan) -> tuple[OperationOutcome, ...]:
+        self.plans.append(plan)
+        self.calls.append(plan.base)
         # Model the network suspension point so concurrent calls genuinely interleave.
         await asyncio.sleep(0)
         if self.error is not None:
             raise self.error
-        return PublicationResult(
-            chat_id=publication.chat_id,
-            message_thread_id=publication.message_thread_id,
-            message_ids=self.message_ids,
+        return tuple(
+            OperationOutcome(
+                operation=operation,
+                status=OperationStatus.PUBLISHED,
+                message_ids=self.message_ids,
+            )
+            for operation in plan.operations
         )
 
     async def send_text(self, chat_id: int, text: str, message_thread_id: int | None = None) -> int:
@@ -335,26 +362,36 @@ class _FakePublisher:
 
 
 class _BlockingPublisher(_FakePublisher):
-    """Publisher whose ``publish`` blocks until the test cancels the use-case task."""
+    """Publisher whose ``publish_plan`` blocks until the test cancels the use-case task."""
 
     def __init__(self) -> None:
         super().__init__()
         self.started = asyncio.Event()
 
-    async def publish(self, publication: Publication) -> PublicationResult:
-        self.calls.append(publication)
+    async def publish_plan(self, plan: PublicationPlan) -> tuple[OperationOutcome, ...]:
+        self.plans.append(plan)
+        self.calls.append(plan.base)
         self.started.set()
         await asyncio.Event().wait()
         raise AssertionError("unreachable")
 
 
-class _ResetBot:
-    """``Bot`` double whose transport always fails with a bare native connection reset.
+class _FakeNotifier:
+    """``OwnerNotifier`` double recording every broadcast text."""
 
-    Not a ``Bot`` subclass: overriding ``send_message`` would break the base signature.
-    ``BotApiPublisher`` only calls the method dynamically, so a structural double plus a
-    single cast at the SDK boundary is enough.
-    """
+    def __init__(self) -> None:
+        self.all_texts: list[str] = []
+        self.others_texts: list[tuple[int, str]] = []
+
+    async def notify_all(self, text: str) -> None:
+        self.all_texts.append(text)
+
+    async def notify_others(self, initiator_id: int, text: str) -> None:
+        self.others_texts.append((initiator_id, text))
+
+
+class _ResetBot:
+    """``Bot`` double whose transport always fails with a bare native connection reset."""
 
     def __init__(self) -> None:
         self.calls = 0
@@ -381,25 +418,16 @@ class _FakeVk:
     async def get_author(self, user_id: int) -> Author:
         return Author(user_id=user_id, first_name="Ivan", last_name="Petrov", screen_name=None)
 
+    async def normalize_event(self, raw_event: object, author: Author) -> SourceMessage:
+        raise AssertionError("normalize_event is not used by this fake")
+
+    async def normalize_wall_event(self, raw_event: object, author: Author) -> SourceWallPost:
+        raise AssertionError("normalize_wall_event is not used by this fake")
+
     async def set_reaction(self, peer_id: int, conversation_message_id: int) -> None:
         self.reaction_calls.append((peer_id, conversation_message_id))
         if self.error is not None:
             raise self.error
-
-
-class _FakeReadiness:
-    def __init__(self, state: ReadinessState = ReadinessState.FORWARDING_ENABLED) -> None:
-        self._state = state
-
-    def current(self) -> ReadinessState:
-        return self._state
-
-    def advance(self, state: ReadinessState) -> None:
-        self._state = state
-
-    def require(self, state: ReadinessState) -> None:
-        if self._state.rank < state.rank:
-            raise ReadinessError(f"not ready for {state.value}")
 
 
 class _FakeSettings:
@@ -426,13 +454,19 @@ class _FakeSettings:
 
 
 class _FakeTopics:
+    def __init__(self) -> None:
+        self.by_chat: dict[int, list[TopicInfo]] = {}
+
     async def replace_all(self, chat_id: int, topics: Sequence[TopicInfo]) -> None:
-        raise NotImplementedError
+        self.by_chat[chat_id] = list(topics)
 
     async def list(self, chat_id: int) -> list[TopicInfo]:
-        raise NotImplementedError
+        return list(self.by_chat.get(chat_id, []))
 
     async def mark_missing(self, chat_id: int, seen_topic_ids: Sequence[int | None]) -> None:
+        raise NotImplementedError
+
+    async def delete_chat(self, chat_id: int) -> None:
         raise NotImplementedError
 
 
@@ -446,6 +480,9 @@ class _FakeAliases:
         raise NotImplementedError
 
     async def delete(self, vk_user_id: int, topic_id: int | None) -> None:
+        raise NotImplementedError
+
+    async def delete_all(self) -> int:
         raise NotImplementedError
 
 
@@ -500,9 +537,22 @@ def _registered_settings(
         BridgeSettingsState.defaults(),
         telegram_chat_id=_CHAT_ID,
         telegram_messages_topic_id=_TOPIC_ID,
+        telegram_messages_topic_configured=True,
         auto_forward_all=auto_forward_all,
         auto_forward_hashtags=auto_forward_hashtags,
     )
+
+
+def _available_topics() -> list[TopicInfo]:
+    return [
+        TopicInfo(
+            topic_id=_TOPIC_ID,
+            title="Новости",
+            is_general=False,
+            is_closed=False,
+            is_hidden=False,
+        )
+    ]
 
 
 def _source(text: str = "@all Привет", *, has_all: bool = False) -> SourceMessage:
@@ -532,11 +582,11 @@ class _Harness:
         *,
         settings: BridgeSettingsState | None = None,
         settings_missing: bool = False,
-        readiness_state: ReadinessState = ReadinessState.FORWARDING_ENABLED,
+        topics: Sequence[TopicInfo] | None = None,
         publisher_error: BaseException | None = None,
         vk_error: Exception | None = None,
         blocking_publisher: bool = False,
-        bot: Bot | None = None,
+        with_notifier: bool = False,
     ) -> None:
         self.ledger = _FakeLedger()
         if settings_missing:
@@ -548,18 +598,20 @@ class _Harness:
         self.publisher: _FakePublisher = (
             _BlockingPublisher() if blocking_publisher else _FakePublisher(error=publisher_error)
         )
-        self.bot_publisher = BotApiPublisher(bot) if bot is not None else None
         self.vk = _FakeVk(error=vk_error)
-        self.readiness = _FakeReadiness(readiness_state)
+        self.notifier = _FakeNotifier()
         self.use_case = ForwardVkMessage(
             uow_factory=self._make_uow,
-            publisher=self.bot_publisher if self.bot_publisher is not None else self.publisher,
+            plan_publisher=self.publisher,
             vk=self.vk,
-            readiness=self.readiness,
+            notifier=self.notifier if with_notifier else None,
         )
+        self._topics = list(topics) if topics is not None else _available_topics()
 
     def _make_uow(self) -> _FakeUow:
-        return _FakeUow(ledger=self.ledger, settings=self.settings)
+        uow = _FakeUow(ledger=self.ledger, settings=self.settings)
+        uow.telegram_topics.by_chat = {_CHAT_ID: list(self._topics)}
+        return uow
 
 
 async def test_all_token_publishes_once_and_reacts() -> None:
@@ -610,12 +662,13 @@ async def test_toggles_off_skips_without_reserve() -> None:
     assert harness.ledger.records == {}
 
 
-async def test_readiness_below_forwarding_skips_all_io() -> None:
-    harness = _Harness(readiness_state=ReadinessState.TOPICS_READY)
+async def test_unconfigured_destination_skips_all_io() -> None:
+    state = replace(BridgeSettingsState.defaults(), telegram_chat_id=_CHAT_ID)
+    harness = _Harness(settings=state)
     outcome = await harness.use_case.execute(_source("@all Привет"))
 
     assert outcome.skipped is True
-    assert outcome.reason == "readiness"
+    assert outcome.reason == "unconfigured"
     assert harness.publisher.calls == []
     assert harness.ledger.records == {}
 
@@ -813,17 +866,70 @@ async def test_concurrent_execute_publishes_exactly_once() -> None:
     assert first.delivery_id == second.delivery_id
 
 
-async def test_native_connection_reset_is_ambiguous() -> None:
-    bot = _ResetBot()
-    harness = _Harness(bot=cast(Bot, bot))
+async def test_missing_topic_falls_back_to_general_with_notification() -> None:
+    harness = _Harness(topics=[], with_notifier=True)
 
     outcome = await harness.use_case.execute(_source("@all Привет"))
 
-    assert outcome.published is False
+    assert outcome.published is True
+    assert harness.publisher.plans[0].base.message_thread_id is None
+    assert _stored(harness.ledger).destination_topic_id is None
+    assert len(harness.notifier.all_texts) == 1
+    assert "General" in harness.notifier.all_texts[0]
+    assert harness.vk.reaction_calls == [(_PEER_ID, _CONVERSATION_MESSAGE_ID)]
+
+
+async def test_closed_topic_falls_back_to_general() -> None:
+    closed = [
+        TopicInfo(
+            topic_id=_TOPIC_ID,
+            title="Новости",
+            is_general=False,
+            is_closed=True,
+            is_hidden=False,
+        )
+    ]
+    harness = _Harness(topics=closed, with_notifier=True)
+
+    outcome = await harness.use_case.execute(_source("@all Привет"))
+
+    assert outcome.published is True
+    assert harness.publisher.plans[0].base.message_thread_id is None
+    assert "закрыт" in harness.notifier.all_texts[0]
+
+
+async def test_explicit_general_publishes_without_fallback_notification() -> None:
+    state = replace(
+        BridgeSettingsState.defaults(),
+        telegram_chat_id=_CHAT_ID,
+        telegram_messages_topic_id=None,
+        telegram_messages_topic_configured=True,
+    )
+    harness = _Harness(settings=state, topics=[], with_notifier=True)
+
+    outcome = await harness.use_case.execute(_source("@all Привет"))
+
+    assert outcome.published is True
+    assert harness.publisher.plans[0].base.message_thread_id is None
+    assert harness.notifier.all_texts == []
+
+
+async def test_ambiguous_outcome_notifies_owners() -> None:
+    harness = _Harness(publisher_error=PublicationAmbiguousError("timeout"), with_notifier=True)
+
+    outcome = await harness.use_case.execute(_source("@all Привет"))
+
     assert outcome.reason == "ambiguous"
-    assert bot.calls == 1
-    record = _stored(harness.ledger)
-    assert record.publication_status is PublicationStatus.AMBIGUOUS
-    assert record.review_required is True
-    assert record.last_error_code == "bot_api_connection_reset"
-    assert harness.vk.reaction_calls == []
+    assert len(harness.notifier.all_texts) == 1
+    assert "Диагностика доставки" in harness.notifier.all_texts[0]
+
+
+async def test_rejected_outcome_notifies_owners() -> None:
+    harness = _Harness(
+        publisher_error=PublicationRejectedError("thread not found"), with_notifier=True
+    )
+
+    outcome = await harness.use_case.execute(_source("@all Привет"))
+
+    assert outcome.reason == "rejected"
+    assert len(harness.notifier.all_texts) == 1

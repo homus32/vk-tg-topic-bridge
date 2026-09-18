@@ -12,8 +12,8 @@ from vk_topic_bridge.domain.value_objects import Author, SourceMessage
 from vk_topic_bridge.infrastructure.vk.api import VkApiGateway
 
 ALLOWED_GROUP = 1
-PEER_ID = 100
-SECOND_PEER_ID = 200
+PEER_ID = 2_000_000_100
+SECOND_PEER_ID = 2_000_000_200
 FROM_ID = 7
 
 

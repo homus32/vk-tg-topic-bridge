@@ -9,7 +9,9 @@ definitive 4xx rejections that created no message are ``PublicationRejectedError
 from __future__ import annotations
 
 import asyncio
+import logging
 import re
+from pathlib import Path
 
 import aiohttp
 from aiogram import Bot
@@ -24,11 +26,26 @@ from aiogram.exceptions import (
     TelegramServerError,
     TelegramUnauthorizedError,
 )
-from aiogram.types import LinkPreviewOptions, Message
+from aiogram.types import (
+    FSInputFile,
+    InputMediaPhoto,
+    InputMediaVideo,
+    LinkPreviewOptions,
+    MediaUnion,
+    Message,
+)
 
 from vk_topic_bridge.application.errors import (
     PublicationAmbiguousError,
     PublicationRejectedError,
+)
+from vk_topic_bridge.domain.publication import (
+    OperationKind,
+    OperationOutcome,
+    OperationStatus,
+    PlannedMedia,
+    PublicationOperation,
+    PublicationPlan,
 )
 from vk_topic_bridge.domain.value_objects import (
     ChatCapabilities,
@@ -36,6 +53,8 @@ from vk_topic_bridge.domain.value_objects import (
     Publication,
     PublicationResult,
 )
+
+logger = logging.getLogger(__name__)
 
 _ERROR_TEXT_LIMIT = 200
 _TOKEN_PATTERN = re.compile(r"\d{5,}:[A-Za-z0-9_-]{20,}")
@@ -169,6 +188,142 @@ class BotApiPublisher:
         destination = Destination(chat_id, message_thread_id)
         message = await _send_message(self._bot, destination, text)
         return message.message_id
+
+    async def publish_plan(self, plan: PublicationPlan) -> tuple[OperationOutcome, ...]:
+        """Execute planned operations in order; classified failures do not abort the plan."""
+        outcomes: list[OperationOutcome] = []
+        for operation in plan.operations:
+            try:
+                message_ids = await self._execute_operation(plan.base, operation)
+            except PublicationRejectedError as exc:
+                outcomes.append(
+                    OperationOutcome(
+                        operation=operation,
+                        status=OperationStatus.FAILED_PERMANENT,
+                        message_ids=(),
+                        error_code=exc.code,
+                        error_message=str(exc),
+                    )
+                )
+            except PublicationAmbiguousError as exc:
+                outcomes.append(
+                    OperationOutcome(
+                        operation=operation,
+                        status=OperationStatus.ACCEPTED_UNKNOWN,
+                        message_ids=(),
+                        error_code=exc.code,
+                        error_message=str(exc),
+                    )
+                )
+            else:
+                outcomes.append(
+                    OperationOutcome(
+                        operation=operation,
+                        status=OperationStatus.PUBLISHED,
+                        message_ids=message_ids,
+                    )
+                )
+            finally:
+                _remove_temp_files(operation)
+        return tuple(outcomes)
+
+    async def _execute_operation(
+        self, base: Publication, operation: PublicationOperation
+    ) -> tuple[int, ...]:
+        thread_id = base.message_thread_id
+        try:
+            if operation.kind is OperationKind.TEXT:
+                message = await _send_message(
+                    self._bot,
+                    Destination(base.chat_id, thread_id),
+                    operation.text or "",
+                    parse_mode=ParseMode.HTML,
+                )
+                return (message.message_id,)
+            if operation.kind is OperationKind.MEDIA_GROUP:
+                media_items: list[MediaUnion] = [
+                    _build_input_media(item, caption=operation.text if index == 0 else None)
+                    for index, item in enumerate(operation.media)
+                ]
+                if thread_id is None:
+                    messages = await self._bot.send_media_group(
+                        chat_id=base.chat_id, media=media_items
+                    )
+                else:
+                    messages = await self._bot.send_media_group(
+                        chat_id=base.chat_id, media=media_items, message_thread_id=thread_id
+                    )
+                return tuple(message.message_id for message in messages)
+            media = operation.media[0]
+            source = FSInputFile(media.file_path, filename=media.file_name)
+            caption = operation.text
+            parse_mode = ParseMode.HTML if caption is not None else None
+            if operation.kind is OperationKind.PHOTO:
+                if thread_id is None:
+                    message = await self._bot.send_photo(
+                        chat_id=base.chat_id, photo=source, caption=caption, parse_mode=parse_mode
+                    )
+                else:
+                    message = await self._bot.send_photo(
+                        chat_id=base.chat_id,
+                        photo=source,
+                        caption=caption,
+                        parse_mode=parse_mode,
+                        message_thread_id=thread_id,
+                    )
+            elif operation.kind is OperationKind.VIDEO:
+                if thread_id is None:
+                    message = await self._bot.send_video(
+                        chat_id=base.chat_id, video=source, caption=caption, parse_mode=parse_mode
+                    )
+                else:
+                    message = await self._bot.send_video(
+                        chat_id=base.chat_id,
+                        video=source,
+                        caption=caption,
+                        parse_mode=parse_mode,
+                        message_thread_id=thread_id,
+                    )
+            else:
+                if thread_id is None:
+                    message = await self._bot.send_document(
+                        chat_id=base.chat_id,
+                        document=source,
+                        caption=caption,
+                        parse_mode=parse_mode,
+                    )
+                else:
+                    message = await self._bot.send_document(
+                        chat_id=base.chat_id,
+                        document=source,
+                        caption=caption,
+                        parse_mode=parse_mode,
+                        message_thread_id=thread_id,
+                    )
+            return (message.message_id,)
+        except asyncio.CancelledError:
+            raise
+        except BaseException as exc:
+            raise _classify(exc) from exc
+
+
+def _build_input_media(
+    media: PlannedMedia, *, caption: str | None
+) -> InputMediaPhoto | InputMediaVideo:
+    """One album item; caption is attached to a single item by the planner contract."""
+    source = FSInputFile(media.file_path, filename=media.file_name)
+    if media.kind is OperationKind.VIDEO:
+        return InputMediaVideo(media=source, caption=caption, parse_mode=ParseMode.HTML)
+    return InputMediaPhoto(media=source, caption=caption, parse_mode=ParseMode.HTML)
+
+
+def _remove_temp_files(operation: PublicationOperation) -> None:
+    """Publisher owns per-operation temp cleanup (success and classified failure)."""
+    for media in operation.media:
+        try:
+            Path(media.file_path).unlink(missing_ok=True)
+        except OSError as exc:
+            logger.warning("temp media cleanup failed for %s: %s", media.file_path, exc)
 
 
 class BotApiAdminPort:

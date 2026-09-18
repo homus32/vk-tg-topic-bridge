@@ -22,7 +22,7 @@ _RETRYABLE = (PublicationStatus.RESERVED, PublicationStatus.FAILED_BEFORE_SEND)
 _NOW = datetime(2026, 9, 18, 12, 0, tzinfo=UTC)
 
 
-def blank_record(source_type: str, source_key: str) -> DeliveryRecord:
+def blank_record(source_type: str, source_key: str, intent: str = "automatic") -> DeliveryRecord:
     """Fresh ``reserved`` row before any claim or send intent."""
     return DeliveryRecord(
         id=0,
@@ -45,6 +45,7 @@ def blank_record(source_type: str, source_key: str) -> DeliveryRecord:
         created_at=_NOW,
         updated_at=_NOW,
         completed_at=None,
+        intent=intent,
     )
 
 
@@ -89,13 +90,19 @@ class DeliveryLedger:
         assert record is not None, f"delivery record {source_key!r} must exist"
         return record
 
+    def wall_record_for(self, source_key: str) -> DeliveryRecord:
+        """Return the stored row for a wall-post source key, failing the test if absent."""
+        record = self.records.get(ledger_key(SourceType.VK_WALL, source_key))
+        assert record is not None, f"wall delivery record {source_key!r} must exist"
+        return record
+
     async def reserve(self, request: ReserveRequest) -> ReserveOutcome:
         key = ledger_key(request.source_type, request.source_key)
         existing = self.records.get(key)
         if existing is not None:
             return ReserveOutcome(created=False, record=existing)
         record = replace(
-            blank_record(request.source_type.value, request.source_key),
+            blank_record(request.source_type.value, request.source_key, request.intent),
             id=self._next_id,
             destination_chat_id=request.destination_chat_id,
             destination_topic_id=request.destination_topic_id,
@@ -264,6 +271,25 @@ class DeliveryLedger:
             for record in self.records.values()
             if record.publication_status is PublicationStatus.AMBIGUOUS
         ]
+
+    async def list_failed_terminal(self, limit: int = 20) -> list[DeliveryRecord]:
+        terminal = [
+            record
+            for record in self.records.values()
+            if record.publication_status
+            in (PublicationStatus.FAILED_PERMANENT, PublicationStatus.AMBIGUOUS)
+        ]
+        return terminal[:limit]
+
+    async def mark_reviewed(self, delivery_id: int) -> bool:
+        key, record = self._find(delivery_id)
+        if (
+            record.publication_status is not PublicationStatus.AMBIGUOUS
+            or not record.review_required
+        ):
+            return False
+        self._write(key, replace(record, review_required=False))
+        return True
 
     def _find(self, delivery_id: int) -> tuple[str, DeliveryRecord]:
         for key, record in self.records.items():

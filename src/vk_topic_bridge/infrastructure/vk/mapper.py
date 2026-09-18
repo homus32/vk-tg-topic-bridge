@@ -9,7 +9,13 @@ from collections.abc import Mapping
 from vk_topic_bridge.domain.enums import SourceType
 from vk_topic_bridge.domain.policies.attachment_policy import classify_attachment_type
 from vk_topic_bridge.domain.policies.forwarding_policy import decide, source_key
-from vk_topic_bridge.domain.value_objects import Attachment, Author, SourceMessage
+from vk_topic_bridge.domain.value_objects import (
+    Attachment,
+    Author,
+    SourceMessage,
+    SourceWallPost,
+)
+from vk_topic_bridge.domain.wall_post import wall_post_url, wall_source_key
 
 _MISSING = object()
 
@@ -24,6 +30,14 @@ def extract_message_payload(
         return raw_object
     message = raw_object["message"]
     return message if isinstance(message, Mapping) else None
+
+
+def extract_wall_payload(
+    raw_event: Mapping[str, object],
+) -> Mapping[str, object] | None:
+    """The ``wall_post_new`` object lives directly under ``object`` (no nesting)."""
+    raw_object = raw_event.get("object")
+    return raw_object if isinstance(raw_object, Mapping) else None
 
 
 def is_cropped(message: Mapping[str, object]) -> bool:
@@ -123,6 +137,76 @@ def map_message(
         has_all=decision.matched_all,
         has_hashtag=decision.matched_hashtag,
         attachments=_map_attachments(message.get("attachments")),
+    )
+
+
+def map_wall_post(
+    *,
+    group_id: int,
+    payload: Mapping[str, object],
+    author: Author,
+) -> SourceWallPost:
+    """Map one ``wall_post_new`` object into the domain wall-post form."""
+    owner_id = _require_int(payload, "owner_id")
+    post_id = _require_int(payload, "id")
+
+    raw_text = payload.get("text")
+    text = raw_text if isinstance(raw_text, str) else ""
+
+    return SourceWallPost(
+        source_type=SourceType.VK_WALL,
+        source_key=wall_source_key(group_id, owner_id, post_id),
+        group_id=group_id,
+        owner_id=owner_id,
+        post_id=post_id,
+        author=author,
+        text=text,
+        url=wall_post_url(owner_id, post_id),
+        attachments=_map_attachments(payload.get("attachments")),
+    )
+
+
+def extract_forwarded_payload(
+    message: Mapping[str, object],
+) -> Mapping[str, object] | None:
+    """First forwarded message of a DM, if any; nested forwards are never expanded."""
+    forwarded = message.get("fwd_messages")
+    if not isinstance(forwarded, list) or not forwarded:
+        return None
+    first = forwarded[0]
+    return first if isinstance(first, Mapping) else None
+
+
+def map_manual_source(
+    *,
+    message: Mapping[str, object],
+    fwd: Mapping[str, object] | None,
+    author: Author,
+    initiator_id: int,
+) -> SourceMessage | None:
+    """Manual DM -> SourceMessage: forwarded content when present, else the DM itself.
+
+    The source key stays bound to the DM so one manual action equals one delivery
+    attempt; content text/attachments come from the forwarded message because a
+    forward carries no own text.
+    """
+    cmid = _optional_int(message, "conversation_message_id")
+    peer_id = _optional_int(message, "peer_id")
+    if cmid is None or peer_id is None:
+        return None
+    content = fwd if fwd is not None else message
+    raw_text = content.get("text")
+    return SourceMessage(
+        source_type=SourceType.VK_MESSAGE,
+        source_key=f"manual:{initiator_id}:{cmid}",
+        group_id=0,
+        peer_id=peer_id,
+        conversation_message_id=cmid,
+        author=author,
+        text=raw_text if isinstance(raw_text, str) else "",
+        has_all=False,
+        has_hashtag=False,
+        attachments=_map_attachments(content.get("attachments")),
     )
 
 

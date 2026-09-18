@@ -1,9 +1,10 @@
 """VK-facing port: community identity, Long Poll handshake, messages and reactions."""
 
+from collections.abc import Mapping
 from typing import Protocol, runtime_checkable
 
 from vk_topic_bridge.application.dto.infrastructure import LongPollInfo
-from vk_topic_bridge.domain.value_objects import Author, SourceMessage
+from vk_topic_bridge.domain.value_objects import Author, SourceMessage, SourceWallPost
 
 
 @runtime_checkable
@@ -16,4 +17,10 @@ class VkGateway(Protocol):
         self, peer_id: int, conversation_message_id: int
     ) -> SourceMessage: ...
     async def get_author(self, user_id: int) -> Author: ...
+    async def normalize_event(
+        self, raw_event: Mapping[str, object], author: Author
+    ) -> SourceMessage: ...
+    async def normalize_wall_event(
+        self, raw_event: Mapping[str, object], author: Author
+    ) -> SourceWallPost: ...
     async def set_reaction(self, peer_id: int, conversation_message_id: int) -> None: ...

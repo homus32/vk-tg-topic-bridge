@@ -19,12 +19,20 @@ class UnsupportedAttachment(DomainError):
     """Attachment kind cannot be handled by the bridge."""
 
 
+class AttachmentTooLargeError(DomainError):
+    """Attachment exceeds the 50 MB policy limit; skipped with a per-item warning."""
+
+
 class RecoverableInfraError(DomainError):
     """External dependency failed; the use case decides fallback or partial success."""
 
 
 class AttachmentDownloadFailed(RecoverableInfraError):
     """Attachment download failed; publication continues with a warning item."""
+
+
+class MediaUnavailableError(RecoverableInfraError):
+    """One attachment has no downloadable resource (e.g. a video without files)."""
 
 
 class TargetTopicUnavailable(RecoverableInfraError):

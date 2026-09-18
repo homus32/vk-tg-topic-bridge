@@ -23,12 +23,14 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from config import Settings
 from tests.acceptance._fakes import RecordingPublisher, make_source
-from vk_topic_bridge.application.dto.readiness import ReadinessState
 from vk_topic_bridge.application.forwarding.forward_message import ForwardVkMessage
-from vk_topic_bridge.application.readiness import InMemoryReadinessGate
 from vk_topic_bridge.bootstrap.vk_consumer import VkEventConsumer
 from vk_topic_bridge.domain.enums import PublicationStatus, SourceType
-from vk_topic_bridge.domain.value_objects import Publication, PublicationResult
+from vk_topic_bridge.domain.publication import (
+    OperationOutcome,
+    PublicationPlan,
+)
+from vk_topic_bridge.domain.value_objects import TopicInfo
 from vk_topic_bridge.infrastructure.db.engine import create_async_engine, create_session_factory
 from vk_topic_bridge.infrastructure.db.models import DeliveryRecord as DeliveryRecordRow
 from vk_topic_bridge.infrastructure.db.repositories.delivery import DeliveryRepositoryImpl
@@ -39,7 +41,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 SessionFactory = async_sessionmaker[AsyncSession]
 
 GROUP_ID = 111
-PEER_ID = 222
+PEER_ID = 2_000_000_222
 FROM_ID = 555
 CONVERSATION_MESSAGE_ID = 333
 SECOND_CONVERSATION_MESSAGE_ID = 334
@@ -168,14 +170,14 @@ class _DbObservingPublisher(RecordingPublisher):
         self._source_key = source_key
         self.observed_status: str | None = None
 
-    async def publish(self, publication: Publication) -> PublicationResult:
+    async def publish_plan(self, plan: PublicationPlan) -> tuple[OperationOutcome, ...]:
         async with self._session_factory() as session:
             record = await DeliveryRepositoryImpl(session).get(
                 SourceType.VK_MESSAGE, self._source_key
             )
         assert record is not None, "send intent must be durable before network I/O"
         self.observed_status = record.publication_status.value
-        return await super().publish(publication)
+        return await super().publish_plan(plan)
 
 
 @pytest.fixture
@@ -183,18 +185,27 @@ async def harness(session_factory: SessionFactory) -> ChainHarness:
     async with SqlAlchemyUnitOfWork(session_factory) as uow:
         await uow.bridge_settings.upsert_chat(CHAT_ID, "Целевой чат")
         await uow.bridge_settings.set_messages_topic(MESSAGES_TOPIC_ID)
+        await uow.telegram_topics.replace_all(
+            CHAT_ID,
+            [
+                TopicInfo(
+                    topic_id=MESSAGES_TOPIC_ID,
+                    title="Новости",
+                    is_general=False,
+                    is_closed=False,
+                    is_hidden=False,
+                )
+            ],
+        )
         await uow.commit()
 
     raw_api = FakeRawVkApi()
     publisher = RecordingPublisher(message_ids=PUBLISHED_MESSAGE_IDS)
-    readiness = InMemoryReadinessGate()
-    readiness.advance(ReadinessState.FORWARDING_ENABLED)
     gateway = VkApiGateway(raw_api, Settings.model_validate({}))
     forward = ForwardVkMessage(
         uow_factory=lambda: SqlAlchemyUnitOfWork(session_factory),
-        publisher=publisher,
+        plan_publisher=publisher,
         vk=gateway,
-        readiness=readiness,
     )
     polling = FakeBotPolling()
     consumer = VkEventConsumer(
@@ -291,17 +302,26 @@ async def test_send_intent_is_committed_before_network_io(
     async with SqlAlchemyUnitOfWork(session_factory) as uow:
         await uow.bridge_settings.upsert_chat(CHAT_ID, "Целевой чат")
         await uow.bridge_settings.set_messages_topic(MESSAGES_TOPIC_ID)
+        await uow.telegram_topics.replace_all(
+            CHAT_ID,
+            [
+                TopicInfo(
+                    topic_id=MESSAGES_TOPIC_ID,
+                    title="Новости",
+                    is_general=False,
+                    is_closed=False,
+                    is_hidden=False,
+                )
+            ],
+        )
         await uow.commit()
 
     publisher = _DbObservingPublisher(session_factory=session_factory, source_key=SOURCE_KEY)
     gateway = VkApiGateway(FakeRawVkApi(), Settings.model_validate({}))
-    readiness = InMemoryReadinessGate()
-    readiness.advance(ReadinessState.FORWARDING_ENABLED)
     use_case = ForwardVkMessage(
         uow_factory=lambda: SqlAlchemyUnitOfWork(session_factory),
-        publisher=publisher,
+        plan_publisher=publisher,
         vk=gateway,
-        readiness=readiness,
     )
 
     outcome = await use_case.execute(make_source(PRIMARY_TEXT))

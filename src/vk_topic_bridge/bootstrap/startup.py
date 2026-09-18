@@ -8,6 +8,7 @@ chat is a valid state — otherwise ``/register`` could never run.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol, runtime_checkable
@@ -23,6 +24,8 @@ from logger import redact_secrets
 from vk_topic_bridge.application.dto.readiness import ReadinessState
 from vk_topic_bridge.bootstrap.container import AppContainer
 from vk_topic_bridge.domain.errors import FatalStartupError, FatalStartupReason
+
+logger = logging.getLogger(__name__)
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _MIGRATIONS_DIR = _REPO_ROOT / "migrations"
@@ -198,20 +201,19 @@ async def _verify_persisted_chat(container: AppContainer) -> bool:
     if destination_id is not None:
         destination = next((topic for topic in topics if topic.topic_id == destination_id), None)
         if destination is None:
-            raise FatalStartupError(
-                FatalStartupReason.TOPICS_UNAVAILABLE,
-                f"persisted destination topic {destination_id} is missing from chat {chat_id}",
+            logger.warning(
+                "persisted destination topic %s is missing from chat %s; "
+                "runtime General fallback applies",
+                destination_id,
+                chat_id,
             )
-        if destination.is_closed or destination.is_hidden:
-            state_name = "closed" if destination.is_closed else "hidden"
-            raise FatalStartupError(
-                FatalStartupReason.TOPICS_UNAVAILABLE,
-                f"persisted destination topic {destination_id} is {state_name}",
+        elif destination.is_closed or destination.is_hidden:
+            logger.warning(
+                "persisted destination topic %s is %s; runtime General fallback applies",
+                destination_id,
+                "closed" if destination.is_closed else "hidden",
             )
-        container.readiness.advance(ReadinessState.DESTINATION_CONFIRMED)
-        container.readiness.advance(ReadinessState.FORWARDING_ENABLED)
-    else:
-        container.readiness.advance(ReadinessState.TOPICS_READY)
+    container.readiness.advance(ReadinessState.TOPICS_READY)
     return True
 
 
@@ -224,3 +226,12 @@ async def run_startup_checks(deps: StartupDeps) -> None:
     await _verify_telethon(container)
     await _verify_vk(container)
     await _verify_persisted_chat(container)
+    await _sync_command_menu(container)
+
+
+async def _sync_command_menu(container: AppContainer) -> None:
+    """Owner/hint scopes are best-effort: a Bot API hiccup must not block startup."""
+    try:
+        await container.command_menu.apply_startup()
+    except Exception:
+        logger.exception("command menu synchronization failed during startup")

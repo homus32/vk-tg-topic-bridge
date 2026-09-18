@@ -231,6 +231,16 @@ class FailingRefreshTopics(RefreshTopics):
         raise ProvisioningError(f"chat {chat_id} returned no forum topics")
 
 
+class FakeCommandMenu:
+    """Command-menu synchronizer double; startup sync never touches the Bot API here."""
+
+    def __init__(self) -> None:
+        self.startup_calls = 0
+
+    async def apply_startup(self) -> None:
+        self.startup_calls += 1
+
+
 def _container(
     settings: Settings,
     *,
@@ -243,7 +253,7 @@ def _container(
         telethon_client=telethon_client or cast(TelethonUserClient, FakeTelethonClient()),
         vk_api_raw=vk_api_raw or cast(RawVkApi, FakeVkApi()),
     )
-    return cast("AppContainer", built)
+    return replace(cast("AppContainer", built), command_menu=FakeCommandMenu())
 
 
 def _factory_returning(container: AppContainer) -> Callable[..., AppContainer]:
@@ -414,7 +424,7 @@ async def test_persisted_chat_revalidation_advances_readiness(
     await container.engine.dispose()
 
 
-async def test_persisted_destination_advances_to_forwarding_enabled(
+async def test_persisted_destination_leaves_readiness_at_topics_ready(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     startup = _module("vk_topic_bridge.bootstrap.startup")
@@ -433,11 +443,11 @@ async def test_persisted_destination_advances_to_forwarding_enabled(
 
     await startup.run_startup_checks(startup.StartupDeps(settings=settings, container=healthy))
 
-    assert healthy.readiness.current() is ReadinessState.FORWARDING_ENABLED
+    assert healthy.readiness.current() is ReadinessState.TOPICS_READY
     await container.engine.dispose()
 
 
-async def test_persisted_destination_missing_from_topics_is_fatal(
+async def test_persisted_destination_missing_from_topics_starts_with_warning(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     startup = _module("vk_topic_bridge.bootstrap.startup")
@@ -454,16 +464,13 @@ async def test_persisted_destination_missing_from_topics_is_fatal(
         telethon_adapter=cast(TelethonAdapter, FakeTelethonAdapter(topic_id=7)),
     )
 
-    with pytest.raises(FatalStartupError) as excinfo:
-        await startup.run_startup_checks(startup.StartupDeps(settings=settings, container=missing))
+    await startup.run_startup_checks(startup.StartupDeps(settings=settings, container=missing))
 
-    assert excinfo.value.reason is FatalStartupReason.TOPICS_UNAVAILABLE
-    assert "99" in str(excinfo.value)
-    assert missing.readiness.current() is not ReadinessState.FORWARDING_ENABLED
+    assert missing.readiness.current() is ReadinessState.TOPICS_READY
     await container.engine.dispose()
 
 
-async def test_persisted_destination_closed_topic_is_fatal(
+async def test_persisted_destination_closed_topic_starts_with_warning(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     startup = _module("vk_topic_bridge.bootstrap.startup")
@@ -480,12 +487,9 @@ async def test_persisted_destination_closed_topic_is_fatal(
         telethon_adapter=cast(TelethonAdapter, FakeTelethonAdapter(topic_id=7, is_closed=True)),
     )
 
-    with pytest.raises(FatalStartupError) as excinfo:
-        await startup.run_startup_checks(startup.StartupDeps(settings=settings, container=closed))
+    await startup.run_startup_checks(startup.StartupDeps(settings=settings, container=closed))
 
-    assert excinfo.value.reason is FatalStartupReason.TOPICS_UNAVAILABLE
-    assert "7" in str(excinfo.value)
-    assert closed.readiness.current() is not ReadinessState.FORWARDING_ENABLED
+    assert closed.readiness.current() is ReadinessState.TOPICS_READY
     await container.engine.dispose()
 
 
@@ -558,7 +562,7 @@ async def test_readiness_aware_select_destination_advances_to_forwarding_enabled
     container = _container(settings)
     await asyncio.to_thread(_upgrade_to_head, monkeypatch, settings)
     readiness = InMemoryReadinessGate()
-    use_case = container_module.ReadinessAwareSelectDestination(
+    use_case = container_module.ReadinessAwareSelectDestinationV2(
         container.uow_factory,
         cast(TelegramAdminPort, FakeProvisioningAdminPort()),
         readiness,
@@ -567,9 +571,9 @@ async def test_readiness_aware_select_destination_advances_to_forwarding_enabled
         topic_id=7, title="Новости", is_general=False, is_closed=False, is_hidden=False
     )
 
-    message_id = await use_case.execute(-1001234567890, topic, "run-1")
+    result = await use_case.execute(-1001234567890, topic, "messages", "run-1")
 
-    assert message_id == 555
+    assert result.message_id == 555
     assert readiness.current() is ReadinessState.FORWARDING_ENABLED
     await container.engine.dispose()
 
