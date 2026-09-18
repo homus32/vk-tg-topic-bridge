@@ -179,6 +179,8 @@
 
 # 8. Этап 7 — Telegram admin UI
 
+> **Статус: реализовано** (Stage 7, план `.omo/plans/finish-vk-topic-bridge.md`). Ниже — исходный объём этапа.
+
 Реализовать User Stories Telegram owner interface:
 
 - owner access;
@@ -201,6 +203,8 @@ UI должен работать поверх application use cases, без SQL/
 
 # 9. Этап 8 — VK UI и ручная пересылка
 
+> **Статус: реализовано** (Stage 8, план `.omo/plans/finish-vk-topic-bridge.md`). Ниже — исходный объём этапа.
+
 Реализовать пользовательский VK interface:
 
 - Help;
@@ -216,6 +220,8 @@ UI должен работать поверх application use cases, без SQL/
 ---
 
 # 10. Этап 9 — Wall и attachments
+
+> **Статус: реализовано** (Stage 9, план `.omo/plans/finish-vk-topic-bridge.md`). Ниже — исходный объём этапа.
 
 Реализовать полный content pipeline:
 
@@ -236,6 +242,8 @@ UI должен работать поверх application use cases, без SQL/
 
 # 11. Этап 10 — Reliability и edge cases
 
+> **Статус: реализовано** (Stage 10, план `.omo/plans/finish-vk-topic-bridge.md`). Ниже — исходный объём этапа.
+
 Закрыть failure scenarios:
 
 - удалённый/недоступный target topic;
@@ -255,6 +263,8 @@ UI должен работать поверх application use cases, без SQL/
 ---
 
 # 12. Этап 11 — Acceptance hardening
+
+> **Статус: реализовано** (Stage 11, план `.omo/plans/finish-vk-topic-bridge.md`). Ниже — исходный объём этапа.
 
 Сопоставить **каждый** User Story / Acceptance Criterion с тестом или явной manual verification.
 
@@ -278,6 +288,8 @@ UI должен работать поверх application use cases, без SQL/
 ---
 
 # 13. Этап 12 — Deployment
+
+> **Статус: реализовано** (Stage 12, план `.omo/plans/finish-vk-topic-bridge.md`). Ниже — исходный объём этапа.
 
 Реализовать production deployment:
 
@@ -315,3 +327,14 @@ UI должен работать поверх application use cases, без SQL/
 - Loguru и PM2 ведут независимые ротируемые логи;
 - в репозитории нет токенов, session и runtime DB;
 - Ultrabrain дал `APPROVE` финальному состоянию.
+
+## Acceptance gates финишной волны
+
+Дополнительно к прежним stage-gates:
+
+- **UI/command gates**: `/start`/`/cancel`/`/register`-мастер, owner-scoped command hints, ReplyKeyboard-меню, отсутствие временных `/topics`/`/set_topic`.
+- **Diagnostics gates**: `Диагностика доставки` показывает ambiguous/failed_permanent записи; ambiguous не ретраится автоматически; `Пометить просмотренной` работает только для ambiguous.
+- **Fallback gates**: недоступный auto-destination → General + уведомление owners + 👍; ручной недоступный named topic → ошибка без General.
+- **No-config gates**: без чата/без destination автоматические потоки молча пропускаются (DEBUG `telegram_chat_not_registered`/`destination_not_configured`), ручной поток даёт понятную ошибку.
+- **Cursor gates**: Long Poll сохраняет ts в `runtime/vk_cursor/`, переживает рестарт, history gap (`failed=1/3`) уведомляет owners однократно без обещания точного счёта.
+- **Media gates**: фото/видео/документы до 50 МБ переносятся с частичным успехом и per-item предупреждениями.

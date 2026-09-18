@@ -266,7 +266,9 @@ vk-topic-bridge/
 │   └── .gitkeep
 │
 ├── runtime/
-│   └── telethon/
+│   ├── telethon/        # Telethon session (gitignored)
+│   ├── vk_cursor/       # VK Long Poll cursor (gitignored)
+│   └── media/           # временные скачанные вложения (gitignored)
 │
 ├── src/
 │   └── vk_topic_bridge/
@@ -323,15 +325,23 @@ vk-topic-bridge/
 │       ├── presentation/
 │       │   ├── telegram/
 │       │   │   ├── routers/
-│       │   │   ├── keyboards.py
-│       │   │   ├── middlewares.py
-│       │   │   ├── states.py
-│       │   │   └── mappers.py
+│       │   │   │   ├── root.py          # /start, /cancel, catch-all подсказка
+│       │   │   │   ├── registration.py  # мастер регистрации (private /start + group /register)
+│       │   │   │   ├── settings.py      # тогглы, топики, обновление, диагностика, смена чата
+│       │   │   │   └── destinations.py  # wizard'ы выбора destination (General + named)
+│       │   │   ├── keyboards.py         # ReplyKeyboardMarkup-фабрики
+│       │   │   ├── commands.py          # определения команд и их скоупов
+│       │   │   ├── filters.py           # chat-type, directed-command, тексты кнопок
+│       │   │   ├── middlewares.py       # OwnerOnlyMiddleware
+│       │   │   └── states.py            # aiogram StatesGroup
 │       │   └── vk/
-│       │       ├── handlers/
-│       │       ├── keyboards.py
-│       │       ├── sessions.py
-│       │       └── mappers.py
+│       │       ├── handlers.py          # VkUiDispatcher: Help/алиасы/ручная пересылка
+│       │       ├── keyboards.py         # VK JSON-клавиатуры
+│       │       └── states.py            # эфемерные per-user сессии (ключ from_id)
+│       │
+│       ├── infrastructure/
+│       │   └── telegram/
+│       │       └── command_menu.py      # CommandMenuSynchronizer (setMyCommands/deleteMyCommands)
 │       │
 │       └── bootstrap/
 │           ├── container.py
@@ -417,7 +427,7 @@ Telethon создаётся один раз и доступен как инфр�
 При остановке:
 
 1. прекращаются pollers;
-2. закрывается aiogram HTTP session;
+2. закрывается aiogram HTTP session и общий aiohttp-сеанс загрузки медиа;
 3. отключается Telethon;
 4. закрываются HTTP clients;
 5. выполняется `AsyncEngine.dispose()`;
@@ -828,6 +838,16 @@ Aiogram отвечает за:
 - публикацию VK-контента;
 - уведомления owners.
 
+## Command scopes
+
+Подсказки команд синхронизирует `CommandMenuSynchronizer` (`infrastructure/telegram/command_menu.py`):
+
+- all-users скоупы (`Default`, `AllPrivateChats`, `AllGroupChats`) очищаются при старте;
+- приватный скоуп каждого owner из `OWNER_IDS` настраивается при старте;
+- временный `BotCommandScopeChatMember` для пары owner/группа ставится при входе в режим регистрации и очищается после успеха или отмены.
+
+Скоупы — только UX: авторизация выполняется `OwnerOnlyMiddleware` и хендлерами независимо. Ошибка синхронизации меню логируется и не прерывает старт (best-effort, после фатальных проверок).
+
 ## Custom Bot API
 
 Если задан `TELEGRAM_BOT_API_URL`, создаётся `TelegramAPIServer.from_base(...)`.
@@ -919,6 +939,22 @@ use case
 
 Вызовы VK API, необходимые use case, выполняются через port.
 
+## Fan-out raw-событий
+
+Единый raw Long Poll consumer классифицирует событие до любого guard'а:
+
+```text
+wall_post_new                  → pipeline стены (ForwardWallPost)
+peer_id < 2_000_000_000        → VK UI (VkUiDispatcher: Help/алиасы/ручная пересылка)
+peer_id >= 2_000_000_000       → автоматическая пересылка сообщений (scoped conversation guard)
+```
+
+Guard первого conversation-peer применяется только к автоматическому conversation-потоку: DM разных пользователей не блокируют друг друга и не занимают guard-слот. Переменная `VK_SOURCE_PEER_ID` не используется.
+
+## Persistent cursor
+
+Long Poll работает в персистентном режиме: `RuntimePathBotPolling` (наследник `BotPolling`) с `skip_old_events=False` и курсором в контролируемом runtime-пути `runtime/vk_cursor/` (gitignored). События `failed=1`/`failed=3` трактуются как history gap: WARNING в лог + однократное уведомление owners; точное число пропущенных событий не заявляется, ручной реплей не выполняется. Курсор не хранится в SQLite: атомарности между VK-курсором и Telegram-публикацией не существует.
+
 ---
 
 # 15. FSM
@@ -929,13 +965,19 @@ Aiogram FSM.
 
 Для данного single-process проекта достаточно in-memory storage.
 
+FSM-стратегия — `FSMStrategy.GLOBAL_USER`: мастер регистрации живёт поперёк чатов (private `/start` открывает режим, group `/register` его завершает), поэтому ключ состояния привязан к user_id, а не к chat_id.
+
 FSM — временное UI-состояние, а не бизнес-конфигурация.
 
 После рестарта незавершённый wizard может быть отменён и начат заново.
 
+Scenes/Wizard-фреймворк не используется: достаточно обычных `StatesGroup`.
+
 ## VK
 
-Для ручной пересылки и aliases используется собственный небольшой session/state abstraction либо штатный механизм VKBottle, если он адекватно покрывает сценарий.
+Для ручной пересылки и aliases используется собственный небольшой session/state abstraction (`presentation/vk/states.py`).
+
+Ключ состояния — `from_id` (VK-пользователь), целевой чат/payload хранится в сессии.
 
 Принцип тот же:
 
@@ -943,6 +985,10 @@ FSM — временное UI-состояние, а не бизнес-конф�
 - aliases и настройки — persistent в SQLite.
 
 Никакая незавершённая FSM-операция не должна частично менять БД.
+
+## Readiness
+
+Линейный `InMemoryReadinessGate` (`CORE_READY`→`CHAT_REGISTERED`→`TOPICS_READY`→`DESTINATION_CONFIRMED`→`FORWARDING_ENABLED`) сохранён для стартовых фаз и registration/selection flows, но решения о пересылке принимаются по feature-specific readiness (`application/readiness_features.py`): `messages_auto_ready`, `wall_auto_ready`, `manual_forwarding_ready`. Ненастроенный destination — нормальное состояние продукта (silent no-op / понятная ошибка VK), а не операционный сбой.
 
 ---
 
@@ -1401,6 +1447,9 @@ data/*.sqlite3
 
 runtime/telethon/*
 !runtime/telethon/.gitkeep
+
+runtime/vk_cursor/
+runtime/media/
 
 logs/*
 !logs/.gitkeep
