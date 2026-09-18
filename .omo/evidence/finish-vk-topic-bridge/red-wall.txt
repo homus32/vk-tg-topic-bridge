@@ -1,0 +1,5 @@
+=== T16 RED evidence: mutation probe — wall tag removed from composition ===
+=========================== short test summary info ============================
+FAILED tests/unit/application/test_forward_wall.py::test_wall_publication_contains_tag_and_original_url
+1 failed in 1.04s
+EXIT=1 (mutation detected)

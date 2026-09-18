@@ -1,0 +1,11 @@
+=== docs diff summary (T22 evidence) ===
+ docs/01-product-spec.md                 |  19 +++-
+ docs/02-user-stories.md                 |  63 ++++++++++++-
+ docs/03-technical-requirements.md       |  76 ++++++++++++++-
+ docs/04-fsm-and-ui.md                   | 162 ++++++++++++++++++++++++--------
+ docs/05-architecture-and-engineering.md |  71 +++++++++++---
+ docs/06-full-implementation-roadmap.md  |  23 +++++
+ 6 files changed, 354 insertions(+), 60 deletions(-)
+
+docs/07 untouched: 0 files changed
+TODO(stage-7) mentions in src/docs: 4

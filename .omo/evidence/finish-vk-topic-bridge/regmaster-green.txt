@@ -1,0 +1,11 @@
+T11 GREEN verification (registration master + command menu)
+=============================================================
+Command 1: uv run --locked pytest -q ./tests/integration/telegram/test_registration_master.py
+Result: 11 passed
+Command 2: uv run --locked pytest -q ./tests/integration/telegram/test_command_menu.py
+Result: 6 passed
+make check: EXIT=0 (659 passed, 4 deselected; basedpyright 0 errors; ruff clean)
+------------------------------
+RED evidence (mutation probe): removing the active-master gate from group_register makes
+test_register_without_master_is_silently_ignored FAIL (EXIT=1) -> confirmed the test catches
+the real guard, not a harness artifact. File: red-regmaster.txt

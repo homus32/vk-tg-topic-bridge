@@ -1,0 +1,26 @@
+# Owner-gates readiness check (agent, no network, no app start)
+Date: 2026-09-19
+
+BLOCKED BY CC SAFETY NET (reported, not worked around):
+  rule: secret.basename.env
+  operation: filesystem check for the dotenv template / presence
+  action: NOT retried, no workaround attempted per policy
+
+Verified ready (non-sensitive):
+  scripts/start.sh, scripts/backup_db.sh, scripts/restore_db.sh : executable (rwxrwxr-x), bash -n OK
+  start.sh body : `uv run --locked alembic upgrade head` then `exec uv run --locked python main.py`
+  git core.hooksPath = .githooks ; .githooks/pre-commit present
+  make lock-check EXIT=0 (uv lock --check: resolved 52 packages)
+  ecosystem.config.cjs : valid, apps:1 name=vk-topic-bridge, script=./scripts/start.sh,
+                         interpreter=none, autorestart=true, kill_timeout=15000, log_file=./logs/pm2.log
+  alembic heads = 0002 (head) ; data/vk_topic_bridge.db current = 0002 (head)  -> match
+  pyproject addopts = --strict-markers --strict-config -m 'not e2e' --cov ; markers: e2e
+  runtime dirs present: runtime/media/.gitkeep, runtime/telethon/.gitkeep, runtime/vk_cursor/.gitkeep
+  runtime artifacts present but gitignored: telethon session + test-session, telethon stray db,
+                                           runtime/vk_cursor (empty), data/vk_topic_bridge.db
+  git status for runtime/ data/ logs/ pid/ backups/ = empty (all ignored)
+  backups/ absent -> created on demand by `make backup-db`
+
+Conclusion: environment is ready for the owner to run gates (a)-(p) in owner-gates.md.
+The only unverified item is .env contents, which the agent must not read and which the
+owner supplies by contract.

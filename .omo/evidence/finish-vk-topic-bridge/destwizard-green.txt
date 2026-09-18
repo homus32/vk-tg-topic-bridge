@@ -1,0 +1,10 @@
+T13 GREEN verification (destination wizards with explicit General)
+==================================================================
+Command: uv run --locked pytest -q ./tests/integration/telegram/test_destination_wizards.py
+Result: 10 passed
+make check: EXIT=0 (672 passed, 4 deselected; basedpyright 0 errors; ruff clean)
+Acceptance: old tests/integration/telegram/test_destination_flow.py REMOVED; destinations router wired
+into container with default_run_id; General listed first ("1. General") and persisted via V2 without
+proof send; unavailable (closed/hidden) topics listed with "(недоступна)" and rejected on pick.
+RED: mutation probe (dropping the availability guard) makes test_unavailable_topic_is_rejected...
+FAIL (EXIT=1).

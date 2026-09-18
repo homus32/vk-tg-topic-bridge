@@ -1,0 +1,362 @@
+........................................................................ [ 13%]
+........................................................................ [ 26%]
+........................................................................ [ 40%]
+........................................................................ [ 53%]
+.................................FFFFFFFFF.............................. [ 67%]
+........................................................................ [ 80%]
+........................................................................ [ 94%]
+.............................../home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/coverage/inorout.py:558: CoverageWarning: Module tests/unit/application/test_readiness_features.py was never imported. (module-not-imported); see https://coverage.readthedocs.io/en/7.16.1/messages.html#warning-module-not-imported
+  self.warn(f"Module {pkg} was never imported.", slug="module-not-imported")
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/coverage/control.py:967: CoverageWarning: No data was collected. (no-data-collected); see https://coverage.readthedocs.io/en/7.16.1/messages.html#warning-no-data-collected
+  self._warn("No data was collected.", slug="no-data-collected")
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/pytest_cov/plugin.py:366: CovReportWarning: Failed to generate report: No data to report.
+
+  warnings.warn(CovReportWarning(message), stacklevel=1)
+
+WARNING: Failed to generate report: No data to report.
+
+                                                                         [100%]/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7006f95d6200>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7006f86248b0>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7006f8627010>
+  gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+
+=================================== FAILURES ===================================
+___________________ test_unregistered_chat_blocks_everything ___________________
+
+    def test_unregistered_chat_blocks_everything() -> None:
+        state = _state(
+            telegram_chat_id=None,
+            telegram_messages_topic_configured=True,
+            telegram_wall_topic_configured=True,
+        )
+    
+>       readiness = derive_feature_readiness(state, _availability(frozenset({5})))
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/application/test_readiness_features.py:56: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+state = BridgeSettingsState(telegram_chat_id=None, telegram_chat_title='Chat', auto_forward_all=True, auto_forward_hashtags=Tr...pic_id=None, telegram_wall_topic_id=None, telegram_messages_topic_configured=True, telegram_wall_topic_configured=True)
+topic_available = <function _availability.<locals>.check at 0x7006f844d2d0>
+
+    def derive_feature_readiness(
+        state: BridgeSettingsState,
+        topic_available: Callable[[DestinationKind, int | None], bool],
+    ) -> FeatureReadiness:
+        """Pure derivation from the persisted settings snapshot.
+    
+        TODO(finish): ``topic_available`` answers for a destination kind plus concrete
+        topic id whether the destination is currently usable: for ``DestinationKind.GENERAL``
+        (explicit configured General, ``configured=True, topic_id=None`` from migration 0002)
+        it must return ``True`` directly; for ``NAMED_TOPIC`` it consults the persisted
+        snapshot (active + not closed + not hidden); ``UNSET`` never yields a usable
+        destination. The explicit-General-vs-unset distinction comes from the configured
+        flag pair in ``BridgeSettingsState`` — never from sentinel topic ids. No I/O of its
+        own.
+        """
+>       raise NotImplementedError
+E       NotImplementedError
+
+src/vk_topic_bridge/application/readiness_features.py:51: NotImplementedError
+________ test_unset_destinations_keep_manual_ready_via_available_topic _________
+
+    def test_unset_destinations_keep_manual_ready_via_available_topic() -> None:
+        state = _state()
+    
+>       readiness = derive_feature_readiness(state, _availability(frozenset({5})))
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/application/test_readiness_features.py:66: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+state = BridgeSettingsState(telegram_chat_id=-100123, telegram_chat_title='Chat', auto_forward_all=True, auto_forward_hashtags...c_id=None, telegram_wall_topic_id=None, telegram_messages_topic_configured=False, telegram_wall_topic_configured=False)
+topic_available = <function _availability.<locals>.check at 0x7006f848dd20>
+
+    def derive_feature_readiness(
+        state: BridgeSettingsState,
+        topic_available: Callable[[DestinationKind, int | None], bool],
+    ) -> FeatureReadiness:
+        """Pure derivation from the persisted settings snapshot.
+    
+        TODO(finish): ``topic_available`` answers for a destination kind plus concrete
+        topic id whether the destination is currently usable: for ``DestinationKind.GENERAL``
+        (explicit configured General, ``configured=True, topic_id=None`` from migration 0002)
+        it must return ``True`` directly; for ``NAMED_TOPIC`` it consults the persisted
+        snapshot (active + not closed + not hidden); ``UNSET`` never yields a usable
+        destination. The explicit-General-vs-unset distinction comes from the configured
+        flag pair in ``BridgeSettingsState`` — never from sentinel topic ids. No I/O of its
+        own.
+        """
+>       raise NotImplementedError
+E       NotImplementedError
+
+src/vk_topic_bridge/application/readiness_features.py:51: NotImplementedError
+______ test_explicit_general_configured_is_ready_without_snapshot_topics _______
+
+    def test_explicit_general_configured_is_ready_without_snapshot_topics() -> None:
+        state = _state(
+            telegram_messages_topic_configured=True,
+            telegram_wall_topic_configured=True,
+        )
+    
+>       readiness = derive_feature_readiness(state, _availability(frozenset()))
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/application/test_readiness_features.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+state = BridgeSettingsState(telegram_chat_id=-100123, telegram_chat_title='Chat', auto_forward_all=True, auto_forward_hashtags...pic_id=None, telegram_wall_topic_id=None, telegram_messages_topic_configured=True, telegram_wall_topic_configured=True)
+topic_available = <function _availability.<locals>.check at 0x7006f848e400>
+
+    def derive_feature_readiness(
+        state: BridgeSettingsState,
+        topic_available: Callable[[DestinationKind, int | None], bool],
+    ) -> FeatureReadiness:
+        """Pure derivation from the persisted settings snapshot.
+    
+        TODO(finish): ``topic_available`` answers for a destination kind plus concrete
+        topic id whether the destination is currently usable: for ``DestinationKind.GENERAL``
+        (explicit configured General, ``configured=True, topic_id=None`` from migration 0002)
+        it must return ``True`` directly; for ``NAMED_TOPIC`` it consults the persisted
+        snapshot (active + not closed + not hidden); ``UNSET`` never yields a usable
+        destination. The explicit-General-vs-unset distinction comes from the configured
+        flag pair in ``BridgeSettingsState`` — never from sentinel topic ids. No I/O of its
+        own.
+        """
+>       raise NotImplementedError
+E       NotImplementedError
+
+src/vk_topic_bridge/application/readiness_features.py:51: NotImplementedError
+_______________ test_named_messages_topic_requires_availability ________________
+
+    def test_named_messages_topic_requires_availability() -> None:
+        available = _state(
+            telegram_messages_topic_id=7,
+            telegram_messages_topic_configured=True,
+        )
+        stale = replace(available, telegram_messages_topic_id=8)
+    
+>       ready = derive_feature_readiness(available, _availability(frozenset({7})))
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/application/test_readiness_features.py:93: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+state = BridgeSettingsState(telegram_chat_id=-100123, telegram_chat_title='Chat', auto_forward_all=True, auto_forward_hashtags...topic_id=7, telegram_wall_topic_id=None, telegram_messages_topic_configured=True, telegram_wall_topic_configured=False)
+topic_available = <function _availability.<locals>.check at 0x7006f848eae0>
+
+    def derive_feature_readiness(
+        state: BridgeSettingsState,
+        topic_available: Callable[[DestinationKind, int | None], bool],
+    ) -> FeatureReadiness:
+        """Pure derivation from the persisted settings snapshot.
+    
+        TODO(finish): ``topic_available`` answers for a destination kind plus concrete
+        topic id whether the destination is currently usable: for ``DestinationKind.GENERAL``
+        (explicit configured General, ``configured=True, topic_id=None`` from migration 0002)
+        it must return ``True`` directly; for ``NAMED_TOPIC`` it consults the persisted
+        snapshot (active + not closed + not hidden); ``UNSET`` never yields a usable
+        destination. The explicit-General-vs-unset distinction comes from the configured
+        flag pair in ``BridgeSettingsState`` — never from sentinel topic ids. No I/O of its
+        own.
+        """
+>       raise NotImplementedError
+E       NotImplementedError
+
+src/vk_topic_bridge/application/readiness_features.py:51: NotImplementedError
+___________________ test_stale_named_topic_is_not_auto_ready ___________________
+
+    def test_stale_named_topic_is_not_auto_ready() -> None:
+        state = _state(
+            telegram_messages_topic_id=7,
+            telegram_messages_topic_configured=True,
+        )
+    
+>       readiness = derive_feature_readiness(state, _availability(frozenset()))
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/application/test_readiness_features.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+state = BridgeSettingsState(telegram_chat_id=-100123, telegram_chat_title='Chat', auto_forward_all=True, auto_forward_hashtags...topic_id=7, telegram_wall_topic_id=None, telegram_messages_topic_configured=True, telegram_wall_topic_configured=False)
+topic_available = <function _availability.<locals>.check at 0x7006f848f1c0>
+
+    def derive_feature_readiness(
+        state: BridgeSettingsState,
+        topic_available: Callable[[DestinationKind, int | None], bool],
+    ) -> FeatureReadiness:
+        """Pure derivation from the persisted settings snapshot.
+    
+        TODO(finish): ``topic_available`` answers for a destination kind plus concrete
+        topic id whether the destination is currently usable: for ``DestinationKind.GENERAL``
+        (explicit configured General, ``configured=True, topic_id=None`` from migration 0002)
+        it must return ``True`` directly; for ``NAMED_TOPIC`` it consults the persisted
+        snapshot (active + not closed + not hidden); ``UNSET`` never yields a usable
+        destination. The explicit-General-vs-unset distinction comes from the configured
+        flag pair in ``BridgeSettingsState`` — never from sentinel topic ids. No I/O of its
+        own.
+        """
+>       raise NotImplementedError
+E       NotImplementedError
+
+src/vk_topic_bridge/application/readiness_features.py:51: NotImplementedError
+__________________ test_manual_ready_without_auto_destination __________________
+
+    def test_manual_ready_without_auto_destination() -> None:
+        state = _state(telegram_wall_topic_configured=True)
+    
+>       readiness = derive_feature_readiness(state, _availability(frozenset({9})))
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/application/test_readiness_features.py:114: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+state = BridgeSettingsState(telegram_chat_id=-100123, telegram_chat_title='Chat', auto_forward_all=True, auto_forward_hashtags...ic_id=None, telegram_wall_topic_id=None, telegram_messages_topic_configured=False, telegram_wall_topic_configured=True)
+topic_available = <function _availability.<locals>.check at 0x7006f848f8a0>
+
+    def derive_feature_readiness(
+        state: BridgeSettingsState,
+        topic_available: Callable[[DestinationKind, int | None], bool],
+    ) -> FeatureReadiness:
+        """Pure derivation from the persisted settings snapshot.
+    
+        TODO(finish): ``topic_available`` answers for a destination kind plus concrete
+        topic id whether the destination is currently usable: for ``DestinationKind.GENERAL``
+        (explicit configured General, ``configured=True, topic_id=None`` from migration 0002)
+        it must return ``True`` directly; for ``NAMED_TOPIC`` it consults the persisted
+        snapshot (active + not closed + not hidden); ``UNSET`` never yields a usable
+        destination. The explicit-General-vs-unset distinction comes from the configured
+        flag pair in ``BridgeSettingsState`` — never from sentinel topic ids. No I/O of its
+        own.
+        """
+>       raise NotImplementedError
+E       NotImplementedError
+
+src/vk_topic_bridge/application/readiness_features.py:51: NotImplementedError
+__________ test_manual_not_ready_when_only_stale_topic_and_no_general __________
+
+    def test_manual_not_ready_when_only_stale_topic_and_no_general() -> None:
+        state = _state(
+            telegram_messages_topic_id=7,
+            telegram_messages_topic_configured=True,
+        )
+    
+>       readiness = derive_feature_readiness(state, _availability(frozenset()))
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/application/test_readiness_features.py:127: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+state = BridgeSettingsState(telegram_chat_id=-100123, telegram_chat_title='Chat', auto_forward_all=True, auto_forward_hashtags...topic_id=7, telegram_wall_topic_id=None, telegram_messages_topic_configured=True, telegram_wall_topic_configured=False)
+topic_available = <function _availability.<locals>.check at 0x7006f84f00f0>
+
+    def derive_feature_readiness(
+        state: BridgeSettingsState,
+        topic_available: Callable[[DestinationKind, int | None], bool],
+    ) -> FeatureReadiness:
+        """Pure derivation from the persisted settings snapshot.
+    
+        TODO(finish): ``topic_available`` answers for a destination kind plus concrete
+        topic id whether the destination is currently usable: for ``DestinationKind.GENERAL``
+        (explicit configured General, ``configured=True, topic_id=None`` from migration 0002)
+        it must return ``True`` directly; for ``NAMED_TOPIC`` it consults the persisted
+        snapshot (active + not closed + not hidden); ``UNSET`` never yields a usable
+        destination. The explicit-General-vs-unset distinction comes from the configured
+        flag pair in ``BridgeSettingsState`` — never from sentinel topic ids. No I/O of its
+        own.
+        """
+>       raise NotImplementedError
+E       NotImplementedError
+
+src/vk_topic_bridge/application/readiness_features.py:51: NotImplementedError
+_______________ test_wall_stale_does_not_affect_messages_feature _______________
+
+    def test_wall_stale_does_not_affect_messages_feature() -> None:
+        state = _state(
+            telegram_messages_topic_id=7,
+            telegram_messages_topic_configured=True,
+            telegram_wall_topic_id=9,
+            telegram_wall_topic_configured=True,
+        )
+    
+>       readiness = derive_feature_readiness(state, _availability(frozenset({7})))
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/application/test_readiness_features.py:141: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+state = BridgeSettingsState(telegram_chat_id=-100123, telegram_chat_title='Chat', auto_forward_all=True, auto_forward_hashtags...ges_topic_id=7, telegram_wall_topic_id=9, telegram_messages_topic_configured=True, telegram_wall_topic_configured=True)
+topic_available = <function _availability.<locals>.check at 0x7006f84f0880>
+
+    def derive_feature_readiness(
+        state: BridgeSettingsState,
+        topic_available: Callable[[DestinationKind, int | None], bool],
+    ) -> FeatureReadiness:
+        """Pure derivation from the persisted settings snapshot.
+    
+        TODO(finish): ``topic_available`` answers for a destination kind plus concrete
+        topic id whether the destination is currently usable: for ``DestinationKind.GENERAL``
+        (explicit configured General, ``configured=True, topic_id=None`` from migration 0002)
+        it must return ``True`` directly; for ``NAMED_TOPIC`` it consults the persisted
+        snapshot (active + not closed + not hidden); ``UNSET`` never yields a usable
+        destination. The explicit-General-vs-unset distinction comes from the configured
+        flag pair in ``BridgeSettingsState`` — never from sentinel topic ids. No I/O of its
+        own.
+        """
+>       raise NotImplementedError
+E       NotImplementedError
+
+src/vk_topic_bridge/application/readiness_features.py:51: NotImplementedError
+_____ test_explicit_general_wall_keeps_manual_ready_despite_stale_messages _____
+
+    def test_explicit_general_wall_keeps_manual_ready_despite_stale_messages() -> None:
+        state = _state(
+            telegram_messages_topic_id=7,
+            telegram_messages_topic_configured=True,
+            telegram_wall_topic_configured=True,
+        )
+    
+>       readiness = derive_feature_readiness(state, _availability(frozenset()))
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/application/test_readiness_features.py:155: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+state = BridgeSettingsState(telegram_chat_id=-100123, telegram_chat_title='Chat', auto_forward_all=True, auto_forward_hashtags..._topic_id=7, telegram_wall_topic_id=None, telegram_messages_topic_configured=True, telegram_wall_topic_configured=True)
+topic_available = <function _availability.<locals>.check at 0x7006f84f1010>
+
+    def derive_feature_readiness(
+        state: BridgeSettingsState,
+        topic_available: Callable[[DestinationKind, int | None], bool],
+    ) -> FeatureReadiness:
+        """Pure derivation from the persisted settings snapshot.
+    
+        TODO(finish): ``topic_available`` answers for a destination kind plus concrete
+        topic id whether the destination is currently usable: for ``DestinationKind.GENERAL``
+        (explicit configured General, ``configured=True, topic_id=None`` from migration 0002)
+        it must return ``True`` directly; for ``NAMED_TOPIC`` it consults the persisted
+        snapshot (active + not closed + not hidden); ``UNSET`` never yields a usable
+        destination. The explicit-General-vs-unset distinction comes from the configured
+        flag pair in ``BridgeSettingsState`` — never from sentinel topic ids. No I/O of its
+        own.
+        """
+>       raise NotImplementedError
+E       NotImplementedError
+
+src/vk_topic_bridge/application/readiness_features.py:51: NotImplementedError
+=========================== short test summary info ============================
+FAILED tests/unit/application/test_readiness_features.py::test_unregistered_chat_blocks_everything
+FAILED tests/unit/application/test_readiness_features.py::test_unset_destinations_keep_manual_ready_via_available_topic
+FAILED tests/unit/application/test_readiness_features.py::test_explicit_general_configured_is_ready_without_snapshot_topics
+FAILED tests/unit/application/test_readiness_features.py::test_named_messages_topic_requires_availability
+FAILED tests/unit/application/test_readiness_features.py::test_stale_named_topic_is_not_auto_ready
+FAILED tests/unit/application/test_readiness_features.py::test_manual_ready_without_auto_destination
+FAILED tests/unit/application/test_readiness_features.py::test_manual_not_ready_when_only_stale_topic_and_no_general
+FAILED tests/unit/application/test_readiness_features.py::test_wall_stale_does_not_affect_messages_feature
+FAILED tests/unit/application/test_readiness_features.py::test_explicit_general_wall_keeps_manual_ready_despite_stale_messages
+9 failed, 526 passed, 4 deselected in 13.65s

@@ -1,0 +1,8 @@
+=== T21 E2E extension evidence (agent-side, no network calls) ===
+--- collect under -m e2e (new file) ---
+tests/e2e/test_finish_smoke.py::test_bot_api_command_scopes_roundtrip
+tests/e2e/test_finish_smoke.py::test_vk_long_poll_cursor_file_created
+6/828 tests collected (822 deselected) in 4.88s
+--- default suite contains NO e2e (expect 0) ---
+0
+--- e2e run deferred to owner (real credentials; agent makes no network calls) ---

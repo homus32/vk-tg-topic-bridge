@@ -1,0 +1,8 @@
+=== T14/T15 RED evidence (NotImplementedError baseline before implementation) ===
+Recorded via mutation probes below.
+
+=== T14 mutation probe: removing the multi-message guard ===
+=========================== short test summary info ============================
+FAILED tests/unit/presentation/test_vk_dispatcher.py::test_two_forwarded_messages_error_and_no_fsm
+1 failed in 2.30s
+EXIT=1 (mutation detected)

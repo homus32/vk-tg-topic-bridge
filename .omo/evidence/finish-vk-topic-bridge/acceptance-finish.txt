@@ -1,0 +1,40 @@
+T20 acceptance hardening — evidence
+====================================
+New acceptance files (tests/acceptance/):
+  test_us10_attachments.py        (3 tests)  US-10 AC-10.1/10.2/10.3
+  test_us11_large_file.py         (3 tests)  US-11 AC-11.1/11.2
+  test_us12_unsupported.py        (3 tests)  US-12 AC-12.1/12.2/12.3
+  test_us14_wall.py               (5 tests)  US-14 AC-14.1..14.4
+  test_us15_manual_single.py      (6 tests)  US-15 AC-15.1..15.4
+  test_us16_multiple_messages.py  (3 tests)  US-16 AC-16.1..16.3
+  test_us17_aliases.py            (7 tests)  US-17 CRUD/uniqueness/validation
+  test_us18_unknown_alias.py      (3 tests)  US-18 AC-18.1/18.2
+  test_us19_help.py               (4 tests)  US-19 triggers
+  test_us20_toggles.py            (4 tests)  US-20 AC-20.1..20.4
+  test_us21_change_chat.py        (4 tests)  US-21 AC-21.1..21.3
+  test_us22_fallback.py           (6 tests)  US-22 AC-22.1..22.3 + explicit General
+  test_no_configuration.py        (3 tests)  draft table silent no-op behaviour
+  test_stale_alias_and_general.py (5 tests)  stale alias / explicit General manual
+
+Guard replacement:
+  DELETED tests/acceptance/deferred.py + test_deferred_stories_guard.py
+  NEW     tests/acceptance/test_all_stories_covered.py — every US-01..US-26 has >=1
+          acceptance file; no unknown story ids; formerly deferred US-10..22 covered.
+
+Supporting fake upgrades (tests/acceptance/_fakes.py):
+  FakeAliasesRepository  — real in-memory alias persistence (was AssertionError stub)
+  FakeDownloader         — per-source-ref failure injection (fail_refs)
+  make_wall_harness / make_wall_post — wall pipeline harness (seeds wall topic)
+  make_vk_ui_harness / make_vk_ui_message / FakeVkUiSend — real VkUiDispatcher harness
+  DeliveryLedger.wall_record_for — VK_WALL source-key lookup
+
+Production fix discovered by US-12 tests:
+  media_prep.prepare_media silently DROPPED unsupported attachments (no warning).
+  Fixed: MediaFailureReason.UNSUPPORTED + warning line per unsupported attachment
+  (AC-12.2/12.3). Covered by tests/acceptance/test_us12_unsupported.py.
+
+Acceptance command results:
+  uv run --locked pytest -q ./tests/acceptance          -> 133 passed
+  uv run --locked pytest --collect-only -q ./tests/acceptance | grep -c test_us -> 122
+  ls tests/acceptance/test_us*.py | wc -l              -> 26 story files
+  make check                                           -> EXIT=0, 822 passed, 4 deselected

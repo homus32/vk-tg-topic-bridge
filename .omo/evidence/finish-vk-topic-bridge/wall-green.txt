@@ -1,0 +1,7 @@
+=== T16 wall pipeline green evidence ===
+cmd: uv run --locked pytest -q ./tests/integration/vk/test_wall_mapper.py
+7 passed in 1.00s
+cmd: uv run --locked pytest -q ./tests/unit/application/test_forward_wall.py
+13 passed in 0.77s
+cmd: uv run --locked pytest -q ./tests/unit/bootstrap/test_vk_consumer_routing.py
+11 passed in 1.61s

@@ -1,0 +1,5 @@
+=== T15 RED evidence: mutation probe — manual intent replaced by automatic default ===
+=========================== short test summary info ============================
+FAILED tests/unit/application/test_publish_manual.py::test_manual_records_manual_intent_and_publishes
+1 failed in 2.41s
+EXIT=1 (mutation detected)

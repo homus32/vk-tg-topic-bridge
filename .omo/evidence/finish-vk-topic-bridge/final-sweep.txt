@@ -1,0 +1,22 @@
+=== T24 final verification sweep ===
+
+--- (a) make check ---
+see make-check-t23.txt: EXIT=0, 839 passed, 6 deselected, basedpyright 0 errors
+
+--- (b) migration base->head cycle (see migration-cycle.txt) ---
+base -> 0001 -> 0002 | repeat upgrade EXIT=0 | downgrade base | base -> head again -> final 0002
+
+--- (c) e2e — deferred to owner (no credentials available to agent) ---
+pytest -m e2e without credentials: 1 passed, 5 skipped (non-destructive)
+
+--- (d) PM2 dry check (no PM2 invocation) ---
+valid, apps: 1 name: vk-topic-bridge
+start.sh syntax EXIT=0
+
+--- (e) secrets hygiene ---
+git status porcelain env/session/db matches: 0 (clean)
+history check (session/db ever committed): empty
+gitignore: .gitignore:38 data/*, .gitignore:41 runtime/telethon/*
+
+--- (f) coverage (guardrail >=80%) ---
+TOTAL 3760 statements, 294 missed, 722 branches, 133 partial = 90%

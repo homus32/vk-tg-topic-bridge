@@ -1,0 +1,221 @@
+uv lock --check
+Resolved 52 packages in 1ms
+uv run --locked ruff format --check .
+226 files already formatted
+uv run --locked ruff check .
+All checks passed!
+uv run --locked basedpyright
+0 errors, 0 warnings, 0 notes
+uv run --locked pytest
+============================= test session starts ==============================
+platform linux -- Python 3.14.3, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/homus/PycharmProjects/vk-topic-bridge
+configfile: pyproject.toml
+testpaths: tests
+plugins: asyncio-1.4.0, cov-7.1.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=function, asyncio_default_test_loop_scope=function
+collected 845 items / 6 deselected / 839 selected
+
+tests/acceptance/test_all_stories_covered.py ...                         [  0%]
+tests/acceptance/test_stale_alias_and_general.py .....                   [  0%]
+tests/acceptance/test_us01_owner_access.py ..                            [  1%]
+tests/acceptance/test_us02_registration.py ..                            [  1%]
+tests/acceptance/test_us03_capability_check.py .....                     [  2%]
+tests/acceptance/test_us04_refresh_topics.py ....                        [  2%]
+tests/acceptance/test_us05_destination_topic.py ....                     [  2%]
+tests/acceptance/test_us06_hashtag_forwarding.py .....                   [  3%]
+tests/acceptance/test_us07_all_forwarding.py .....                       [  4%]
+tests/acceptance/test_us08_cropped_message.py ...                        [  4%]
+tests/acceptance/test_us09_author_transfer.py ....                       [  5%]
+tests/acceptance/test_us10_attachments.py ...                            [  5%]
+tests/acceptance/test_us11_large_file.py ...                             [  5%]
+tests/acceptance/test_us12_unsupported.py ...                            [  6%]
+tests/acceptance/test_us13_vk_reaction.py .......                        [  6%]
+tests/acceptance/test_us14_wall.py .....                                 [  7%]
+tests/acceptance/test_us15_manual_single.py ......                       [  8%]
+tests/acceptance/test_us16_multiple_messages.py ...                      [  8%]
+tests/acceptance/test_us17_aliases.py .......                            [  9%]
+tests/acceptance/test_us18_unknown_alias.py ...                          [  9%]
+tests/acceptance/test_us19_help.py ....                                  [ 10%]
+tests/acceptance/test_us20_toggles.py ....                               [ 10%]
+tests/acceptance/test_us21_change_chat.py ....                           [ 11%]
+tests/acceptance/test_us22_fallback.py ......                            [ 11%]
+tests/acceptance/test_us23_telethon_transport.py .......                 [ 12%]
+tests/acceptance/test_us24_bot_api_proxy.py ........                     [ 13%]
+tests/acceptance/test_us25_no_edit_sync.py ....                          [ 14%]
+tests/acceptance/test_us26_authorize_script.py ...........               [ 15%]
+tests/acceptance/test_us27_no_configuration.py ...                       [ 15%]
+tests/integration/db/test_delivery_repository.py .................       [ 17%]
+tests/integration/db/test_delivery_review.py ........                    [ 18%]
+tests/integration/db/test_engine_pragmas.py ..                           [ 19%]
+tests/integration/db/test_finish_schema.py ...........                   [ 20%]
+tests/integration/db/test_migrations.py ........................         [ 23%]
+tests/integration/db/test_repositories.py .......................        [ 25%]
+tests/integration/forwarding/test_general_fallback.py ..                 [ 26%]
+tests/integration/telegram/test_bot_api_factory.py ......                [ 26%]
+tests/integration/telegram/test_chat_access.py ......                    [ 27%]
+tests/integration/telegram/test_command_menu.py ......                   [ 28%]
+tests/integration/telegram/test_destination_wizards.py ..........        [ 29%]
+tests/integration/telegram/test_owner_middleware.py ...                  [ 29%]
+tests/integration/telegram/test_publisher_args.py ...................... [ 32%]
+.........                                                                [ 33%]
+tests/integration/telegram/test_publisher_plan.py ..........             [ 34%]
+tests/integration/telegram/test_register_flow.py .......                 [ 35%]
+tests/integration/telegram/test_registration_master.py ...........       [ 36%]
+tests/integration/telegram/test_root_router.py .........                 [ 38%]
+tests/integration/telegram/test_settings_router.py ................      [ 39%]
+tests/integration/telegram/test_topic_mapper.py ....                     [ 40%]
+tests/integration/test_forwarding_chain.py ........                      [ 41%]
+tests/integration/test_lifecycle.py ..................                   [ 43%]
+tests/integration/vk/test_mapper.py ................                     [ 45%]
+tests/integration/vk/test_media_downloader.py ..............             [ 47%]
+tests/integration/vk/test_vk_api.py ...................                  [ 49%]
+tests/integration/vk/test_wall_mapper.py .......                         [ 50%]
+tests/unit/application/test_aliasing.py .................                [ 52%]
+tests/unit/application/test_application_dtos.py ...........              [ 53%]
+tests/unit/application/test_composition.py ....................          [ 55%]
+tests/unit/application/test_destination_admin.py ..........              [ 57%]
+tests/unit/application/test_forward_message.py ........................  [ 59%]
+tests/unit/application/test_forward_wall.py ................             [ 61%]
+tests/unit/application/test_owner_notifier.py .......                    [ 62%]
+tests/unit/application/test_port_async_contract.py .........             [ 63%]
+tests/unit/application/test_port_fakes.py ....                           [ 64%]
+tests/unit/application/test_publication_planning.py .................... [ 66%]
+                                                                         [ 66%]
+tests/unit/application/test_publish_manual.py ............               [ 68%]
+tests/unit/application/test_readiness_features.py .........              [ 69%]
+tests/unit/application/test_readiness_gate.py .......                    [ 69%]
+tests/unit/application/test_refresh_topics.py ...                        [ 70%]
+tests/unit/application/test_register_chat.py ....                        [ 70%]
+tests/unit/application/test_toggle_settings.py .....                     [ 71%]
+tests/unit/bootstrap/test_vk_consumer.py ......                          [ 72%]
+tests/unit/bootstrap/test_vk_consumer_cursor.py ...                      [ 72%]
+tests/unit/bootstrap/test_vk_consumer_routing.py ...........             [ 73%]
+tests/unit/domain/test_alias_policy.py ................                  [ 75%]
+tests/unit/domain/test_attachment_policy.py .............                [ 77%]
+tests/unit/domain/test_delivery_policy.py ......................         [ 79%]
+tests/unit/domain/test_forwarding_policy.py ..............               [ 81%]
+tests/unit/infrastructure/test_vk_cursor.py ..........                   [ 82%]
+tests/unit/presentation/test_vk_dispatcher.py .........................  [ 85%]
+tests/unit/test_authorize_telegram.py ............                       [ 87%]
+tests/unit/test_config.py .............................................. [ 92%]
+.....                                                                    [ 93%]
+tests/unit/test_deployment_artifacts.py .................                [ 95%]
+tests/unit/test_git_hooks.py ......                                      [ 95%]
+tests/unit/test_logger.py ..............                                 [ 97%]
+tests/unit/test_smoke.py .............                                   [ 99%]
+tests/unit/test_telethon_proxy.py ......./home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/collections/__init__.py:455: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x756d562688b0>
+  result = tuple_new(cls, iterable)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/collections/__init__.py:455: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x756d57fe2f20>
+  result = tuple_new(cls, iterable)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/homus/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/collections/__init__.py:455: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x756d57fe1a80>
+  result = tuple_new(cls, iterable)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+                                [100%]
+
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.14.3-final-0 ________________
+
+Name                                                                    Stmts   Miss Branch BrPart  Cover   Missing
+-------------------------------------------------------------------------------------------------------------------
+src/vk_topic_bridge/__init__.py                                             0      0      0      0   100%
+src/vk_topic_bridge/__main__.py                                             4      4      2      0     0%   3-8
+src/vk_topic_bridge/application/__init__.py                                 0      0      0      0   100%
+src/vk_topic_bridge/application/admin/__init__.py                           0      0      0      0   100%
+src/vk_topic_bridge/application/admin/destination_admin.py                 66      2     16      3    94%   40, 45, 90->92
+src/vk_topic_bridge/application/admin/refresh_topics.py                    20      0      4      0   100%
+src/vk_topic_bridge/application/admin/register_chat.py                     33      0      2      0   100%
+src/vk_topic_bridge/application/admin/toggle_settings.py                   16      0      0      0   100%
+src/vk_topic_bridge/application/dto/__init__.py                             0      0      0      0   100%
+src/vk_topic_bridge/application/dto/delivery.py                            11      0      0      0   100%
+src/vk_topic_bridge/application/dto/finish.py                              26      1      0      0    96%   39
+src/vk_topic_bridge/application/dto/infrastructure.py                       5      0      0      0   100%
+src/vk_topic_bridge/application/dto/readiness.py                           10      0      0      0   100%
+src/vk_topic_bridge/application/dto/settings.py                            26      0      2      0   100%
+src/vk_topic_bridge/application/errors.py                                  11      0      0      0   100%
+src/vk_topic_bridge/application/forwarding/__init__.py                      0      0      0      0   100%
+src/vk_topic_bridge/application/forwarding/composition.py                  79      3     28      5    93%   141->153, 148->153, 165-166, 174->196, 193
+src/vk_topic_bridge/application/forwarding/forward_message.py             129      6     34      3    94%   116->119, 200, 205-206, 212, 218-219
+src/vk_topic_bridge/application/forwarding/forward_wall.py                101     15     28      4    81%   135-144, 153, 178, 183-184, 189-197
+src/vk_topic_bridge/application/forwarding/media_prep.py                   47      4     16      1    92%   58-63, 68-73
+src/vk_topic_bridge/application/forwarding/plan_execution.py               68      0      8      0   100%
+src/vk_topic_bridge/application/forwarding/publication_planning.py         39      0     18      0   100%
+src/vk_topic_bridge/application/manual/__init__.py                          0      0      0      0   100%
+src/vk_topic_bridge/application/manual/aliasing.py                         92      0      6      0   100%
+src/vk_topic_bridge/application/manual/publish_manual.py                   42      1      2      1    95%   99
+src/vk_topic_bridge/application/notifications/__init__.py                   0      0      0      0   100%
+src/vk_topic_bridge/application/notifications/owner_notifier.py            41      2      6      0    96%   107-108
+src/vk_topic_bridge/application/ports/__init__.py                           0      0      0      0   100%
+src/vk_topic_bridge/application/ports/readiness.py                          4      0      0      0   100%
+src/vk_topic_bridge/application/ports/repositories.py                      18      0      0      0   100%
+src/vk_topic_bridge/application/ports/telegram.py                           9      0      0      0   100%
+src/vk_topic_bridge/application/ports/telegram_ex.py                       15      0      0      0   100%
+src/vk_topic_bridge/application/ports/unit_of_work.py                       4      0      0      0   100%
+src/vk_topic_bridge/application/ports/vk.py                                 6      0      0      0   100%
+src/vk_topic_bridge/application/ports/vk_ex.py                              6      0      0      0   100%
+src/vk_topic_bridge/application/readiness.py                               15      0      4      0   100%
+src/vk_topic_bridge/application/readiness_features.py                      42      4     16      2    86%   102, 117-119
+src/vk_topic_bridge/bootstrap/__init__.py                                   0      0      0      0   100%
+src/vk_topic_bridge/bootstrap/container.py                                185     22      6      1    87%   120-121, 130-134, 146-148, 151-154, 159, 227->230, 245-247, 254-257
+src/vk_topic_bridge/bootstrap/shutdown.py                                  35      3      6      1    90%   49->51, 54-56
+src/vk_topic_bridge/bootstrap/startup.py                                  131     27     22      6    78%   42, 91-92, 100-103, 125->132, 128-129, 134-135, 139, 144-145, 153-154, 159-160, 164, 179-180, 184, 191-192, 196, 236-237
+src/vk_topic_bridge/bootstrap/vk_consumer.py                              138     21     46     12    82%   82, 92-93, 101-102, 112-113, 116-117, 138-139, 151-152, 162-163, 167, 229, 235, 238-240
+src/vk_topic_bridge/domain/__init__.py                                      0      0      0      0   100%
+src/vk_topic_bridge/domain/enums.py                                        22      0      0      0   100%
+src/vk_topic_bridge/domain/errors.py                                       25      0      0      0   100%
+src/vk_topic_bridge/domain/policies/__init__.py                             0      0      0      0   100%
+src/vk_topic_bridge/domain/policies/alias_policy.py                        17      0      8      0   100%
+src/vk_topic_bridge/domain/policies/attachment_policy.py                   15      0      4      0   100%
+src/vk_topic_bridge/domain/policies/delivery_policy.py                     13      0      0      0   100%
+src/vk_topic_bridge/domain/policies/forwarding_policy.py                   23      0      0      0   100%
+src/vk_topic_bridge/domain/publication.py                                  44      1      0      0    98%   115
+src/vk_topic_bridge/domain/routing_policy.py                               15      0      2      0   100%
+src/vk_topic_bridge/domain/value_objects.py                                27      0      0      0   100%
+src/vk_topic_bridge/domain/wall_post.py                                     7      0      0      0   100%
+src/vk_topic_bridge/infrastructure/__init__.py                              0      0      0      0   100%
+src/vk_topic_bridge/infrastructure/db/__init__.py                           0      0      0      0   100%
+src/vk_topic_bridge/infrastructure/db/base.py                               2      0      0      0   100%
+src/vk_topic_bridge/infrastructure/db/engine.py                            20      0      2      0   100%
+src/vk_topic_bridge/infrastructure/db/models.py                            92      0      0      0   100%
+src/vk_topic_bridge/infrastructure/db/repositories/__init__.py              6      0      0      0   100%
+src/vk_topic_bridge/infrastructure/db/repositories/bridge_settings.py      53      0      2      0   100%
+src/vk_topic_bridge/infrastructure/db/repositories/delivery.py             91      1      6      1    98%   55
+src/vk_topic_bridge/infrastructure/db/repositories/telegram_topics.py      35      1      8      0    98%   50
+src/vk_topic_bridge/infrastructure/db/repositories/unit_of_work.py         65      2      8      3    93%   68->74, 87, 93
+src/vk_topic_bridge/infrastructure/db/repositories/vk_aliases.py           29      2      4      0    94%   61-62
+src/vk_topic_bridge/infrastructure/telegram/__init__.py                     0      0      0      0   100%
+src/vk_topic_bridge/infrastructure/telegram/bot_api_factory.py             15      0      2      0   100%
+src/vk_topic_bridge/infrastructure/telegram/command_menu.py                28      1      4      0    97%   83
+src/vk_topic_bridge/infrastructure/telegram/mtproto.py                     76      6     12      3    90%   97, 103-104, 120-121, 123, 129->128
+src/vk_topic_bridge/infrastructure/telegram/proxy.py                       32      3     12      2    89%   43-44, 50
+src/vk_topic_bridge/infrastructure/telegram/publisher.py                  129     11     34      6    88%   125, 249, 263, 275-280, 289, 305, 316, 325-326
+src/vk_topic_bridge/infrastructure/vk/__init__.py                           0      0      0      0   100%
+src/vk_topic_bridge/infrastructure/vk/api.py                              117     30     30      8    70%   70-71, 82-83, 97-98, 127-128, 152-160, 168-169, 172-173, 178-179, 181-182, 190-198
+src/vk_topic_bridge/infrastructure/vk/cursor.py                            36      6      8      2    77%   52-53, 68->70, 73-76
+src/vk_topic_bridge/infrastructure/vk/mapper.py                            95      4     32      6    92%   28, 52, 79, 82, 87->94, 108->106
+src/vk_topic_bridge/infrastructure/vk/media_downloader.py                 131     19     42     10    82%   76-77, 119-123, 131->143, 134, 139, 144-145, 154->159, 171-172, 181, 183-184, 191-193
+src/vk_topic_bridge/presentation/__init__.py                                0      0      0      0   100%
+src/vk_topic_bridge/presentation/telegram/__init__.py                       0      0      0      0   100%
+src/vk_topic_bridge/presentation/telegram/commands.py                      19      0      0      0   100%
+src/vk_topic_bridge/presentation/telegram/errors.py                         1      1      0      0     0%   9
+src/vk_topic_bridge/presentation/telegram/filters.py                       46      2     10      2    93%   41, 45
+src/vk_topic_bridge/presentation/telegram/keyboards.py                     20      0      0      0   100%
+src/vk_topic_bridge/presentation/telegram/middlewares.py                   12      0      2      0   100%
+src/vk_topic_bridge/presentation/telegram/routers/__init__.py               1      0      0      0   100%
+src/vk_topic_bridge/presentation/telegram/routers/destinations.py         127     15     30      9    85%   45, 75, 78, 115-116, 120-121, 137-138, 176, 181, 185-186, 193, 196
+src/vk_topic_bridge/presentation/telegram/routers/register.py              33      0      4      0   100%
+src/vk_topic_bridge/presentation/telegram/routers/registration.py          80      6     22      5    89%   97, 118-123, 138->exit, 146->exit, 158, 161
+src/vk_topic_bridge/presentation/telegram/routers/root.py                  42      5      6      0    85%   61-62, 75-77
+src/vk_topic_bridge/presentation/telegram/routers/settings.py             235     20     64     19    87%   153, 154->156, 156->158, 166, 169, 246, 257, 273->275, 280, 290, 294-298, 306, 310-311, 329, 333-334, 340, 346, 353, 357-358
+src/vk_topic_bridge/presentation/telegram/routers/start.py                 18      5      0      0    72%   42-48
+src/vk_topic_bridge/presentation/telegram/states.py                        13      0      0      0   100%
+src/vk_topic_bridge/presentation/vk/__init__.py                             1      0      0      0   100%
+src/vk_topic_bridge/presentation/vk/handlers.py                           315     38     90     18    86%   133, 141, 234-236, 247-252, 258-259, 309-310, 314-319, 322-327, 343-345, 360-361, 386-387, 408-409, 412-414, 433, 435, 453-458, 471, 497, 505
+src/vk_topic_bridge/presentation/vk/keyboards.py                           31      0      0      0   100%
+src/vk_topic_bridge/presentation/vk/states.py                              32      0      2      0   100%
+-------------------------------------------------------------------------------------------------------------------
+TOTAL                                                                    3760    294    722    133    90%
+====================== 839 passed, 6 deselected in 12.99s ======================
+EXIT=0

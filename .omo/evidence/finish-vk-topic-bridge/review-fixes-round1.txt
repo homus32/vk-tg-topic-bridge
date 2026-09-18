@@ -1,0 +1,14 @@
+=== Review fixes round 1 (F1/F2/F3) ===
+
+F1: container.build_dispatcher() -> Dispatcher(fsm_strategy=FSMStrategy.GLOBAL_USER)
+F2: router order: registration -> destinations -> settings -> root(last);
+    SkipHandler guards in destinations.py (messages_pick, wall_pick, wizard_cancel);
+    settings.py (diag_pick, diag_mark, diag_back, confirm_yes, confirm_cancel)
+F3: mandatory async source_resolver wired in container (_manual_source_resolver);
+    mapper.extract_forwarded_payload + map_manual_source; silent lossy fallback removed
+
+RED mutation probes:
+- root-before-features mutation -> 2 wiring tests FAILED
+- default FSM strategy mutation -> 1 wiring test FAILED
+
+make check: EXIT=0, 847 passed, 6 deselected, basedpyright 0 errors

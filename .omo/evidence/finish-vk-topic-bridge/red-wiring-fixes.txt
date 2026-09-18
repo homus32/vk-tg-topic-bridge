@@ -1,0 +1,7 @@
+=== F1/F2 review fixes: RED mutation probes ===
+--- mutation: root router before feature routers ---
+FAILED test_root_router_is_included_after_feature_routers
+FAILED test_menu_button_text_reaches_feature_router_not_catch_all
+--- mutation: Dispatcher() default strategy ---
+FAILED test_dispatcher_uses_global_user_fsm_strategy
+--- restored: 3 passed ---

@@ -1,0 +1,5 @@
+TOTAL                                                                    3758   3196    722      4    13%
+13 passed in 3.11s
+EXIT=0
+
+TECHNICAL CORRECTION (recorded for review): plan task 18 said "обернуть listen() прокси-генератором, инспектирующим события на ключ failed". Verified in pinned vkbottle 4.11.0 source (vkbottle/polling/base.py listen()): failed events are consumed internally by handle_failed_event and never yielded to consumers, so a listen()-wrapper CANNOT observe them. Implemented the only correct observation point: override handle_failed_event (calls super() to preserve reconnect semantics) with per-episode dedup reset on normal events in listen(). Product intent unchanged.

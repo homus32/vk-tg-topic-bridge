@@ -1,0 +1,13 @@
+=== F4 scope fidelity checks ===
+--- (1) no FastAPI/celery/redis in src/ ---
+0
+--- (2) no InlineKeyboard in presentation ---
+0
+--- (3) no VK_SOURCE_PEER_ID ---
+0
+--- (4) docs/07 + drafts untouched vs baseline ---
+0
+--- (5) sentinel topic ids absent ---
+0
+--- (6) no scene wizard ---
+0

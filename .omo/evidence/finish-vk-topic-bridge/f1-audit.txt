@@ -1,0 +1,71 @@
+# F1 — Plan compliance audit (agent-performed portion)
+
+Audit date: 2026-09-19
+Baseline: 8e26879164f380eae411451716f7d790fd52b25d
+
+## 1. Plan checkbox state
+
+```
+grep -c "^- \[x\]" .omo/plans/finish-vk-topic-bridge.md  -> 26
+grep -n "^- \[ \]"  .omo/plans/finish-vk-topic-bridge.md  -> 3 lines
+```
+
+Checked (26): tasks 1–24, F2, F4.
+Unchecked (3): task 25 (OWNER-PERFORMED), F3 (OWNER), F1 (this audit — closed only
+after task 25 per its own acceptance criterion).
+
+No plan item that the agent was responsible for remains unchecked.
+
+## 2. Acceptance-command evidence sweep
+
+All `make-check-*.txt` and `*-green.txt` artifacts whose verification line contains
+`EXIT=` end with `EXIT=0` (or carry `make check: EXIT=0 (...)`):
+
+- Verified programmatically: 43 green/check artifacts scanned for the LAST `EXIT=` token.
+- Three files (`destwizard-green.txt`, `regmaster-green.txt`, `settings-green.txt`)
+  contain a later `FAIL (EXIT=1)` sentence — verified by line inspection that this is the
+  *description of the mutation probe*, while the file's verification line reads
+  `make check: EXIT=0`. Not a failure.
+- Ten green files carry no `EXIT=` marker at all (`docs-updated.txt`, `e2e-extended.txt`,
+  `make-check-skeleton-baseline.txt`, `make-check-task2.txt`, `make-check-wave-1.txt`,
+  `owner-notifier-green.txt`, `readiness-green.txt`, `scope-fidelity.txt`,
+  `vkui-manualpub-green.txt`, `wall-green.txt`). Each embeds its result inline
+  (e.g. "535 passed", "0 matches"); `make-check-wave-1.txt` / `make-check-task2.txt` /
+  `owner-notifier-green.txt` / `readiness-green.txt` / `wall-green.txt` /
+  `vkui-manualpub-green.txt` cover the early waves where the convention had not yet
+  settled. Direct re-verification of the current tree: `make check` EXIT=0, 847 passed
+  (`make-check-f1.txt`, `make-check-fixes.txt`), which supersedes all per-wave snapshots.
+
+## 3. RED-evidence coverage per task
+
+19 `red-*.txt` artifacts exist. Four of them (`red-composition.txt`,
+`red-migration-0002.txt`, `red-readiness.txt`, `red-wiring-fixes.txt`) carry no `EXIT=`
+token but do contain genuine failure summaries (`N failed, M passed`), i.e. valid RED
+artifacts recorded by the early convention.
+
+**Gap found and closed during this audit:** tasks 2, 4 and 17 each prescribed a named RED
+artifact that was never persisted:
+
+| Task | Prescribed artifact | Action taken |
+|---|---|---|
+| 2  | `red-routing.txt`   | created via mutation probe (conversation-only classifier) → EXIT=1 |
+| 4  | `red-notifier.txt`  | created via mutation probe (initiator no longer skipped) → EXIT=1 |
+| 17 | `red-fallback.txt`  | created via mutation probe (no General fallback on unavailable topic) → EXIT=1 |
+
+All three mutation probes were reverted immediately after capture; subsequent
+`make check` (EXIT=0, 847 passed) confirms the tree is intact.
+
+## 4. Remaining unchecked items are owner-only
+
+- **task 25 / F3** — manual gates: real VK→TG E2E, PM2 reboot, backup/restore, Telegram
+  admin UI walk-through. Checklist prepared at
+  `.omo/evidence/finish-vk-topic-bridge/owner-gates.md`; performed and signed by the
+  owner only (agent performs no network calls, starts no application).
+- **F1** — closes when task 25 is done and `grep -c "^- \[ \]"` reaches 0.
+
+## Verdict
+
+Agent-performable part of F1 is complete: every agent-owned plan item is checked, every
+task's verification command has EXIT=0 evidence, and RED/GREEN evidence now covers all
+26 tasks plus the review rounds. Green: 847 passed / 6 deselected / basedpyright 0 /
+ruff clean. F1 and F3 remain open solely for the owner.

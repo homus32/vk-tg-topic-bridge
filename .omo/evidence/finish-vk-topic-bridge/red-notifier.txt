@@ -1,0 +1,124 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______________________ test_notify_others_skips_initiator ______________________
+
+    async def test_notify_others_skips_initiator() -> None:
+        port = _FakeNotifierPort()
+        notifier = OwnerNotifier(owner_ids=frozenset({7, 8, 9}), port=port)
+    
+        await notifier.notify_others(7, "broadcast")
+    
+>       assert sorted(recipient for recipient, _, _ in port.sent) == [8, 9]
+E       assert [7, 8, 9] == [8, 9]
+E         
+E         At index 0 diff: 7 != 8
+E         Left contains one more item: 9
+E         Use -v to get more diff
+
+tests/unit/application/test_owner_notifier.py:38: AssertionError
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.14.3-final-0 ________________
+
+Name                                                                    Stmts   Miss Branch BrPart  Cover   Missing
+-------------------------------------------------------------------------------------------------------------------
+src/vk_topic_bridge/__init__.py                                             0      0      0      0   100%
+src/vk_topic_bridge/__main__.py                                             4      4      2      0     0%   3-8
+src/vk_topic_bridge/application/__init__.py                                 0      0      0      0   100%
+src/vk_topic_bridge/application/admin/__init__.py                           0      0      0      0   100%
+src/vk_topic_bridge/application/admin/destination_admin.py                 66     66     16      0     0%   3-120
+src/vk_topic_bridge/application/admin/refresh_topics.py                    20     20      4      0     0%   8-38
+src/vk_topic_bridge/application/admin/register_chat.py                     33     33      2      0     0%   12-84
+src/vk_topic_bridge/application/admin/toggle_settings.py                   16     16      0      0     0%   3-25
+src/vk_topic_bridge/application/dto/__init__.py                             0      0      0      0   100%
+src/vk_topic_bridge/application/dto/delivery.py                            11     11      0      0     0%   3-49
+src/vk_topic_bridge/application/dto/finish.py                              26     26      0      0     0%   3-65
+src/vk_topic_bridge/application/dto/infrastructure.py                       5      5      0      0     0%   3-17
+src/vk_topic_bridge/application/dto/readiness.py                           10     10      0      0     0%   3-18
+src/vk_topic_bridge/application/dto/settings.py                            26     26      2      0     0%   3-70
+src/vk_topic_bridge/application/errors.py                                  11     11      0      0     0%   3-30
+src/vk_topic_bridge/application/forwarding/__init__.py                      0      0      0      0   100%
+src/vk_topic_bridge/application/forwarding/composition.py                  79     79     28      0     0%   9-196
+src/vk_topic_bridge/application/forwarding/forward_message.py             129    129     34      0     0%   10-239
+src/vk_topic_bridge/application/forwarding/forward_wall.py                101    101     28      0     0%   8-197
+src/vk_topic_bridge/application/forwarding/media_prep.py                   47     47     16      0     0%   8-95
+src/vk_topic_bridge/application/forwarding/plan_execution.py               68     68      8      0     0%   8-153
+src/vk_topic_bridge/application/forwarding/publication_planning.py         39     39     18      0     0%   13-92
+src/vk_topic_bridge/application/manual/__init__.py                          0      0      0      0   100%
+src/vk_topic_bridge/application/manual/aliasing.py                         92     92      6      0     0%   8-178
+src/vk_topic_bridge/application/manual/publish_manual.py                   42     42      2      0     0%   8-103
+src/vk_topic_bridge/application/notifications/__init__.py                   0      0      0      0   100%
+src/vk_topic_bridge/application/notifications/owner_notifier.py            39     11      4      0    70%   48-49, 58-59, 69-71, 90-91, 105-106
+src/vk_topic_bridge/application/ports/__init__.py                           0      0      0      0   100%
+src/vk_topic_bridge/application/ports/readiness.py                          4      4      0      0     0%   3-9
+src/vk_topic_bridge/application/ports/repositories.py                      18     18      0      0     0%   9-93
+src/vk_topic_bridge/application/ports/telegram.py                           9      9      0      0     0%   3-42
+src/vk_topic_bridge/application/ports/telegram_ex.py                       15      0      0      0   100%
+src/vk_topic_bridge/application/ports/unit_of_work.py                       4      4      0      0     0%   7-18
+src/vk_topic_bridge/application/ports/vk.py                                 6      6      0      0     0%   3-11
+src/vk_topic_bridge/application/ports/vk_ex.py                              6      6      0      0     0%   3-22
+src/vk_topic_bridge/application/readiness.py                               15     15      4      0     0%   3-25
+src/vk_topic_bridge/application/readiness_features.py                      42     42     16      0     0%   8-123
+src/vk_topic_bridge/bootstrap/__init__.py                                   0      0      0      0   100%
+src/vk_topic_bridge/bootstrap/container.py                                203    203     10      0     0%   8-439
+src/vk_topic_bridge/bootstrap/shutdown.py                                  35     35      6      0     0%   7-58
+src/vk_topic_bridge/bootstrap/startup.py                                  131    131     22      0     0%   9-237
+src/vk_topic_bridge/bootstrap/vk_consumer.py                              138    138     46      0     0%   7-240
+src/vk_topic_bridge/domain/__init__.py                                      0      0      0      0   100%
+src/vk_topic_bridge/domain/enums.py                                        22      0      0      0   100%
+src/vk_topic_bridge/domain/errors.py                                       25     25      0      0     0%   3-67
+src/vk_topic_bridge/domain/policies/__init__.py                             0      0      0      0   100%
+src/vk_topic_bridge/domain/policies/alias_policy.py                        17     17      8      0     0%   3-42
+src/vk_topic_bridge/domain/policies/attachment_policy.py                   15     15      4      0     0%   3-30
+src/vk_topic_bridge/domain/policies/delivery_policy.py                     13     13      0      0     0%   3-52
+src/vk_topic_bridge/domain/policies/forwarding_policy.py                   23     23      0      0     0%   3-43
+src/vk_topic_bridge/domain/publication.py                                  44      1      0      0    98%   115
+src/vk_topic_bridge/domain/routing_policy.py                               15     15      2      0     0%   9-39
+src/vk_topic_bridge/domain/value_objects.py                                27      2      0      0    93%   21, 26
+src/vk_topic_bridge/domain/wall_post.py                                     7      7      0      0     0%   8-26
+src/vk_topic_bridge/infrastructure/__init__.py                              0      0      0      0   100%
+src/vk_topic_bridge/infrastructure/db/__init__.py                           0      0      0      0   100%
+src/vk_topic_bridge/infrastructure/db/base.py                               2      2      0      0     0%   3-6
+src/vk_topic_bridge/infrastructure/db/engine.py                            20     20      2      0     0%   3-49
+src/vk_topic_bridge/infrastructure/db/models.py                            92     92      0      0     0%   3-213
+src/vk_topic_bridge/infrastructure/db/repositories/__init__.py              6      6      0      0     0%   7-17
+src/vk_topic_bridge/infrastructure/db/repositories/bridge_settings.py      53     53      2      0     0%   3-95
+src/vk_topic_bridge/infrastructure/db/repositories/delivery.py             91     91      6      0     0%   8-371
+src/vk_topic_bridge/infrastructure/db/repositories/telegram_topics.py      35     35      8      0     0%   3-110
+src/vk_topic_bridge/infrastructure/db/repositories/unit_of_work.py         65     65      8      0     0%   3-94
+src/vk_topic_bridge/infrastructure/db/repositories/vk_aliases.py           29     29      4      0     0%   3-83
+src/vk_topic_bridge/infrastructure/telegram/__init__.py                     0      0      0      0   100%
+src/vk_topic_bridge/infrastructure/telegram/bot_api_factory.py             15     15      2      0     0%   12-37
+src/vk_topic_bridge/infrastructure/telegram/command_menu.py                28     28      4      0     0%   10-85
+src/vk_topic_bridge/infrastructure/telegram/mtproto.py                     76     76     12      0     0%   8-138
+src/vk_topic_bridge/infrastructure/telegram/proxy.py                       32     32     12      0     0%   7-60
+src/vk_topic_bridge/infrastructure/telegram/publisher.py                  129    129     34      0     0%   9-370
+src/vk_topic_bridge/infrastructure/vk/__init__.py                           0      0      0      0   100%
+src/vk_topic_bridge/infrastructure/vk/api.py                              117    117     30      0     0%   7-198
+src/vk_topic_bridge/infrastructure/vk/cursor.py                            36     36      8      0     0%   16-85
+src/vk_topic_bridge/infrastructure/vk/mapper.py                           109    109     36      0     0%   7-233
+src/vk_topic_bridge/infrastructure/vk/media_downloader.py                 131    131     42      0     0%   14-193
+src/vk_topic_bridge/presentation/__init__.py                                0      0      0      0   100%
+src/vk_topic_bridge/presentation/telegram/__init__.py                       0      0      0      0   100%
+src/vk_topic_bridge/presentation/telegram/commands.py                      19     19      0      0     0%   4-39
+src/vk_topic_bridge/presentation/telegram/errors.py                         1      1      0      0     0%   9
+src/vk_topic_bridge/presentation/telegram/filters.py                       46     46     10      0     0%   3-71
+src/vk_topic_bridge/presentation/telegram/keyboards.py                     20     20      0      0     0%   7-73
+src/vk_topic_bridge/presentation/telegram/middlewares.py                   12     12      2      0     0%   7-30
+src/vk_topic_bridge/presentation/telegram/routers/__init__.py               1      1      0      0     0%   3
+src/vk_topic_bridge/presentation/telegram/routers/destinations.py         130    130     30      0     0%   8-208
+src/vk_topic_bridge/presentation/telegram/routers/register.py              33     33      4      0     0%   8-85
+src/vk_topic_bridge/presentation/telegram/routers/registration.py          80     80     22      0     0%   13-162
+src/vk_topic_bridge/presentation/telegram/routers/root.py                  42     42      6      0     0%   9-82
+src/vk_topic_bridge/presentation/telegram/routers/settings.py             236    236     64      0     0%   4-404
+src/vk_topic_bridge/presentation/telegram/routers/start.py                 18     18      0      0     0%   8-48
+src/vk_topic_bridge/presentation/telegram/states.py                        13     13      0      0     0%   3-36
+src/vk_topic_bridge/presentation/vk/__init__.py                             1      1      0      0     0%   8
+src/vk_topic_bridge/presentation/vk/handlers.py                           310    310     86      0     0%   9-488
+src/vk_topic_bridge/presentation/vk/keyboards.py                           31     31      0      0     0%   8-72
+src/vk_topic_bridge/presentation/vk/states.py                              32     32      2      0     0%   7-64
+-------------------------------------------------------------------------------------------------------------------
+TOTAL                                                                    3789   3656    724      0     3%
+=========================== short test summary info ============================
+FAILED tests/unit/application/test_owner_notifier.py::test_notify_others_skips_initiator
+1 failed in 1.00s
+EXIT=1

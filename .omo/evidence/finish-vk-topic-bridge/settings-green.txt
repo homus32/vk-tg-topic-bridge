@@ -1,0 +1,9 @@
+T12 GREEN verification (settings router: toggles/broadcast/topics/refresh/diagnostics/change-chat)
+====================================================================================================
+Command: uv run --locked pytest -q ./tests/integration/telegram/test_settings_router.py
+Result: 16 passed
+make check: EXIT=0 (662 passed, 4 deselected; basedpyright 0 errors; ruff clean)
+Acceptance criteria: grep -r "TODO(stage-7)" src/ | wc -l -> 0; routers/destination.py REMOVED;
+application/admin/select_destination.py REMOVED; container rewired to SelectDestinationV2 + settings router.
+RED evidence: mutation probe (removing the other-owners broadcast from the toggle handler) makes
+test_toggle_broadcasts_keyboard_to_other_owners FAIL (EXIT=1) -> the test asserts the real AC-20.4.

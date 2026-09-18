@@ -1,0 +1,336 @@
+FFFFFFFFFFFFFF                                                           [100%]
+=================================== FAILURES ===================================
+__________ test_resolve_photo_requests_get_by_id_with_full_identifier __________
+
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-400/test_resolve_photo_requests_ge0')
+
+    async def test_resolve_photo_requests_get_by_id_with_full_identifier(tmp_path: Path) -> None:
+        api = FakeVkApi(response=_photo_response())
+        downloader = _downloader(api, FakeHttp(), tmp_path)
+    
+>       url = await downloader.resolve_url(PHOTO_REF, AttachmentKind.PHOTO)
+                    ^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'VkMediaDownloader' object has no attribute 'resolve_url'
+
+tests/integration/vk/test_media_downloader.py:114: AttributeError
+________________ test_resolve_photo_identifier_keeps_access_key ________________
+
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-400/test_resolve_photo_identifier_0')
+
+    async def test_resolve_photo_identifier_keeps_access_key(tmp_path: Path) -> None:
+        api = FakeVkApi(response=_photo_response())
+        downloader = _downloader(api, FakeHttp(), tmp_path)
+    
+>       await downloader.resolve_url(f"{PHOTO_REF}_SECRETKEY", AttachmentKind.PHOTO)
+              ^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'VkMediaDownloader' object has no attribute 'resolve_url'
+
+tests/integration/vk/test_media_downloader.py:126: AttributeError
+___________ test_resolve_document_returns_url_and_requests_get_by_id ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-400/test_resolve_document_returns_0')
+
+    async def test_resolve_document_returns_url_and_requests_get_by_id(tmp_path: Path) -> None:
+        api = FakeVkApi(response=[{"id": 33, "owner_id": -1, "url": "https://vk.example/f.pdf"}])
+        downloader = _downloader(api, FakeHttp(), tmp_path)
+    
+>       url = await downloader.resolve_url(DOC_REF, AttachmentKind.DOCUMENT)
+                    ^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'VkMediaDownloader' object has no attribute 'resolve_url'
+
+tests/integration/vk/test_media_downloader.py:135: AttributeError
+_________________ test_resolve_video_picks_highest_quality_mp4 _________________
+
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-400/test_resolve_video_picks_highe0')
+
+    async def test_resolve_video_picks_highest_quality_mp4(tmp_path: Path) -> None:
+        api = FakeVkApi(
+            response={
+                "items": [
+                    {
+                        "files": {
+                            "mp4_360": "https://vk.example/v360.mp4",
+                            "mp4_720": "https://vk.example/v720.mp4",
+                        },
+                        "player": "https://vk.example/player",
+                    }
+                ]
+            }
+        )
+        downloader = _downloader(api, FakeHttp(), tmp_path)
+    
+>       url = await downloader.resolve_url(VIDEO_REF, AttachmentKind.VIDEO)
+                    ^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'VkMediaDownloader' object has no attribute 'resolve_url'
+
+tests/integration/vk/test_media_downloader.py:159: AttributeError
+_____________ test_resolve_video_without_mp4_files_is_unavailable ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-400/test_resolve_video_without_mp40')
+
+    async def test_resolve_video_without_mp4_files_is_unavailable(tmp_path: Path) -> None:
+        api = FakeVkApi(response={"items": [{"player": "https://vk.example/player"}]})
+        downloader = _downloader(api, FakeHttp(), tmp_path)
+    
+        with pytest.raises(VkMediaUnavailableError):
+>           await downloader.resolve_url(VIDEO_REF, AttachmentKind.VIDEO)
+                  ^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: 'VkMediaDownloader' object has no attribute 'resolve_url'
+
+tests/integration/vk/test_media_downloader.py:170: AttributeError
+______________ test_resolve_video_with_empty_items_is_unavailable ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-400/test_resolve_video_with_empty_0')
+
+    async def test_resolve_video_with_empty_items_is_unavailable(tmp_path: Path) -> None:
+        api = FakeVkApi(response={"items": []})
+        downloader = _downloader(api, FakeHttp(), tmp_path)
+    
+        with pytest.raises(VkMediaUnavailableError):
+>           await downloader.resolve_url(VIDEO_REF, AttachmentKind.VIDEO)
+                  ^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: 'VkMediaDownloader' object has no attribute 'resolve_url'
+
+tests/integration/vk/test_media_downloader.py:178: AttributeError
+______________ test_resolve_access_denied_vk_error_is_unavailable ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-400/test_resolve_access_denied_vk_0')
+
+    async def test_resolve_access_denied_vk_error_is_unavailable(tmp_path: Path) -> None:
+>       from vkbottle import APIError
+E       ImportError: cannot import name 'APIError' from 'vkbottle' (/home/homus/PycharmProjects/vk-topic-bridge/.venv/lib/python3.14/site-packages/vkbottle/__init__.py). Did you mean: 'VKAPIError'?
+
+tests/integration/vk/test_media_downloader.py:182: ImportError
+____________ test_resolve_oversize_document_refused_before_download ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-400/test_resolve_oversize_document0')
+
+    async def test_resolve_oversize_document_refused_before_download(tmp_path: Path) -> None:
+        api = FakeVkApi(
+            response=[
+                {
+                    "id": 44,
+                    "owner_id": -1,
+                    "url": "https://vk.example/big.zip",
+                    "size": MAX_ATTACHMENT_BYTES + 1,
+                }
+            ]
+        )
+        http = FakeHttp()
+        downloader = _downloader(api, http, tmp_path)
+    
+        with pytest.raises(AttachmentTooLargeError):
+>           await downloader.resolve_url(BIG_DOC_REF, AttachmentKind.DOCUMENT)
+                  ^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: 'VkMediaDownloader' object has no attribute 'resolve_url'
+
+tests/integration/vk/test_media_downloader.py:206: AttributeError
+_________________ test_download_streams_chunks_into_media_dir __________________
+
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-400/test_download_streams_chunks_i0')
+
+    async def test_download_streams_chunks_into_media_dir(tmp_path: Path) -> None:
+        payload = b"x" * 1024 * 1024
+        http = FakeHttp(response=FakeResponse(chunks=(payload[: 512 * 1024], payload[512 * 1024 :])))
+        media_dir = tmp_path / "media"
+        downloader = _downloader(FakeVkApi(), http, media_dir)
+    
+        path = await downloader.download(DOC_REF, "https://vk.example/f.bin")
+    
+>       assert media_dir.is_dir()
+E       AssertionError: assert False
+E        +  where False = is_dir()
+E        +    where is_dir = PosixPath('/tmp/pytest-of-homus/pytest-400/test_download_streams_chunks_i0/media').is_dir
+
+tests/integration/vk/test_media_downloader.py:222: AssertionError
+___________ test_download_midstream_oversize_aborts_and_removes_temp ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-400/test_download_midstream_oversi0')
+
+    async def test_download_midstream_oversize_aborts_and_removes_temp(tmp_path: Path) -> None:
+        chunk = b"y" * (1024 * 1024)
+        chunks = (chunk,) * (MAX_ATTACHMENT_BYTES // len(chunk) + 2)
+        http = FakeHttp(response=FakeResponse(chunks=chunks))
+        media_dir = tmp_path / "media"
+        downloader = _downloader(FakeVkApi(), http, media_dir)
+    
+>       with pytest.raises(AttachmentTooLargeError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE AttachmentTooLargeError
+
+tests/integration/vk/test_media_downloader.py:234: Failed
+___________ test_download_http_error_status_maps_to_download_failed ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-400/test_download_http_error_statu0')
+
+    async def test_download_http_error_status_maps_to_download_failed(tmp_path: Path) -> None:
+        http = FakeHttp(response=FakeResponse(status=500))
+        downloader = _downloader(FakeVkApi(), http, tmp_path)
+    
+>       with pytest.raises(AttachmentDownloadFailed):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE AttachmentDownloadFailed
+
+tests/integration/vk/test_media_downloader.py:244: Failed
+____________ test_download_connection_error_maps_to_download_failed ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-400/test_download_connection_error0')
+
+    async def test_download_connection_error_maps_to_download_failed(tmp_path: Path) -> None:
+        http = FakeHttp(error=aiohttp.ClientConnectionError("dropped"))
+        downloader = _downloader(FakeVkApi(), http, tmp_path)
+    
+>       with pytest.raises(AttachmentDownloadFailed):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE AttachmentDownloadFailed
+
+tests/integration/vk/test_media_downloader.py:254: Failed
+____________________ test_download_does_not_log_access_key _____________________
+
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-400/test_download_does_not_log_acc0')
+caplog = <_pytest.logging.LogCaptureFixture object at 0x7e9c4f07e7b0>
+
+    async def test_download_does_not_log_access_key(
+        tmp_path: Path, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        http = FakeHttp(error=aiohttp.ClientConnectionError("dropped"))
+        downloader = _downloader(FakeVkApi(), http, tmp_path)
+    
+>       with caplog.at_level("DEBUG"), pytest.raises(AttachmentDownloadFailed):
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE AttachmentDownloadFailed
+
+tests/integration/vk/test_media_downloader.py:264: Failed
+____________________ test_download_cancellation_propagates _____________________
+
+tmp_path = PosixPath('/tmp/pytest-of-homus/pytest-400/test_download_cancellation_pro0')
+
+    async def test_download_cancellation_propagates(tmp_path: Path) -> None:
+        import asyncio
+    
+        http = FakeHttp(error=asyncio.CancelledError())
+        downloader = _downloader(FakeVkApi(), http, tmp_path)
+    
+>       with pytest.raises(asyncio.CancelledError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE CancelledError
+
+tests/integration/vk/test_media_downloader.py:276: Failed
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.14.3-final-0 ________________
+
+Name                                                                    Stmts   Miss Branch BrPart  Cover   Missing
+-------------------------------------------------------------------------------------------------------------------
+src/vk_topic_bridge/__init__.py                                             0      0      0      0   100%
+src/vk_topic_bridge/__main__.py                                             4      4      2      0     0%   3-8
+src/vk_topic_bridge/application/__init__.py                                 0      0      0      0   100%
+src/vk_topic_bridge/application/admin/__init__.py                           0      0      0      0   100%
+src/vk_topic_bridge/application/admin/destination_admin.py                 24     24      0      0     0%   3-78
+src/vk_topic_bridge/application/admin/refresh_topics.py                    20     20      4      0     0%   8-38
+src/vk_topic_bridge/application/admin/register_chat.py                     33     33      2      0     0%   12-84
+src/vk_topic_bridge/application/admin/select_destination.py                20     20      4      0     0%   11-46
+src/vk_topic_bridge/application/admin/toggle_settings.py                   16     16      0      0     0%   3-25
+src/vk_topic_bridge/application/dto/__init__.py                             0      0      0      0   100%
+src/vk_topic_bridge/application/dto/delivery.py                            11     11      0      0     0%   3-49
+src/vk_topic_bridge/application/dto/finish.py                              21     21      0      0     0%   3-44
+src/vk_topic_bridge/application/dto/infrastructure.py                       5      5      0      0     0%   3-17
+src/vk_topic_bridge/application/dto/readiness.py                           10     10      0      0     0%   3-18
+src/vk_topic_bridge/application/dto/settings.py                            26     26      2      0     0%   3-70
+src/vk_topic_bridge/application/errors.py                                  11     11      0      0     0%   3-30
+src/vk_topic_bridge/application/forwarding/__init__.py                      0      0      0      0   100%
+src/vk_topic_bridge/application/forwarding/composition.py                  78     78     28      0     0%   9-194
+src/vk_topic_bridge/application/forwarding/forward_message.py             114    114     20      0     0%   3-216
+src/vk_topic_bridge/application/forwarding/publication_planning.py         39     39     18      0     0%   13-92
+src/vk_topic_bridge/application/manual/__init__.py                          0      0      0      0   100%
+src/vk_topic_bridge/application/manual/aliasing.py                         27     27      0      0     0%   8-87
+src/vk_topic_bridge/application/manual/publish_manual.py                   17     17      0      0     0%   8-54
+src/vk_topic_bridge/application/notifications/__init__.py                   0      0      0      0   100%
+src/vk_topic_bridge/application/notifications/owner_notifier.py            30     30      6      0     0%   8-73
+src/vk_topic_bridge/application/ports/__init__.py                           0      0      0      0   100%
+src/vk_topic_bridge/application/ports/readiness.py                          4      4      0      0     0%   3-9
+src/vk_topic_bridge/application/ports/repositories.py                      14     14      0      0     0%   9-55
+src/vk_topic_bridge/application/ports/telegram.py                           9      9      0      0     0%   3-42
+src/vk_topic_bridge/application/ports/telegram_ex.py                       14      0      0      0   100%
+src/vk_topic_bridge/application/ports/unit_of_work.py                       4      4      0      0     0%   7-18
+src/vk_topic_bridge/application/ports/vk.py                                 5      5      0      0     0%   3-10
+src/vk_topic_bridge/application/ports/vk_ex.py                              6      6      0      0     0%   3-22
+src/vk_topic_bridge/application/readiness.py                               15     15      4      0     0%   3-25
+src/vk_topic_bridge/application/readiness_features.py                      19     19      4      0     0%   8-82
+src/vk_topic_bridge/bootstrap/__init__.py                                   0      0      0      0   100%
+src/vk_topic_bridge/bootstrap/container.py                                121    121      4      0     0%   8-219
+src/vk_topic_bridge/bootstrap/shutdown.py                                  34     34      6      0     0%   7-57
+src/vk_topic_bridge/bootstrap/startup.py                                  126    126     22      0     0%   9-226
+src/vk_topic_bridge/bootstrap/vk_consumer.py                              102    102     32      0     0%   7-181
+src/vk_topic_bridge/domain/__init__.py                                      0      0      0      0   100%
+src/vk_topic_bridge/domain/enums.py                                        22      0      0      0   100%
+src/vk_topic_bridge/domain/errors.py                                       24      2      0      0    92%   62-63
+src/vk_topic_bridge/domain/policies/__init__.py                             0      0      0      0   100%
+src/vk_topic_bridge/domain/policies/alias_policy.py                        17     17      8      0     0%   3-42
+src/vk_topic_bridge/domain/policies/attachment_policy.py                   15      8      4      0    37%   16, 20, 25-30
+src/vk_topic_bridge/domain/policies/delivery_policy.py                     13     13      0      0     0%   3-52
+src/vk_topic_bridge/domain/policies/forwarding_policy.py                   23     23      0      0     0%   3-43
+src/vk_topic_bridge/domain/publication.py                                  44      1      0      0    98%   115
+src/vk_topic_bridge/domain/routing_policy.py                               15     15      2      0     0%   9-39
+src/vk_topic_bridge/domain/value_objects.py                                27      2      0      0    93%   21, 26
+src/vk_topic_bridge/domain/wall_post.py                                     7      7      0      0     0%   8-30
+src/vk_topic_bridge/infrastructure/__init__.py                              0      0      0      0   100%
+src/vk_topic_bridge/infrastructure/db/__init__.py                           0      0      0      0   100%
+src/vk_topic_bridge/infrastructure/db/base.py                               2      2      0      0     0%   3-6
+src/vk_topic_bridge/infrastructure/db/engine.py                            20     20      2      0     0%   3-49
+src/vk_topic_bridge/infrastructure/db/models.py                            92     92      0      0     0%   3-213
+src/vk_topic_bridge/infrastructure/db/repositories/__init__.py              6      6      0      0     0%   7-17
+src/vk_topic_bridge/infrastructure/db/repositories/bridge_settings.py      53     53      2      0     0%   3-95
+src/vk_topic_bridge/infrastructure/db/repositories/delivery.py             85     85      6      0     0%   8-341
+src/vk_topic_bridge/infrastructure/db/repositories/telegram_topics.py      33     33      8      0     0%   3-104
+src/vk_topic_bridge/infrastructure/db/repositories/unit_of_work.py         65     65      8      0     0%   3-94
+src/vk_topic_bridge/infrastructure/db/repositories/vk_aliases.py           26     26      4      0     0%   3-78
+src/vk_topic_bridge/infrastructure/telegram/__init__.py                     0      0      0      0   100%
+src/vk_topic_bridge/infrastructure/telegram/bot_api_factory.py             15     15      2      0     0%   12-37
+src/vk_topic_bridge/infrastructure/telegram/command_menu.py                 5      5      0      0     0%   10-32
+src/vk_topic_bridge/infrastructure/telegram/mtproto.py                     76     76     12      0     0%   8-138
+src/vk_topic_bridge/infrastructure/telegram/proxy.py                       32     32     12      0     0%   7-60
+src/vk_topic_bridge/infrastructure/telegram/publisher.py                  129    129     34      0     0%   9-370
+src/vk_topic_bridge/infrastructure/vk/__init__.py                           0      0      0      0   100%
+src/vk_topic_bridge/infrastructure/vk/api.py                              100    100     24      0     0%   7-167
+src/vk_topic_bridge/infrastructure/vk/cursor.py                             8      8      0      0     0%   9-42
+src/vk_topic_bridge/infrastructure/vk/mapper.py                            85     85     32      0     0%   7-149
+src/vk_topic_bridge/infrastructure/vk/media_downloader.py                   8      0      0      0   100%
+src/vk_topic_bridge/presentation/__init__.py                                0      0      0      0   100%
+src/vk_topic_bridge/presentation/telegram/__init__.py                       0      0      0      0   100%
+src/vk_topic_bridge/presentation/telegram/commands.py                      16     16      0      0     0%   4-35
+src/vk_topic_bridge/presentation/telegram/errors.py                         1      1      0      0     0%   9
+src/vk_topic_bridge/presentation/telegram/filters.py                       20     20      0      0     0%   3-36
+src/vk_topic_bridge/presentation/telegram/keyboards.py                     17     17      0      0     0%   7-52
+src/vk_topic_bridge/presentation/telegram/middlewares.py                   12     12      2      0     0%   7-30
+src/vk_topic_bridge/presentation/telegram/routers/__init__.py               1      1      0      0     0%   3
+src/vk_topic_bridge/presentation/telegram/routers/destination.py           87     87     22      0     0%   12-178
+src/vk_topic_bridge/presentation/telegram/routers/destinations.py           5      5      0      0     0%   8-27
+src/vk_topic_bridge/presentation/telegram/routers/register.py              41     41      4      0     0%   8-106
+src/vk_topic_bridge/presentation/telegram/routers/registration.py           5      5      0      0     0%   10-32
+src/vk_topic_bridge/presentation/telegram/routers/root.py                   7      7      0      0     0%   9-35
+src/vk_topic_bridge/presentation/telegram/routers/settings.py               4      4      0      0     0%   4-39
+src/vk_topic_bridge/presentation/telegram/routers/start.py                 23     23      2      0     0%   7-55
+src/vk_topic_bridge/presentation/telegram/states.py                        13     13      0      0     0%   3-36
+src/vk_topic_bridge/presentation/vk/__init__.py                             1      1      0      0     0%   8
+src/vk_topic_bridge/presentation/vk/handlers.py                            13     13      0      0     0%   8-56
+src/vk_topic_bridge/presentation/vk/keyboards.py                           22     22      0      0     0%   3-44
+src/vk_topic_bridge/presentation/vk/states.py                              22     22      0      0     0%   7-52
+-------------------------------------------------------------------------------------------------------------------
+TOTAL                                                                    2336   2195    348      0     5%
+=========================== short test summary info ============================
+FAILED tests/integration/vk/test_media_downloader.py::test_resolve_photo_requests_get_by_id_with_full_identifier
+FAILED tests/integration/vk/test_media_downloader.py::test_resolve_photo_identifier_keeps_access_key
+FAILED tests/integration/vk/test_media_downloader.py::test_resolve_document_returns_url_and_requests_get_by_id
+FAILED tests/integration/vk/test_media_downloader.py::test_resolve_video_picks_highest_quality_mp4
+FAILED tests/integration/vk/test_media_downloader.py::test_resolve_video_without_mp4_files_is_unavailable
+FAILED tests/integration/vk/test_media_downloader.py::test_resolve_video_with_empty_items_is_unavailable
+FAILED tests/integration/vk/test_media_downloader.py::test_resolve_access_denied_vk_error_is_unavailable
+FAILED tests/integration/vk/test_media_downloader.py::test_resolve_oversize_document_refused_before_download
+FAILED tests/integration/vk/test_media_downloader.py::test_download_streams_chunks_into_media_dir
+FAILED tests/integration/vk/test_media_downloader.py::test_download_midstream_oversize_aborts_and_removes_temp
+FAILED tests/integration/vk/test_media_downloader.py::test_download_http_error_status_maps_to_download_failed
+FAILED tests/integration/vk/test_media_downloader.py::test_download_connection_error_maps_to_download_failed
+FAILED tests/integration/vk/test_media_downloader.py::test_download_does_not_log_access_key
+FAILED tests/integration/vk/test_media_downloader.py::test_download_cancellation_propagates
+14 failed in 2.85s
+EXIT=1

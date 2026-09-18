@@ -1,0 +1,14 @@
+=== T24 migration cycle (clean rerun) ===
+--- base -> head ---
+INFO  [alembic.runtime.migration] Running upgrade  -> 0001, create bridge settings, telegram topics, vk topic aliases and delivery records
+INFO  [alembic.runtime.migration] Running upgrade 0001 -> 0002, finish: topic availability, General three-state flags, delivery intent, alias guard
+head revision: 0002
+--- repeat upgrade (idempotent, exit code) ---
+EXIT=0
+--- full downgrade to base ---
+INFO  [alembic.runtime.migration] Running downgrade 0002 -> 0001, finish: topic availability, General three-state flags, delivery intent, alias guard
+INFO  [alembic.runtime.migration] Running downgrade 0001 -> , create bridge settings, telegram topics, vk topic aliases and delivery records
+--- base -> head again ---
+INFO  [alembic.runtime.migration] Running upgrade  -> 0001, create bridge settings, telegram topics, vk topic aliases and delivery records
+INFO  [alembic.runtime.migration] Running upgrade 0001 -> 0002, finish: topic availability, General three-state flags, delivery intent, alias guard
+final revision: 0002

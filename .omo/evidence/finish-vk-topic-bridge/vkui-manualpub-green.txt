@@ -1,0 +1,12 @@
+=== T14/T15 green evidence ===
+cmd: uv run --locked pytest -q ./tests/unit/presentation/test_vk_dispatcher.py
+TOTAL                                                                    3458   2530    642     25    25%
+25 passed in 2.34s
+
+cmd: uv run --locked pytest -q ./tests/unit/application/test_publish_manual.py
+TOTAL                                                                    3458   2856    642      9    16%
+12 passed in 1.38s
+
+cmd: uv run --locked pytest -q ./tests/unit/bootstrap/test_vk_consumer_routing.py
+TOTAL                                                                    3458   2722    642     24    19%
+8 passed in 1.52s

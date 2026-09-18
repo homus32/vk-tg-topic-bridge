@@ -1,0 +1,16 @@
+=== T23 deployment artifacts evidence ===
+--- bash -n scripts ---
+bash -n EXIT=0
+
+--- backup -> restore roundtrip (tmp SQLite) ---
+restored: revision 0002 == head (verified via uv run alembic script directory)
+
+--- git check-ignore ---
+runtime/telethon/test
+.vkbottle/x
+runtime/vk_cursor/x
+runtime/media/x
+all ignored
+
+--- deployment artifacts pytest ---
+17 passed in 0.22s
