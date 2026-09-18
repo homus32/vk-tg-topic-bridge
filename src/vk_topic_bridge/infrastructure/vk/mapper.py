@@ -14,6 +14,18 @@ from vk_topic_bridge.domain.value_objects import Attachment, Author, SourceMessa
 _MISSING = object()
 
 
+def extract_message_payload(
+    raw_event: Mapping[str, object],
+) -> Mapping[str, object] | None:
+    raw_object = raw_event.get("object")
+    if not isinstance(raw_object, Mapping):
+        return None
+    if "message" not in raw_object:
+        return raw_object
+    message = raw_object["message"]
+    return message if isinstance(message, Mapping) else None
+
+
 def is_cropped(message: Mapping[str, object]) -> bool:
     """``is_cropped`` is optional and may arrive as bool, int or ``None``."""
     value = message.get("is_cropped")

@@ -1,0 +1,43 @@
+F
+=================================== FAILURES ===================================
+_______________ test_normalize_event_maps_nested_message_object ________________
+
+    async def test_normalize_event_maps_nested_message_object() -> None:
+        module = _api_module()
+        fake = FakeVkApi()
+        gateway = module.VkApiGateway(fake, _settings())
+        raw_event: dict[str, object] = {
+            "type": "message_new",
+            "group_id": GROUP_ID,
+            "event_id": "e1",
+            "object": {"message": _full_message(), "client_info": {}},
+        }
+    
+>       source = await gateway.normalize_event(raw_event, _author())
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/integration/vk/test_vk_api.py:236: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/vk_topic_bridge/infrastructure/vk/api.py:167: in normalize_event
+    return mapper.map_message(group_id=group_id, message=obj, author=author)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/vk_topic_bridge/infrastructure/vk/mapper.py:94: in map_message
+    peer_id = _require_int(message, "peer_id")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+message = {'message': {'id': 456, 'from_id': 123, 'peer_id': 2000000001, 'conversation_message_id': 789, ...}, 'client_info': {}}
+field = 'peer_id'
+
+    def _require_int(message: Mapping[str, object], field: str) -> int:
+        value = message.get(field, _MISSING)
+        if isinstance(value, bool) or not isinstance(value, int):
+            msg = f"VK message payload is missing integer field {field!r}"
+>           raise ValueError(msg)
+E           ValueError: VK message payload is missing integer field 'peer_id'
+
+src/vk_topic_bridge/infrastructure/vk/mapper.py:33: ValueError
+=========================== short test summary info ============================
+FAILED tests/integration/vk/test_vk_api.py::test_normalize_event_maps_nested_message_object
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed in 1.81s

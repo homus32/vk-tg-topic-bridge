@@ -63,11 +63,14 @@ def _update(
         "group_id": GROUP_ID,
         "event_id": f"evt-{conversation_message_id}",
         "object": {
-            "peer_id": PEER_ID,
-            "from_id": FROM_ID,
-            "conversation_message_id": conversation_message_id,
-            "text": text,
-            "is_cropped": False,
+            "message": {
+                "peer_id": PEER_ID,
+                "from_id": FROM_ID,
+                "conversation_message_id": conversation_message_id,
+                "text": text,
+                "is_cropped": False,
+            },
+            "client_info": {},
         },
     }
 
@@ -245,6 +248,16 @@ async def test_chain_records_one_published_delivery_row(harness: ChainHarness) -
 async def test_chain_sets_the_vk_reaction_once(harness: ChainHarness) -> None:
     await harness.deliver(_update())
 
+    assert harness.raw_api.params_for("messages.sendReaction") == [
+        {"peer_id": PEER_ID, "cmid": CONVERSATION_MESSAGE_ID, "reaction_id": LIKE_REACTION_ID}
+    ]
+
+
+@pytest.mark.parametrize("text", ["#хештег сообщение", "@all важное сообщение"])
+async def test_nested_trigger_publishes_and_reacts(harness: ChainHarness, text: str) -> None:
+    await harness.deliver(_update(text=text))
+
+    assert len(harness.publisher.publications) == 1
     assert harness.raw_api.params_for("messages.sendReaction") == [
         {"peer_id": PEER_ID, "cmid": CONVERSATION_MESSAGE_ID, "reaction_id": LIKE_REACTION_ID}
     ]

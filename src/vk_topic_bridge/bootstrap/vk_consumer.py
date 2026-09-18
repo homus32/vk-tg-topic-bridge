@@ -17,7 +17,7 @@ from vkbottle.polling import BotPolling
 
 from vk_topic_bridge.application.forwarding.forward_message import ForwardVkMessage
 from vk_topic_bridge.infrastructure.vk.api import RawVkApi, VkApiGateway
-from vk_topic_bridge.infrastructure.vk.mapper import FirstPeerGuard
+from vk_topic_bridge.infrastructure.vk.mapper import FirstPeerGuard, extract_message_payload
 
 logger = logging.getLogger(__name__)
 
@@ -84,9 +84,9 @@ class VkEventConsumer:
                     self._allowed_group_id,
                 )
                 return
-            obj = update.get("object")
-            if not isinstance(obj, Mapping):
-                logger.warning("vk update has no object mapping for group %s", group_id)
+            obj = extract_message_payload(update)
+            if obj is None:
+                logger.warning("vk update has no message payload for group %s", group_id)
                 return
             peer_id = obj.get("peer_id")
             if not _is_int(peer_id):

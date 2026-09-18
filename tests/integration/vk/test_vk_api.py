@@ -222,6 +222,23 @@ async def test_normalize_event_non_cropped_maps_object_directly() -> None:
     assert fake.calls == []
 
 
+async def test_normalize_event_maps_nested_message_object() -> None:
+    module = _api_module()
+    fake = FakeVkApi()
+    gateway = module.VkApiGateway(fake, _settings())
+    raw_event: dict[str, object] = {
+        "type": "message_new",
+        "group_id": GROUP_ID,
+        "event_id": "e1",
+        "object": {"message": _full_message(), "client_info": {}},
+    }
+
+    source = await gateway.normalize_event(raw_event, _author())
+
+    assert source.source_key == f"{GROUP_ID}:{PEER_ID}:{CMID}"
+    assert source.text == "@all полный текст #извк"
+
+
 async def test_cropped_event_triggers_full_message_fetch() -> None:
     module = _api_module()
     fake = FakeVkApi(

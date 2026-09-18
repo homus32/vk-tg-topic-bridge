@@ -1,0 +1,194 @@
+........................................................................ [ 14%]
+........................................................................ [ 28%]
+......................................................FFFFFFF........... [ 43%]
+.................................F...................................... [ 57%]
+........................................................................ [ 71%]
+........................................................................ [ 86%]
+.....................................................................    [100%]
+=================================== FAILURES ===================================
+_____________ test_chain_publishes_once_to_the_seeded_destination ______________
+
+harness = ChainHarness(session_factory=async_sessionmaker(class_='AsyncSession', bind=<sqlalchemy.ext.asyncio.engine.AsyncEngine...g object at 0x7d3711338d70>, consumer=<vk_topic_bridge.bootstrap.vk_consumer.VkEventConsumer object at 0x7d3711338ad0>)
+
+    async def test_chain_publishes_once_to_the_seeded_destination(harness: ChainHarness) -> None:
+        await harness.deliver(_update())
+    
+>       assert len(harness.publisher.publications) == 1
+E       AssertionError: assert 0 == 1
+E        +  where 0 = len([])
+E        +    where [] = <tests.acceptance._fakes.RecordingPublisher object at 0x7d37113ab620>.publications
+E        +      where <tests.acceptance._fakes.RecordingPublisher object at 0x7d37113ab620> = ChainHarness(session_factory=async_sessionmaker(class_='AsyncSession', bind=<sqlalchemy.ext.asyncio.engine.AsyncEngine...g object at 0x7d3711338d70>, consumer=<vk_topic_bridge.bootstrap.vk_consumer.VkEventConsumer object at 0x7d3711338ad0>).publisher
+
+tests/integration/test_forwarding_chain.py:224: AssertionError
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 0001, create bridge settings, telegram topics, vk topic aliases and delivery records
+________________ test_chain_records_one_published_delivery_row _________________
+
+harness = ChainHarness(session_factory=async_sessionmaker(class_='AsyncSession', bind=<sqlalchemy.ext.asyncio.engine.AsyncEngine...g object at 0x7d371140f9d0>, consumer=<vk_topic_bridge.bootstrap.vk_consumer.VkEventConsumer object at 0x7d371140f250>)
+
+    async def test_chain_records_one_published_delivery_row(harness: ChainHarness) -> None:
+        await harness.deliver(_update())
+    
+        rows = await _delivery_rows(harness.session_factory)
+>       assert len(rows) == 1
+E       assert 0 == 1
+E        +  where 0 = len([])
+
+tests/integration/test_forwarding_chain.py:237: AssertionError
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 0001, create bridge settings, telegram topics, vk topic aliases and delivery records
+_____________________ test_chain_sets_the_vk_reaction_once _____________________
+
+harness = ChainHarness(session_factory=async_sessionmaker(class_='AsyncSession', bind=<sqlalchemy.ext.asyncio.engine.AsyncEngine...g object at 0x7d3711dbdf90>, consumer=<vk_topic_bridge.bootstrap.vk_consumer.VkEventConsumer object at 0x7d3711dbd950>)
+
+    async def test_chain_sets_the_vk_reaction_once(harness: ChainHarness) -> None:
+        await harness.deliver(_update())
+    
+>       assert harness.raw_api.params_for("messages.sendReaction") == [
+            {"peer_id": PEER_ID, "cmid": CONVERSATION_MESSAGE_ID, "reaction_id": LIKE_REACTION_ID}
+        ]
+E       AssertionError: assert [] == [{'peer_id': ...ction_id': 1}]
+E         
+E         Right contains one more item: {'peer_id': 222, 'cmid': 333, 'reaction_id': 1}
+E         Use -v to get more diff
+
+tests/integration/test_forwarding_chain.py:251: AssertionError
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 0001, create bridge settings, telegram topics, vk topic aliases and delivery records
+_ test_nested_trigger_publishes_and_reacts[#\u0445\u0435\u0448\u0442\u0435\u0433 \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435] _
+
+harness = ChainHarness(session_factory=async_sessionmaker(class_='AsyncSession', bind=<sqlalchemy.ext.asyncio.engine.AsyncEngine...g object at 0x7d3712aa23f0>, consumer=<vk_topic_bridge.bootstrap.vk_consumer.VkEventConsumer object at 0x7d3712aa2780>)
+text = '#хештег сообщение'
+
+    @pytest.mark.parametrize("text", ["#хештег сообщение", "@all важное сообщение"])
+    async def test_nested_trigger_publishes_and_reacts(
+        harness: ChainHarness, text: str
+    ) -> None:
+        await harness.deliver(_update(text=text))
+    
+>       assert len(harness.publisher.publications) == 1
+E       AssertionError: assert 0 == 1
+E        +  where 0 = len([])
+E        +    where [] = <tests.acceptance._fakes.RecordingPublisher object at 0x7d371141fd90>.publications
+E        +      where <tests.acceptance._fakes.RecordingPublisher object at 0x7d371141fd90> = ChainHarness(session_factory=async_sessionmaker(class_='AsyncSession', bind=<sqlalchemy.ext.asyncio.engine.AsyncEngine...g object at 0x7d3712aa23f0>, consumer=<vk_topic_bridge.bootstrap.vk_consumer.VkEventConsumer object at 0x7d3712aa2780>).publisher
+
+tests/integration/test_forwarding_chain.py:262: AssertionError
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 0001, create bridge settings, telegram topics, vk topic aliases and delivery records
+_ test_nested_trigger_publishes_and_reacts[@all \u0432\u0430\u0436\u043d\u043e\u0435 \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435] _
+
+harness = ChainHarness(session_factory=async_sessionmaker(class_='AsyncSession', bind=<sqlalchemy.ext.asyncio.engine.AsyncEngine...g object at 0x7d3712aa1350>, consumer=<vk_topic_bridge.bootstrap.vk_consumer.VkEventConsumer object at 0x7d3712aa1810>)
+text = '@all важное сообщение'
+
+    @pytest.mark.parametrize("text", ["#хештег сообщение", "@all важное сообщение"])
+    async def test_nested_trigger_publishes_and_reacts(
+        harness: ChainHarness, text: str
+    ) -> None:
+        await harness.deliver(_update(text=text))
+    
+>       assert len(harness.publisher.publications) == 1
+E       AssertionError: assert 0 == 1
+E        +  where 0 = len([])
+E        +    where [] = <tests.acceptance._fakes.RecordingPublisher object at 0x7d3711de82f0>.publications
+E        +      where <tests.acceptance._fakes.RecordingPublisher object at 0x7d3711de82f0> = ChainHarness(session_factory=async_sessionmaker(class_='AsyncSession', bind=<sqlalchemy.ext.asyncio.engine.AsyncEngine...g object at 0x7d3712aa1350>, consumer=<vk_topic_bridge.bootstrap.vk_consumer.VkEventConsumer object at 0x7d3712aa1810>).publisher
+
+tests/integration/test_forwarding_chain.py:262: AssertionError
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 0001, create bridge settings, telegram topics, vk topic aliases and delivery records
+_____________ test_replaying_the_same_event_does_not_publish_again _____________
+
+harness = ChainHarness(session_factory=async_sessionmaker(class_='AsyncSession', bind=<sqlalchemy.ext.asyncio.engine.AsyncEngine...g object at 0x7d37120797f0>, consumer=<vk_topic_bridge.bootstrap.vk_consumer.VkEventConsumer object at 0x7d3712079490>)
+
+    async def test_replaying_the_same_event_does_not_publish_again(harness: ChainHarness) -> None:
+        await harness.deliver(_update())
+        await harness.deliver(_update())
+    
+>       assert len(harness.publisher.publications) == 1
+E       AssertionError: assert 0 == 1
+E        +  where 0 = len([])
+E        +    where [] = <tests.acceptance._fakes.RecordingPublisher object at 0x7d3711d7dfd0>.publications
+E        +      where <tests.acceptance._fakes.RecordingPublisher object at 0x7d3711d7dfd0> = ChainHarness(session_factory=async_sessionmaker(class_='AsyncSession', bind=<sqlalchemy.ext.asyncio.engine.AsyncEngine...g object at 0x7d37120797f0>, consumer=<vk_topic_bridge.bootstrap.vk_consumer.VkEventConsumer object at 0x7d3712079490>).publisher
+
+tests/integration/test_forwarding_chain.py:272: AssertionError
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 0001, create bridge settings, telegram topics, vk topic aliases and delivery records
+____________________ test_filtered_event_publishes_nothing _____________________
+
+harness = ChainHarness(session_factory=async_sessionmaker(class_='AsyncSession', bind=<sqlalchemy.ext.asyncio.engine.AsyncEngine...g object at 0x7d371831f240>, consumer=<vk_topic_bridge.bootstrap.vk_consumer.VkEventConsumer object at 0x7d37136398c0>)
+
+    async def test_filtered_event_publishes_nothing(harness: ChainHarness) -> None:
+        await harness.deliver(_update())
+        await harness.deliver(
+            _update(conversation_message_id=SECOND_CONVERSATION_MESSAGE_ID, text=FILTERED_TEXT)
+        )
+    
+>       assert len(harness.publisher.publications) == 1
+E       AssertionError: assert 0 == 1
+E        +  where 0 = len([])
+E        +    where [] = <tests.acceptance._fakes.RecordingPublisher object at 0x7d3711d13930>.publications
+E        +      where <tests.acceptance._fakes.RecordingPublisher object at 0x7d3711d13930> = ChainHarness(session_factory=async_sessionmaker(class_='AsyncSession', bind=<sqlalchemy.ext.asyncio.engine.AsyncEngine...g object at 0x7d371831f240>, consumer=<vk_topic_bridge.bootstrap.vk_consumer.VkEventConsumer object at 0x7d37136398c0>).publisher
+
+tests/integration/test_forwarding_chain.py:285: AssertionError
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 0001, create bridge settings, telegram topics, vk topic aliases and delivery records
+_______________ test_normalize_event_maps_nested_message_object ________________
+
+    async def test_normalize_event_maps_nested_message_object() -> None:
+        module = _api_module()
+        fake = FakeVkApi()
+        gateway = module.VkApiGateway(fake, _settings())
+        raw_event: dict[str, object] = {
+            "type": "message_new",
+            "group_id": GROUP_ID,
+            "event_id": "e1",
+            "object": {"message": _full_message(), "client_info": {}},
+        }
+    
+>       source = await gateway.normalize_event(raw_event, _author())
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/integration/vk/test_vk_api.py:236: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/vk_topic_bridge/infrastructure/vk/api.py:167: in normalize_event
+    return mapper.map_message(group_id=group_id, message=obj, author=author)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/vk_topic_bridge/infrastructure/vk/mapper.py:94: in map_message
+    peer_id = _require_int(message, "peer_id")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+message = {'message': {'id': 456, 'from_id': 123, 'peer_id': 2000000001, 'conversation_message_id': 789, ...}, 'client_info': {}}
+field = 'peer_id'
+
+    def _require_int(message: Mapping[str, object], field: str) -> int:
+        value = message.get(field, _MISSING)
+        if isinstance(value, bool) or not isinstance(value, int):
+            msg = f"VK message payload is missing integer field {field!r}"
+>           raise ValueError(msg)
+E           ValueError: VK message payload is missing integer field 'peer_id'
+
+src/vk_topic_bridge/infrastructure/vk/mapper.py:33: ValueError
+=========================== short test summary info ============================
+FAILED tests/integration/test_forwarding_chain.py::test_chain_publishes_once_to_the_seeded_destination
+FAILED tests/integration/test_forwarding_chain.py::test_chain_records_one_published_delivery_row
+FAILED tests/integration/test_forwarding_chain.py::test_chain_sets_the_vk_reaction_once
+FAILED tests/integration/test_forwarding_chain.py::test_nested_trigger_publishes_and_reacts[#\u0445\u0435\u0448\u0442\u0435\u0433 \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435]
+FAILED tests/integration/test_forwarding_chain.py::test_nested_trigger_publishes_and_reacts[@all \u0432\u0430\u0436\u043d\u043e\u0435 \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435]
+FAILED tests/integration/test_forwarding_chain.py::test_replaying_the_same_event_does_not_publish_again
+FAILED tests/integration/test_forwarding_chain.py::test_filtered_event_publishes_nothing
+FAILED tests/integration/vk/test_vk_api.py::test_normalize_event_maps_nested_message_object
+8 failed, 493 passed, 4 deselected in 13.95s

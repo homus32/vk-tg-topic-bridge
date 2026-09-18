@@ -150,9 +150,9 @@ class VkApiGateway:
         if not isinstance(group_id, int):
             msg = "VK event payload is missing integer group_id"
             raise ValueError(msg)
-        obj = raw_event.get("object")
-        if not isinstance(obj, Mapping):
-            msg = "VK event payload is missing the object mapping"
+        obj = mapper.extract_message_payload(raw_event)
+        if obj is None:
+            msg = "VK event payload is missing the object message mapping"
             raise ValueError(msg)
         if mapper.is_cropped(obj):
             peer_id = obj.get("peer_id")
