@@ -1,4 +1,20 @@
-.s..                                                                     [100%]
+# make test-e2e — opt-in smoke (Bot API getMe, Telethon session, VK identity/Long Poll)
+# Run: 2026-09-18, session copy because the owner app holds runtime/telethon/vk_topic_bridge.session
+# (second process gets sqlite3.OperationalError: database is locked on the live session file).
+# Command: TELEGRAM_SESSION_PATH=runtime/telethon/e2e-smoke-copy.session make test-e2e
+
+uv run --locked pytest -m e2e
+============================= test session starts ==============================
+platform linux -- Python 3.14.3, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/homus/PycharmProjects/vk-topic-bridge
+configfile: pyproject.toml
+testpaths: tests
+plugins: asyncio-1.4.0, cov-7.1.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=function, asyncio_default_test_loop_scope=function
+collected 505 items / 501 deselected / 4 selected
+
+tests/e2e/test_smoke.py ....                                             [100%]
+
 ================================ tests coverage ================================
 _______________ coverage: platform linux, python 3.14.3-final-0 ________________
 
@@ -10,7 +26,7 @@ src/vk_topic_bridge/application/__init__.py                                 0   
 src/vk_topic_bridge/application/admin/__init__.py                           0      0      0      0   100%
 src/vk_topic_bridge/application/admin/refresh_topics.py                    20     12      4      0    33%   20-21, 24-38
 src/vk_topic_bridge/application/admin/register_chat.py                     33     17      2      0    46%   31-32, 55-57, 60-84
-src/vk_topic_bridge/application/admin/select_destination.py                18     10      2      0    40%   23-24, 28-40
+src/vk_topic_bridge/application/admin/select_destination.py                20     12      4      0    33%   23-24, 28-46
 src/vk_topic_bridge/application/admin/toggle_settings.py                   16      9      0      0    44%   13, 16-19, 22-25
 src/vk_topic_bridge/application/dto/__init__.py                             0      0      0      0   100%
 src/vk_topic_bridge/application/dto/delivery.py                             9      0      0      0   100%
@@ -19,7 +35,7 @@ src/vk_topic_bridge/application/dto/readiness.py                           10   
 src/vk_topic_bridge/application/dto/settings.py                            12      1      0      0    92%   31
 src/vk_topic_bridge/application/errors.py                                  11      4      0      0    64%   12-13, 22-23
 src/vk_topic_bridge/application/forwarding/__init__.py                      0      0      0      0   100%
-src/vk_topic_bridge/application/forwarding/forward_message.py             113     84     20      0    22%   49-52, 55-160, 169-173, 176-193, 198-200, 205-207
+src/vk_topic_bridge/application/forwarding/forward_message.py             114     85     20      0    22%   49-52, 55-169, 178-182, 185-202, 207-209, 214-216
 src/vk_topic_bridge/application/ports/__init__.py                           0      0      0      0   100%
 src/vk_topic_bridge/application/ports/readiness.py                          4      0      0      0   100%
 src/vk_topic_bridge/application/ports/repositories.py                      14      0      0      0   100%
@@ -28,9 +44,9 @@ src/vk_topic_bridge/application/ports/unit_of_work.py                       4   
 src/vk_topic_bridge/application/ports/vk.py                                 5      0      0      0   100%
 src/vk_topic_bridge/application/readiness.py                               15      7      4      0    42%   11, 14, 17-18, 21-22, 25
 src/vk_topic_bridge/bootstrap/__init__.py                                   0      0      0      0   100%
-src/vk_topic_bridge/bootstrap/container.py                                111    111      2      0     0%   8-192
+src/vk_topic_bridge/bootstrap/container.py                                121    121      4      0     0%   8-219
 src/vk_topic_bridge/bootstrap/shutdown.py                                  34     34      6      0     0%   7-57
-src/vk_topic_bridge/bootstrap/startup.py                                  110    110     16      0     0%   9-170
+src/vk_topic_bridge/bootstrap/startup.py                                  126    126     22      0     0%   9-226
 src/vk_topic_bridge/bootstrap/vk_consumer.py                               93     69     28      0    20%   34, 48-52, 56, 60-65, 69-110, 122-127, 130-144, 147-154
 src/vk_topic_bridge/domain/__init__.py                                      0      0      0      0   100%
 src/vk_topic_bridge/domain/enums.py                                        22      0      0      0   100%
@@ -53,20 +69,21 @@ src/vk_topic_bridge/infrastructure/db/repositories/telegram_topics.py      33   
 src/vk_topic_bridge/infrastructure/db/repositories/unit_of_work.py         65     40      8      0    34%   24-29, 33, 37, 41, 45, 48-54, 62-74, 77-78, 81-82, 85-88, 92-94
 src/vk_topic_bridge/infrastructure/db/repositories/vk_aliases.py           26     16      4      0    33%   14, 17-23, 28-47, 50-55, 60-78
 src/vk_topic_bridge/infrastructure/telegram/__init__.py                     0      0      0      0   100%
-src/vk_topic_bridge/infrastructure/telegram/bot_api_factory.py             17      3      2      1    79%   20, 28-29
+src/vk_topic_bridge/infrastructure/telegram/bot_api_factory.py             15      3      2      1    76%   23, 31-32
 src/vk_topic_bridge/infrastructure/telegram/mtproto.py                     76     47     12      0    33%   47, 50, 53, 56-57, 63-87, 90-98, 101-104, 111-124, 128-131, 137-138
 src/vk_topic_bridge/infrastructure/telegram/proxy.py                       32     18     12      1    34%   39-44, 48-60
-src/vk_topic_bridge/infrastructure/telegram/publisher.py                   64     64      8      0     0%   9-189
+src/vk_topic_bridge/infrastructure/telegram/publisher.py                   70     40     12      0    37%   84-88, 93-94, 99-107, 123-143, 150, 153-157, 169-171, 187-188, 191, 194-201, 215
 src/vk_topic_bridge/infrastructure/vk/__init__.py                           0      0      0      0   100%
 src/vk_topic_bridge/infrastructure/vk/api.py                              100     53     24      5    42%   32-33, 51-53, 66-67, 69-70, 77-78, 81-82, 86-87, 96-97, 106-112, 120-131, 136, 149-167
-src/vk_topic_bridge/infrastructure/vk/mapper.py                            77     59     28      0    17%   19-26, 30-34, 38-41, 45-48, 52-68, 77-84, 94-103, 125, 128-131, 134, 137
+src/vk_topic_bridge/infrastructure/vk/mapper.py                            85     66     32      0    16%   20-26, 31-38, 42-46, 50-53, 57-60, 64-80, 89-96, 106-115, 137, 140-143, 146, 149
 src/vk_topic_bridge/presentation/__init__.py                                0      0      0      0   100%
 src/vk_topic_bridge/presentation/telegram/__init__.py                       0      0      0      0   100%
 src/vk_topic_bridge/presentation/telegram/keyboards.py                      4      1      0      0    75%   14
 src/vk_topic_bridge/presentation/telegram/middlewares.py                   12      5      2      0    50%   19, 27-30
 src/vk_topic_bridge/presentation/telegram/routers/__init__.py               1      0      0      0   100%
-src/vk_topic_bridge/presentation/telegram/routers/register.py              34     21      2      0    36%   40, 45-72, 79-85
-src/vk_topic_bridge/presentation/telegram/routers/start.py                 23     11      2      0    48%   32-38, 46-52
+src/vk_topic_bridge/presentation/telegram/routers/destination.py           87     61     22      0    24%   50, 54-55, 59-65, 69-77, 82-91, 105-150, 163-178
+src/vk_topic_bridge/presentation/telegram/routers/register.py              41     26      4      0    33%   47, 52, 58-93, 100-106
+src/vk_topic_bridge/presentation/telegram/routers/start.py                 23     11      2      0    48%   35-41, 49-55
 -------------------------------------------------------------------------------------------------------------------
-TOTAL                                                                    1596    964    220      7    35%
-3 passed, 1 skipped, 463 deselected in 15.30s
+TOTAL                                                                    1731   1042    262      7    35%
+====================== 4 passed, 501 deselected in 15.49s ======================

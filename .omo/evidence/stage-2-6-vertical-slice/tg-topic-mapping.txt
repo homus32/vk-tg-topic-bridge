@@ -1,0 +1,13 @@
+# HUMAN GATE TG-TOPIC — evidence (owner manual run)
+# Owner message in the target chat, 2026-09-18 10:24 local:
+#   /set_topic 2
+# Bot reply:
+#   Тема «Важное» подтверждена тестовым сообщением (message_id: 36)
+#   и сохранена как тема сообщений VK-чата.
+# Destination test send observed in the topic by the owner:
+#   destination check for run 20260917T232400-0d1b8693 (topic 21)
+#
+# Persisted state read back from SQLite (topics + destination, wall stays NULL):
+[(21, None)]
+[(None, 'General', 1, 1), (21, 'Важное', 0, 1), (23, 'Первая группа', 0, 1), (25, 'Вторая группа', 0, 1), (27, 'Стена ВК', 0, 1)]
+EXIT=0

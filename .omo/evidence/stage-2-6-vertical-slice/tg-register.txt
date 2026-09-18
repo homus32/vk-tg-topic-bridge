@@ -1,0 +1,23 @@
+# HUMAN GATE TG-REG — evidence (owner manual run, 2026-09-18)
+# Owner executed /register in the target chat; DB below is read back after the run.
+# Read-only probe: sqlite SELECT + Bot API getChatMember. No messages sent, no state written.
+
+$ PYTHONPATH=. uv run --locked python /tmp/opencode/gate_evidence_probe.py
+== bridge_settings ==
+[(-1002132607181, '123', 21, None)]
+== telegram_topics (topic_id, title, is_general) ==
+(None, 'General', 1)
+(21, 'Важное', 0)
+(23, 'Первая группа', 0)
+(25, 'Вторая группа', 0)
+(27, 'Стена ВК', 0)
+== delivery_records ==
+(1, '185042850:2000000001:7', 'published', 'succeeded', '[38]', '2026-09-18 00:06:47', '2026-09-18 00:06:48')
+(2, '185042850:2000000001:8', 'published', 'succeeded', '[39]', '2026-09-18 00:07:19', '2026-09-18 00:07:20')
+== capability probe (Bot API getChatMember, read-only) ==
+can_send_text=True
+can_send_photo=True
+can_send_video=True
+can_send_document=True
+missing=()
+EXIT=0

@@ -1,0 +1,23 @@
+# HUMAN GATE MT-AUTH (conditional) — evidence
+Date: 2026-09-18
+Owner completed interactive authorization via authorize_telegram.py on 2026-09-17.
+No secrets recorded (no phone/code/2FA/session content). Session stays gitignored in runtime/telethon/.
+
+$ uv run --locked pytest tests/e2e/test_smoke.py::test_telethon_session_authorized -m e2e -v --no-cov
+============================= test session starts ==============================
+platform linux -- Python 3.14.3, pytest-9.1.1, pluggy-1.6.0 -- /home/homus/PycharmProjects/vk-topic-bridge/.venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /home/homus/PycharmProjects/vk-topic-bridge
+configfile: pyproject.toml
+testpaths: tests
+plugins: asyncio-1.4.0, cov-7.1.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=function, asyncio_default_test_loop_scope=function
+collecting ... collected 505 items / 501 deselected / 4 selected
+
+tests/e2e/test_smoke.py::test_bot_api_get_me PASSED                      [ 25%]
+tests/e2e/test_smoke.py::test_telethon_session_authorized PASSED         [ 50%]
+tests/e2e/test_smoke.py::test_vk_identity_and_long_poll PASSED           [ 75%]
+tests/e2e/test_smoke.py::test_e2e_run_id_is_unique PASSED                [100%]
+
+====================== 4 passed, 501 deselected in 11.14s ======================
+EXIT=0

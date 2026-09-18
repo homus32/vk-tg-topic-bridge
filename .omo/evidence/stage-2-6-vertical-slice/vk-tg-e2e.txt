@@ -1,0 +1,26 @@
+# HUMAN GATE FINAL E2E — evidence (owner manual run after the VK payload fix)
+#
+# Owner restarted the app on the fixed code at 11:06:23 local (logs/app.log).
+# After the restart no "vk update has no integer peer_id" warning appears; the trigger
+# messages sent by the owner were published and reacted (rows below).
+# Owner visual confirmation: Telegram publication in topic «Важное», 👍 visible in VK.
+#
+# delivery_records read back from SQLite (read-only probe):
+#   (id, source_key, publication_status, reaction_status, telegram_message_ids, created_at_UTC, completed_at_UTC)
+(1, '185042850:2000000001:7', 'published', 'succeeded', '[38]', '2026-09-18 00:06:47', '2026-09-18 00:06:48')
+(2, '185042850:2000000001:8', 'published', 'succeeded', '[39]', '2026-09-18 00:07:19', '2026-09-18 00:07:20')
+published_count= 2
+distinct_source_keys= 2
+
+# Log excerpt: app restarted on fixed code; the three peer_id warnings are from the pre-fix run:
+86:2026-09-18 10:27:06.240 | WARNING  | logging:callHandlers:1737 - vk update has no integer peer_id for group 185042850
+87:2026-09-18 10:27:24.808 | WARNING  | logging:callHandlers:1737 - vk update has no integer peer_id for group 185042850
+88:2026-09-18 10:27:41.750 | WARNING  | logging:callHandlers:1737 - vk update has no integer peer_id for group 185042850
+94:2026-09-18 11:06:23.216 | INFO     | logger:configure_logging:102 - logging configured: level=INFO libs=WARNING file=logs/app.log rotation=10 MB retention=14 days compression=zip
+95:2026-09-18 11:06:23.248 | INFO     | logging:callHandlers:1737 - Context impl SQLiteImpl.
+96:2026-09-18 11:06:23.248 | INFO     | logging:callHandlers:1737 - Will assume non-transactional DDL.
+
+# Duplicate replay: live VK replay was not re-sent by hand; automated proof is in
+# duplicate-replay.txt (15 passed) plus one delivery row per distinct source_key above.
+# LIKE_REACTION_ID=1 confirmed empirically by the visible 👍 in VK.
+# EXIT=0
