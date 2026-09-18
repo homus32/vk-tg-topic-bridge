@@ -13,6 +13,21 @@ class ToggleKind(StrEnum):
     WALL = "wall"
 
 
+class DestinationKind(StrEnum):
+    """Three-state destination selector derived from (configured flag, nullable id).
+
+    Draft contract (no sentinel ids): ``UNSET`` = configured False + topic id NULL;
+    ``GENERAL`` = explicit configured General (configured True + topic id NULL);
+    ``NAMED_TOPIC`` = configured True + concrete topic id. The finish migration 0002
+    adds the ``telegram_*_topic_configured`` boolean columns; accessors on
+    ``BridgeSettingsState`` derive this kind from the persisted pair.
+    """
+
+    UNSET = "unset"
+    GENERAL = "general"
+    NAMED_TOPIC = "named_topic"
+
+
 @dataclass(frozen=True, slots=True)
 class BridgeSettingsState:
     """Immutable snapshot of ``bridge_settings``; mutations produce new instances."""
@@ -24,6 +39,16 @@ class BridgeSettingsState:
     auto_forward_wall: bool
     telegram_messages_topic_id: int | None
     telegram_wall_topic_id: int | None
+    telegram_messages_topic_configured: bool = False
+    telegram_wall_topic_configured: bool = False
+
+    def messages_destination_kind(self) -> DestinationKind:
+        return _destination_kind(
+            self.telegram_messages_topic_configured, self.telegram_messages_topic_id
+        )
+
+    def wall_destination_kind(self) -> DestinationKind:
+        return _destination_kind(self.telegram_wall_topic_configured, self.telegram_wall_topic_id)
 
     @classmethod
     def defaults(cls) -> Self:
@@ -37,3 +62,9 @@ class BridgeSettingsState:
             telegram_messages_topic_id=None,
             telegram_wall_topic_id=None,
         )
+
+
+def _destination_kind(configured: bool, topic_id: int | None) -> DestinationKind:
+    if not configured:
+        return DestinationKind.UNSET
+    return DestinationKind.GENERAL if topic_id is None else DestinationKind.NAMED_TOPIC

@@ -21,6 +21,8 @@ def _to_state(row: BridgeSettings) -> BridgeSettingsState:
         auto_forward_wall=row.auto_forward_wall,
         telegram_messages_topic_id=row.telegram_messages_topic_id,
         telegram_wall_topic_id=row.telegram_wall_topic_id,
+        telegram_messages_topic_configured=bool(row.telegram_messages_topic_configured),
+        telegram_wall_topic_configured=bool(row.telegram_wall_topic_configured),
     )
 
 
@@ -32,6 +34,8 @@ def _new_singleton() -> BridgeSettings:
         auto_forward_all=True,
         auto_forward_hashtags=True,
         auto_forward_wall=True,
+        telegram_messages_topic_configured=False,
+        telegram_wall_topic_configured=False,
     )
 
 
@@ -54,11 +58,13 @@ class BridgeSettingsRepositoryImpl:
     async def set_messages_topic(self, topic_id: int | None) -> BridgeSettingsState:
         row = await self._ensure_row()
         row.telegram_messages_topic_id = topic_id
+        row.telegram_messages_topic_configured = True
         return _to_state(row)
 
     async def set_wall_topic(self, topic_id: int | None) -> BridgeSettingsState:
         row = await self._ensure_row()
         row.telegram_wall_topic_id = topic_id
+        row.telegram_wall_topic_configured = True
         return _to_state(row)
 
     async def set_toggle(self, kind: ToggleKind, value: bool) -> BridgeSettingsState:
@@ -76,6 +82,8 @@ class BridgeSettingsRepositoryImpl:
         row.auto_forward_wall = defaults.auto_forward_wall
         row.telegram_messages_topic_id = defaults.telegram_messages_topic_id
         row.telegram_wall_topic_id = defaults.telegram_wall_topic_id
+        row.telegram_messages_topic_configured = defaults.telegram_messages_topic_configured
+        row.telegram_wall_topic_configured = defaults.telegram_wall_topic_configured
         return _to_state(row)
 
     async def _ensure_row(self) -> BridgeSettings:

@@ -268,3 +268,96 @@ async def test_unit_of_work_exposes_every_repository(session_factory: SessionFac
         assert isinstance(uow.telegram_topics, TelegramTopicsRepositoryImpl)
         assert isinstance(uow.vk_aliases, VkAliasRepositoryImpl)
         assert isinstance(uow.deliveries, DeliveryRepositoryImpl)
+
+
+async def test_topics_availability_flags_roundtrip(session: AsyncSession) -> None:
+    repo = TelegramTopicsRepositoryImpl(session)
+
+    await repo.replace_all(
+        CHAT_ID,
+        [_topic(5, "Ticket", is_closed=True), _topic(6, "Hidden", is_hidden=True)],
+    )
+    await session.commit()
+
+    listed = {topic.topic_id: topic for topic in await repo.list(CHAT_ID)}
+    assert listed[5].is_closed is True
+    assert listed[5].is_hidden is False
+    assert listed[6].is_hidden is True
+
+
+async def test_topics_availability_flags_update_on_refresh(session: AsyncSession) -> None:
+    repo = TelegramTopicsRepositoryImpl(session)
+    await repo.replace_all(CHAT_ID, [_topic(5, "Ticket", is_closed=True)])
+    await session.commit()
+
+    await repo.replace_all(CHAT_ID, [_topic(5, "Ticket", is_closed=False)])
+    await session.commit()
+
+    listed = await repo.list(CHAT_ID)
+    assert listed[0].is_closed is False
+
+
+async def test_general_alias_index_blocks_second_general_alias_for_user(
+    session: AsyncSession,
+) -> None:
+    repo = VkAliasRepositoryImpl(session)
+    await repo.upsert(7, None, "Общее", "общее")
+    await session.commit()
+
+    with pytest.raises(IntegrityError):
+        await session.execute(
+            text(
+                "INSERT INTO vk_topic_aliases (vk_user_id, topic_id, alias, alias_normalized)"
+                " VALUES (7, NULL, 'Ещё', 'ещё')"
+            )
+        )
+
+    await session.rollback()
+
+
+async def test_general_alias_index_allows_other_users(session: AsyncSession) -> None:
+    repo = VkAliasRepositoryImpl(session)
+    await repo.upsert(7, None, "Общее", "общее")
+    await repo.upsert(8, None, "Общее", "общее")
+    await session.commit()
+
+    assert await repo.list_for_user(8) == [(None, "общее")]
+
+
+async def test_settings_configured_flags_default_false(session: AsyncSession) -> None:
+    repo = BridgeSettingsRepositoryImpl(session)
+    await repo.upsert_chat(CHAT_ID, "Bridge chat")
+    await session.commit()
+
+    state = await repo.get()
+    assert state is not None
+    assert state.telegram_messages_topic_configured is False
+    assert state.telegram_wall_topic_configured is False
+    assert state.messages_destination_kind().value == "unset"
+
+
+async def test_settings_set_named_topic_marks_configured(session: AsyncSession) -> None:
+    repo = BridgeSettingsRepositoryImpl(session)
+    await repo.set_messages_topic(11)
+    await repo.set_wall_topic(None)
+    await session.commit()
+
+    state = await repo.get()
+    assert state is not None
+    assert state.messages_destination_kind().value == "named_topic"
+    assert state.wall_destination_kind().value == "general"
+
+
+async def test_settings_reset_clears_configured_flags(session: AsyncSession) -> None:
+    repo = BridgeSettingsRepositoryImpl(session)
+    await repo.set_messages_topic(5)
+    await repo.set_wall_topic(None)
+    await session.commit()
+
+    await repo.reset()
+    await session.commit()
+
+    state = await repo.get()
+    assert state is not None
+    assert state.messages_destination_kind().value == "unset"
+    assert state.wall_destination_kind().value == "unset"

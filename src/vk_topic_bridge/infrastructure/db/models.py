@@ -53,9 +53,15 @@ REACTION_STATUSES: tuple[str, ...] = (
 SOURCE_TYPE_VK_MESSAGE = "vk_message"
 SOURCE_TYPE_VK_WALL = "vk_wall"
 
+DELIVERY_INTENT_AUTOMATIC = "automatic"
+DELIVERY_INTENT_MANUAL = "manual"
+
+DELIVERY_INTENTS: tuple[str, ...] = (DELIVERY_INTENT_AUTOMATIC, DELIVERY_INTENT_MANUAL)
+
 BRIDGE_SETTINGS_SINGLETON_ID = 1
 
 UNIQUE_GENERAL_TOPIC_INDEX = "uq_telegram_topics_general"
+UNIQUE_GENERAL_ALIAS_INDEX = "uq_vk_topic_aliases_general"
 DELIVERY_PUBLICATION_STATUS_INDEX = "ix_delivery_records_publication_status"
 DELIVERY_REACTION_STATUS_INDEX = "ix_delivery_records_reaction_status"
 
@@ -88,6 +94,14 @@ class BridgeSettings(Base):
     )
     telegram_messages_topic_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     telegram_wall_topic_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    # Three-state destinations (draft :32/:169/:185): `configured=False + NULL` is unset,
+    # `configured=True + NULL` is explicit General, `configured=True + N` is a named topic.
+    telegram_messages_topic_configured: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("0")
+    )
+    telegram_wall_topic_configured: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("0")
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
     )
@@ -117,6 +131,8 @@ class TelegramTopic(Base):
     title: Mapped[str] = mapped_column(Text, nullable=False)
     is_general: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("0"))
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("1"))
+    is_closed: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("0"))
+    is_hidden: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("0"))
     last_seen_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 
@@ -156,6 +172,10 @@ class DeliveryRecord(Base):
             _status_check("reaction_status", REACTION_STATUSES),
             name="ck_delivery_records_reaction_status",
         ),
+        CheckConstraint(
+            _status_check("intent", DELIVERY_INTENTS),
+            name="ck_delivery_records_intent",
+        ),
         Index(DELIVERY_PUBLICATION_STATUS_INDEX, "publication_status"),
         Index(DELIVERY_REACTION_STATUS_INDEX, "reaction_status"),
     )
@@ -168,6 +188,9 @@ class DeliveryRecord(Base):
     )
     reaction_status: Mapped[str] = mapped_column(
         Text, nullable=False, server_default=text(f"'{REACTION_STATUS_NOT_DUE}'")
+    )
+    intent: Mapped[str] = mapped_column(
+        Text, nullable=False, server_default=text(f"'{DELIVERY_INTENT_AUTOMATIC}'")
     )
     claim_token: Mapped[str | None] = mapped_column(Text, nullable=True)
     lease_expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)

@@ -2,7 +2,7 @@
 
 from collections.abc import Sequence
 
-from sqlalchemy import func, select, text
+from sqlalchemy import delete, func, select, text
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,14 +11,12 @@ from vk_topic_bridge.infrastructure.db.models import TelegramTopic
 
 
 def _to_topic(row: TelegramTopic) -> TopicInfo:
-    # is_closed/is_hidden are not persisted by the frozen schema; discovery reports them
-    # fresh, so the stored view only needs identity, title and the General marker.
     return TopicInfo(
         topic_id=row.topic_id,
         title=row.title,
         is_general=bool(row.is_general),
-        is_closed=False,
-        is_hidden=False,
+        is_closed=bool(row.is_closed),
+        is_hidden=bool(row.is_hidden),
     )
 
 
@@ -47,6 +45,12 @@ class TelegramTopicsRepositoryImpl:
     async def mark_missing(self, chat_id: int, seen_topic_ids: Sequence[int | None]) -> None:
         await self._deactivate_unseen(chat_id, set(seen_topic_ids))
 
+    async def delete_chat(self, chat_id: int) -> None:
+        """Remove every snapshot row of the chat (factory reset, not deactivation)."""
+        await self._session.execute(
+            delete(TelegramTopic).where(TelegramTopic.telegram_chat_id == chat_id)
+        )
+
     async def _upsert(self, chat_id: int, topic: TopicInfo) -> None:
         values = {
             "telegram_chat_id": chat_id,
@@ -54,6 +58,8 @@ class TelegramTopicsRepositoryImpl:
             "title": topic.title,
             "is_general": topic.is_general,
             "is_active": True,
+            "is_closed": topic.is_closed,
+            "is_hidden": topic.is_hidden,
             "last_seen_at": func.current_timestamp(),
         }
         # General rows carry topic_id NULL, where the composite UNIQUE does not apply:
@@ -69,6 +75,8 @@ class TelegramTopicsRepositoryImpl:
                         "title": topic.title,
                         "is_general": True,
                         "is_active": True,
+                        "is_closed": topic.is_closed,
+                        "is_hidden": topic.is_hidden,
                         "last_seen_at": func.current_timestamp(),
                     },
                 )
@@ -83,6 +91,8 @@ class TelegramTopicsRepositoryImpl:
                         "title": topic.title,
                         "is_general": topic.is_general,
                         "is_active": True,
+                        "is_closed": topic.is_closed,
+                        "is_hidden": topic.is_hidden,
                         "last_seen_at": func.current_timestamp(),
                     },
                 )

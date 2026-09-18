@@ -12,6 +12,7 @@ from alembic.script import ScriptDirectory
 REPO_ROOT = Path(__file__).resolve().parents[3]
 MIGRATIONS_DIR = REPO_ROOT / "migrations"
 INITIAL_REVISION = "0001"
+HEAD_REVISION = "0002"
 
 PRODUCT_TABLES = frozenset(
     {"bridge_settings", "telegram_topics", "vk_topic_aliases", "delivery_records"}
@@ -142,7 +143,7 @@ def test_migration_from_base_to_head_creates_expected_tables(db_path: Path) -> N
     assert _table_names(db_path) >= PRODUCT_TABLES | {"alembic_version"}
 
     heads = ScriptDirectory.from_config(_alembic_config()).get_heads()
-    assert heads == [INITIAL_REVISION], f"initial migration missing: heads={heads!r}"
+    assert heads == [HEAD_REVISION], f"initial migration missing: heads={heads!r}"
 
 
 def test_upgrade_head_is_idempotent(db_path: Path) -> None:
@@ -150,7 +151,7 @@ def test_upgrade_head_is_idempotent(db_path: Path) -> None:
     _upgrade()
 
     version = _query(db_path, "SELECT version_num FROM alembic_version")
-    assert version == [(INITIAL_REVISION,)]
+    assert version == [(HEAD_REVISION,)]
     assert _table_names(db_path) >= PRODUCT_TABLES
 
 

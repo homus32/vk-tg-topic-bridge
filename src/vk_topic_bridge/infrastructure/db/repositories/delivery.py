@@ -78,6 +78,7 @@ def _to_dto(row: DeliveryRecordModel) -> DeliveryRecord:
         created_at=row.created_at,
         updated_at=row.updated_at,
         completed_at=row.completed_at,
+        intent=row.intent,
     )
 
 
@@ -95,6 +96,7 @@ class DeliveryRepositoryImpl:
                 source_key=request.source_key,
                 publication_status=models.PUBLICATION_STATUS_RESERVED,
                 reaction_status=models.REACTION_STATUS_NOT_DUE,
+                intent=request.intent,
                 destination_chat_id=request.destination_chat_id,
                 destination_topic_id=request.destination_topic_id,
                 payload_hash=request.payload_hash,
@@ -321,6 +323,36 @@ class DeliveryRepositoryImpl:
             .execution_options(populate_existing=True)
         )
         return [_to_dto(row) for row in result.scalars()]
+
+    async def list_failed_terminal(self, limit: int = 20) -> list[DeliveryRecord]:
+        result = await self._session.execute(
+            select(DeliveryRecordModel)
+            .where(
+                DeliveryRecordModel.publication_status.in_(
+                    (
+                        models.PUBLICATION_STATUS_FAILED_PERMANENT,
+                        models.PUBLICATION_STATUS_AMBIGUOUS,
+                    )
+                )
+            )
+            .order_by(DeliveryRecordModel.updated_at.desc(), DeliveryRecordModel.id.desc())
+            .limit(limit)
+            .execution_options(populate_existing=True)
+        )
+        return [_to_dto(row) for row in result.scalars()]
+
+    async def mark_reviewed(self, delivery_id: int) -> bool:
+        stmt = (
+            update(DeliveryRecordModel)
+            .where(
+                DeliveryRecordModel.id == delivery_id,
+                DeliveryRecordModel.publication_status == models.PUBLICATION_STATUS_AMBIGUOUS,
+                DeliveryRecordModel.review_required.is_(True),
+            )
+            .values(review_required=False, updated_at=func.current_timestamp())
+            .returning(DeliveryRecordModel.id)
+        )
+        return await self._cas(stmt)
 
     def _claim_guard(
         self, delivery_id: int, claim_token: str, target: PublicationStatus

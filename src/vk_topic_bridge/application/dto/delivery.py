@@ -30,6 +30,7 @@ class DeliveryRecord:
     created_at: datetime
     updated_at: datetime
     completed_at: datetime | None
+    intent: str = "automatic"
 
 
 @dataclass(frozen=True, slots=True)
@@ -41,6 +42,7 @@ class ReserveRequest:
     destination_chat_id: int | None
     destination_topic_id: int | None
     payload_hash: str | None
+    intent: str = "automatic"
 
 
 @dataclass(frozen=True, slots=True)

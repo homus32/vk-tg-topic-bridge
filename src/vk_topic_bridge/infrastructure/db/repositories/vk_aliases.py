@@ -56,6 +56,11 @@ class VkAliasRepositoryImpl:
             delete(VkTopicAlias).where(VkTopicAlias.vk_user_id == vk_user_id, condition)
         )
 
+    async def delete_all(self) -> int:
+        """Delete every alias row (chat reset); returns the number of deleted rows."""
+        result = await self._session.execute(delete(VkTopicAlias).returning(VkTopicAlias.id))
+        return len(result.scalars().all())
+
     async def _upsert_general(self, vk_user_id: int, alias: str, alias_normalized: str) -> None:
         existing = (
             await self._session.execute(
