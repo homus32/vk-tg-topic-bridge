@@ -40,6 +40,8 @@ data/*
 
 runtime/telethon/*
 !runtime/telethon/.gitkeep
+runtime/vk_cursor/
+runtime/media/
 
 .idea/*
 

@@ -1,4 +1,4 @@
-.PHONY: sync lock lock-check format format-check lint typecheck test test-e2e check hooks
+.PHONY: sync lock lock-check format format-check lint typecheck test test-e2e check hooks backup-db restore-db
 
 sync:
 	uv sync --all-groups
@@ -31,3 +31,9 @@ test-e2e:
 	uv run --locked pytest -m e2e
 
 check: lock-check format-check lint typecheck test
+
+backup-db:
+	bash scripts/backup_db.sh
+
+restore-db:
+	bash scripts/restore_db.sh $(BACKUP)
