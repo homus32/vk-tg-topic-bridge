@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Commit gate: full static checks (ruff format/lint, basedpyright) + all non-e2e tests.
+exec make check

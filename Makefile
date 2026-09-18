@@ -1,7 +1,10 @@
-.PHONY: sync lock lock-check format format-check lint typecheck test test-e2e check
+.PHONY: sync lock lock-check format format-check lint typecheck test test-e2e check hooks
 
 sync:
 	uv sync --all-groups
+
+hooks:
+	git config --local core.hooksPath .githooks
 
 lock:
 	uv lock

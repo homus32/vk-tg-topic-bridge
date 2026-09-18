@@ -13,6 +13,11 @@
 - `make typecheck` — запустить basedpyright.
 - `make test` — запустить pytest.
 - `make check` — выполнить lock, format, lint, typecheck и test checks.
+- `make hooks` — подключить versioned git-хуки из `.githooks/` (`core.hooksPath`); одноразовая команда после клонирования.
+
+## Git Hooks
+- `.githooks/pre-commit` запускает `make check` и блокирует коммит при любом падении статики или тестов; обход — только `git commit --no-verify`.
+- После клонирования активировать: `make hooks`.
 
 ## Rules
 - **Commit authorship**: Агент (Sisyphus) НЕ указывает себя как соавтора (co-authored-by) в коммитах. 
