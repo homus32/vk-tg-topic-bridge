@@ -32,6 +32,54 @@ def _run_hook_with_stubbed_make(tmp_path: Path, *, make_exit: int) -> int:
     return completed.returncode
 
 
+def _run_hook_capturing_make_env(
+    tmp_path: Path, fake_home: Path, *, incoming_path: str
+) -> dict[str, str]:
+    stub_bin = tmp_path / "bin"
+    stub_bin.mkdir()
+    capture = tmp_path / "capture.txt"
+    stub_make = stub_bin / "make"
+    stub_make.write_text(
+        "#!/usr/bin/env bash\n"
+        f'printf "PATH=%s\\n" "$PATH" > "{capture}"\n'
+        f'printf "UV=%s\\n" "$(command -v uv || true)" >> "{capture}"\n',
+        encoding="utf-8",
+    )
+    stub_make.chmod(stub_make.stat().st_mode | stat.S_IXUSR)
+
+    env = dict(os.environ)
+    env["HOME"] = str(fake_home)
+    env["PATH"] = f"{stub_bin}{os.pathsep}{incoming_path}"
+    completed = subprocess.run(
+        [str(HOOK_PATH)], cwd=REPO_ROOT, env=env, check=False, capture_output=True, text=True
+    )
+    assert completed.returncode == 0, completed.stderr
+
+    return dict(
+        line.split("=", 1)
+        for line in capture.read_text(encoding="utf-8").splitlines()
+        if "=" in line
+    )
+
+
+def test_hook_bootstraps_user_local_bin_so_make_can_find_uv(tmp_path: Path) -> None:
+    fake_home = tmp_path / "home"
+    local_bin = fake_home / ".local" / "bin"
+    local_bin.mkdir(parents=True)
+    stub_uv = local_bin / "uv"
+    stub_uv.write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
+    stub_uv.chmod(stub_uv.stat().st_mode | stat.S_IXUSR)
+
+    captured = _run_hook_capturing_make_env(
+        tmp_path,
+        fake_home,
+        incoming_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    )
+
+    assert str(local_bin) in captured["PATH"].split(os.pathsep)
+    assert captured["UV"] == str(stub_uv)
+
+
 def test_pre_commit_hook_is_executable() -> None:
     assert HOOK_PATH.is_file()
     assert HOOK_PATH.stat().st_mode & stat.S_IXUSR

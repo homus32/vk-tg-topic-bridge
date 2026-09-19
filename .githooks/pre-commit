@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# GUI launchers (e.g. PyCharm) may omit the user-local bin dir where uv lives.
+if [[ -n "${HOME:-}" && -d "$HOME/.local/bin" ]]; then
+  PATH="$HOME/.local/bin:$PATH"
+  export PATH
+fi
+
 # Commit gate: full static checks (ruff format/lint, basedpyright) + all non-e2e tests.
 exec make check
