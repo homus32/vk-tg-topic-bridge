@@ -76,12 +76,24 @@ class VkEventConsumer:
 
     async def run(self) -> None:
         """Consume the stream until it ends or the task is cancelled."""
-        async for event in self._polling.listen():
-            updates = event.get("updates")
-            if not isinstance(updates, list):
-                continue
-            for update in updates:
-                await self._handle(update)
+        logger.info(
+            "vk consumer started",
+            extra={"group_id": self._allowed_group_id, "poller": type(self._polling).__name__},
+        )
+        try:
+            async for event in self._polling.listen():
+                updates = event.get("updates")
+                if not isinstance(updates, list):
+                    logger.debug("vk long poll event ignored: updates is not a list")
+                    continue
+                logger.debug("vk event received", extra={"update_count": len(updates)})
+                for update in updates:
+                    await self._handle(update)
+        finally:
+            logger.info(
+                "vk consumer stopped",
+                extra={"group_id": self._allowed_group_id, "peer_id": self.bound_peer_id},
+            )
 
     async def _handle(self, update: object) -> None:
         # One bad update must never kill the consumer: log with context and keep going.
@@ -92,10 +104,21 @@ class VkEventConsumer:
                 logger.warning("vk update is not a mapping: %r", type(update).__name__)
                 return
             event_type = update.get("type")
+            logger.debug(
+                "vk update received",
+                extra={
+                    "event_id": update.get("event_id"),
+                    "event_type": event_type,
+                    "group_id": group_id,
+                },
+            )
             if event_type == "wall_post_new":
                 await self._handle_wall(update, group_id)
                 return
             if event_type != "message_new":
+                logger.debug(
+                    "vk update ignored: unsupported event", extra={"event_type": event_type}
+                )
                 return
             if not _is_int(group_id):
                 logger.warning("vk update has no integer group_id: %r", group_id)
@@ -116,9 +139,24 @@ class VkEventConsumer:
                 logger.warning("vk update has no integer peer_id for group %s", group_id)
                 return
             classification = classify_peer(peer_id)
+            logger.debug(
+                "vk message route classified",
+                extra={
+                    "peer_id": peer_id,
+                    "route": classification.route.value,
+                    "chat_id": classification.chat_id,
+                },
+            )
             if classification.route is PeerRoute.USER_DM:
                 if self._ui_router is not None:
-                    await self._ui_router.handle_dm(update)
+                    consumed = await self._ui_router.handle_dm(update)
+                    logger.debug(
+                        "vk DM routed to UI",
+                        extra={
+                            "peer_id": peer_id,
+                            "outcome": "consumed" if consumed else "ignored",
+                        },
+                    )
                 else:
                     logger.debug(
                         "vk DM from peer %s skipped: no UI router wired "
@@ -139,13 +177,50 @@ class VkEventConsumer:
                 return
             author = await self._gateway.get_author(from_id)
             source = await self._gateway.normalize_event(update, author)
-            await self._forward.execute(source)
+            logger.debug(
+                "vk message routed to forwarding",
+                extra={
+                    "group_id": source.group_id,
+                    "peer_id": source.peer_id,
+                    "from_id": source.author.user_id,
+                    "conversation_message_id": source.conversation_message_id,
+                    "source_key": source.source_key,
+                    "source_type": source.source_type.value,
+                    "attachment_count": len(source.attachments),
+                },
+            )
+            outcome = await self._forward.execute(source)
+            logger.debug(
+                "vk message forwarding completed",
+                extra={
+                    "peer_id": source.peer_id,
+                    "from_id": source.author.user_id,
+                    "conversation_message_id": source.conversation_message_id,
+                    "source_key": source.source_key,
+                    "outcome": outcome.reason,
+                    "published": outcome.published,
+                    "skipped": outcome.skipped,
+                    "delivery_id": outcome.delivery_id,
+                    "message_id_count": len(outcome.message_ids),
+                },
+            )
+            if outcome.published:
+                logger.info(
+                    "vk message forwarded",
+                    extra={
+                        "peer_id": source.peer_id,
+                        "conversation_message_id": source.conversation_message_id,
+                        "delivery_id": outcome.delivery_id,
+                        "message_id_count": len(outcome.message_ids),
+                    },
+                )
         except Exception:
             logger.exception("vk update handling failed for group=%s peer=%s", group_id, peer_id)
 
     async def _handle_wall(self, update: Mapping[str, object], group_id: object) -> None:
         """Wall posts come from the community, so this branch runs before peer routing."""
         if self._forward_wall is None:
+            logger.debug("vk wall update ignored: wall pipeline is not configured")
             return
         if not _is_int(group_id):
             logger.warning("vk wall update has no integer group_id: %r", group_id)
@@ -166,7 +241,40 @@ class VkEventConsumer:
         if author is None:
             author = Author(user_id=0, first_name="", last_name="", screen_name=None)
         wall_post = await self._gateway.normalize_wall_event(update, author)
-        await self._forward_wall.execute(wall_post)
+        logger.debug(
+            "vk wall post routed to forwarding",
+            extra={
+                "group_id": wall_post.group_id,
+                "owner_id": wall_post.owner_id,
+                "post_id": wall_post.post_id,
+                "source_type": wall_post.source_type.value,
+                "attachment_count": len(wall_post.attachments),
+            },
+        )
+        outcome = await self._forward_wall.execute(wall_post)
+        logger.debug(
+            "vk wall forwarding completed",
+            extra={
+                "group_id": wall_post.group_id,
+                "owner_id": wall_post.owner_id,
+                "post_id": wall_post.post_id,
+                "outcome": outcome.reason,
+                "published": outcome.published,
+                "skipped": outcome.skipped,
+                "delivery_id": outcome.delivery_id,
+                "message_id_count": len(outcome.message_ids),
+            },
+        )
+        if outcome.published:
+            logger.info(
+                "vk wall post forwarded",
+                extra={
+                    "group_id": wall_post.group_id,
+                    "owner_id": wall_post.owner_id,
+                    "post_id": wall_post.post_id,
+                    "delivery_id": outcome.delivery_id,
+                },
+            )
 
 
 class VkPollingRuntime:
@@ -200,7 +308,9 @@ class VkPollingRuntime:
         self._task: asyncio.Task[None] | None = None
 
     async def run(self) -> None:
+        logger.info("vk polling starting")
         allowed_group_id = await self._gateway.get_community_id()
+        logger.info("vk polling community resolved", extra={"group_id": allowed_group_id})
         # RawVkApi is the structural twin of ABCAPI (same ``request``); the SDK types it
         # nominally, so this single boundary cast is the only place the two meet.
         raw_api = cast(ABCAPI, self._api)
@@ -216,6 +326,10 @@ class VkPollingRuntime:
         else:
             polling = BotPolling(api=raw_api, group_id=allowed_group_id)
         self._polling = polling
+        logger.debug(
+            "vk polling transport configured",
+            extra={"group_id": allowed_group_id, "poller": type(polling).__name__},
+        )
         consumer = VkEventConsumer(
             polling=polling,
             gateway=self._gateway,
@@ -226,10 +340,17 @@ class VkPollingRuntime:
         )
         self._task = asyncio.current_task()
         if self._stop_requested.is_set():
+            logger.info(
+                "vk polling stopped before consumer start", extra={"group_id": allowed_group_id}
+            )
             return
-        await consumer.run()
+        try:
+            await consumer.run()
+        finally:
+            logger.info("vk polling stopped", extra={"group_id": allowed_group_id})
 
     async def stop(self) -> None:
+        logger.debug("vk polling stop requested")
         self._stop_requested.set()
         if self._polling is not None:
             self._polling.stop()

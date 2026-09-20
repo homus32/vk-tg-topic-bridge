@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import AsyncIterator, Mapping
 from typing import cast
+
+import pytest
 
 from vk_topic_bridge.application.forwarding.forward_message import ForwardOutcome, ForwardVkMessage
 from vk_topic_bridge.bootstrap.vk_consumer import VkEventConsumer
@@ -130,6 +133,19 @@ async def test_valid_message_new_is_forwarded_once() -> None:
     assert len(forward.calls) == 1
     assert forward.calls[0].peer_id == PEER_ID
     assert gateway.author_calls == [FROM_ID]
+
+
+async def test_valid_message_emits_routing_and_forwarding_trace(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    consumer, _, _ = _consumer([_event(_update())])
+
+    with caplog.at_level(logging.DEBUG):
+        await consumer.run()
+
+    assert "vk event received" in caplog.text
+    assert "vk message routed to forwarding" in caplog.text
+    assert "vk message forwarding completed" in caplog.text
 
 
 async def test_message_new_from_other_group_is_ignored() -> None:

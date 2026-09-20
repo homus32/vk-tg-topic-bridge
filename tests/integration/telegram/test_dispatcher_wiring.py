@@ -148,6 +148,22 @@ async def test_menu_button_text_reaches_feature_router_not_catch_all() -> None:
     assert not any("Неизвестная команда" in text for text in responses)
 
 
+async def test_unknown_group_command_is_silent() -> None:
+    dispatcher = _build_dispatcher()
+
+    responses = await _dispatch_message(dispatcher, _message_update("/asd", chat_type="supergroup"))
+
+    assert responses == []
+
+
+async def test_unknown_private_command_keeps_owner_hint() -> None:
+    dispatcher = _build_dispatcher()
+
+    responses = await _dispatch_message(dispatcher, _message_update("/asd"))
+
+    assert responses == ["Неизвестная команда. Воспользуйтесь кнопками меню."]
+
+
 async def _dispatch_message(dispatcher: Dispatcher, update: Update) -> list[str]:
     """Run one message update through real propagation with recorded answers."""
     bot = cast(_ResultBot, _ResultBot())

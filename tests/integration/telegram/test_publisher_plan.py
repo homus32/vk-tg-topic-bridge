@@ -6,6 +6,7 @@ real files under ``tmp_path`` so cleanup can be asserted.
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import cast
 
@@ -148,6 +149,21 @@ async def test_text_operation_calls_send_message_html_and_returns_outcome() -> N
     assert kwargs["parse_mode"] is ParseMode.HTML
     assert outcomes[0].status is OperationStatus.PUBLISHED
     assert outcomes[0].message_ids == (MESSAGE_ID,)
+
+
+async def test_publisher_emits_operation_trace(caplog: pytest.LogCaptureFixture) -> None:
+    fake = FakeBot()
+    publisher = _publisher(fake)
+    plan = PublicationPlan(
+        base=_publication("t"),
+        operations=(PublicationOperation(kind=OperationKind.TEXT, text="t", position=0),),
+    )
+
+    with caplog.at_level(logging.DEBUG):
+        await publisher.publish_plan(plan)
+
+    assert "telegram publication operation started" in caplog.text
+    assert "telegram publication operation succeeded" in caplog.text
 
 
 async def test_general_destination_omits_thread_id() -> None:

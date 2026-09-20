@@ -140,21 +140,39 @@ async def _send_message(
     per call: only the escaped VK publication uses HTML, owner-facing text stays plain.
     """
     preview = LinkPreviewOptions(is_disabled=True)
+    logger.debug(
+        "telegram sendMessage started",
+        extra={
+            "chat_id": destination.chat_id,
+            "destination_topic_id": destination.message_thread_id,
+            "text_length": len(text),
+        },
+    )
     try:
         if destination.message_thread_id is None:
-            return await bot.send_message(
+            message = await bot.send_message(
                 chat_id=destination.chat_id,
                 text=text,
                 parse_mode=parse_mode,
                 link_preview_options=preview,
             )
-        return await bot.send_message(
-            chat_id=destination.chat_id,
-            text=text,
-            message_thread_id=destination.message_thread_id,
-            parse_mode=parse_mode,
-            link_preview_options=preview,
+        else:
+            message = await bot.send_message(
+                chat_id=destination.chat_id,
+                text=text,
+                message_thread_id=destination.message_thread_id,
+                parse_mode=parse_mode,
+                link_preview_options=preview,
+            )
+        logger.debug(
+            "telegram sendMessage completed",
+            extra={
+                "chat_id": destination.chat_id,
+                "destination_topic_id": destination.message_thread_id,
+                "message_id_count": 1,
+            },
         )
+        return message
     except asyncio.CancelledError:
         # Cancellation semantics belong to the caller: it marks the outcome ambiguous.
         raise
@@ -193,9 +211,25 @@ class BotApiPublisher:
         """Execute planned operations in order; classified failures do not abort the plan."""
         outcomes: list[OperationOutcome] = []
         for operation in plan.operations:
+            logger.debug(
+                "telegram publication operation started",
+                extra={
+                    "operation": operation.position,
+                    "operation_kind": operation.kind.value,
+                    "media_count": len(operation.media),
+                },
+            )
             try:
                 message_ids = await self._execute_operation(plan.base, operation)
             except PublicationRejectedError as exc:
+                logger.warning(
+                    "telegram publication operation rejected",
+                    extra={
+                        "operation": operation.position,
+                        "operation_kind": operation.kind.value,
+                        "reason": exc.code,
+                    },
+                )
                 outcomes.append(
                     OperationOutcome(
                         operation=operation,
@@ -206,6 +240,14 @@ class BotApiPublisher:
                     )
                 )
             except PublicationAmbiguousError as exc:
+                logger.warning(
+                    "telegram publication operation became ambiguous",
+                    extra={
+                        "operation": operation.position,
+                        "operation_kind": operation.kind.value,
+                        "reason": exc.code,
+                    },
+                )
                 outcomes.append(
                     OperationOutcome(
                         operation=operation,
@@ -216,6 +258,14 @@ class BotApiPublisher:
                     )
                 )
             else:
+                logger.debug(
+                    "telegram publication operation succeeded",
+                    extra={
+                        "operation": operation.position,
+                        "operation_kind": operation.kind.value,
+                        "message_id_count": len(message_ids),
+                    },
+                )
                 outcomes.append(
                     OperationOutcome(
                         operation=operation,
@@ -225,6 +275,10 @@ class BotApiPublisher:
                 )
             finally:
                 _remove_temp_files(operation)
+        logger.debug(
+            "telegram publication plan completed",
+            extra={"operation_count": len(plan.operations), "message_count": len(outcomes)},
+        )
         return tuple(outcomes)
 
     async def _execute_operation(
@@ -324,6 +378,11 @@ def _remove_temp_files(operation: PublicationOperation) -> None:
             Path(media.file_path).unlink(missing_ok=True)
         except OSError as exc:
             logger.warning("temp media cleanup failed for %s: %s", media.file_path, exc)
+    if operation.media:
+        logger.debug(
+            "telegram temporary media cleanup completed",
+            extra={"media_count": len(operation.media)},
+        )
 
 
 class BotApiAdminPort:
@@ -343,9 +402,12 @@ class BotApiAdminPort:
         self._publisher = BotApiPublisher(bot)
 
     async def get_me(self) -> int:
-        return (await self._bot.get_me()).id
+        result = await self._bot.get_me()
+        logger.debug("telegram bot identity resolved", extra={"outcome": "success"})
+        return result.id
 
     async def get_chat_capabilities(self, chat_id: int) -> ChatCapabilities:
+        logger.debug("telegram chat capability check started", extra={"chat_id": chat_id})
         bot_id = (await self._bot.get_me()).id
         member = await self._bot.get_chat_member(chat_id, bot_id)
         absent = member.status in self._ABSENT_STATUSES
@@ -353,13 +415,18 @@ class BotApiAdminPort:
             public_name: not absent and getattr(member, telegram_name, None) is not False
             for public_name, telegram_name in _CAPABILITY_FLAGS
         }
-        return ChatCapabilities(
+        capabilities = ChatCapabilities(
             can_send_text=allowed["can_send_text"],
             can_send_photo=allowed["can_send_photo"],
             can_send_video=allowed["can_send_video"],
             can_send_document=allowed["can_send_document"],
             missing=tuple(name for name, _ in _CAPABILITY_FLAGS if not allowed[name]),
         )
+        logger.debug(
+            "telegram chat capability check completed",
+            extra={"chat_id": chat_id, "missing": capabilities.missing},
+        )
+        return capabilities
 
     async def send_test_into_topic(
         self,
@@ -367,4 +434,9 @@ class BotApiAdminPort:
         message_thread_id: int | None,
         text: str,
     ) -> int:
-        return await self._publisher.send_text(chat_id, text, message_thread_id)
+        message_id = await self._publisher.send_text(chat_id, text, message_thread_id)
+        logger.info(
+            "telegram registration topic test sent",
+            extra={"chat_id": chat_id, "destination_topic_id": message_thread_id},
+        )
+        return message_id

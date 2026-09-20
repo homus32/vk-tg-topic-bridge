@@ -8,6 +8,7 @@ persisted status. An ambiguous outcome is never retried (frozen fail-closed poli
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -25,6 +26,7 @@ from vk_topic_bridge.domain.publication import (
 
 DEFAULT_CLAIM_LEASE_SECONDS = 60
 _WINNING_STATUSES = (OperationStatus.PUBLISHED, OperationStatus.PARTIALLY_PUBLISHED)
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,6 +57,14 @@ async def reserve_delivery(
     intent: str,
 ) -> int:
     """Insert the delivery row and commit before any network call; returns its id."""
+    logger.debug(
+        "delivery reservation started",
+        extra={
+            "source_type": source_type.value,
+            "destination_topic_id": destination_topic_id,
+            "outcome": intent,
+        },
+    )
     async with uow_factory() as uow:
         reservation = await uow.deliveries.reserve(
             ReserveRequest(
@@ -67,7 +77,9 @@ async def reserve_delivery(
             )
         )
         await uow.commit()
-        return reservation.record.id
+        delivery_id = reservation.record.id
+    logger.debug("delivery reservation completed", extra={"delivery_id": delivery_id})
+    return delivery_id
 
 
 async def begin_send(
@@ -78,14 +90,26 @@ async def begin_send(
     lease_seconds: int = DEFAULT_CLAIM_LEASE_SECONDS,
 ) -> bool:
     """Claim and commit send intent; False when another attempt owns the delivery."""
+    logger.debug("delivery claim started", extra={"delivery_id": delivery_id})
     async with uow_factory() as uow:
         claimed = await uow.deliveries.claim_reserved(delivery_id, claim_token, lease_seconds)
         await uow.commit()
     if not claimed:
+        logger.debug(
+            "delivery claim rejected",
+            extra={"delivery_id": delivery_id, "outcome": "claim_lost"},
+        )
         return False
     async with uow_factory() as uow:
         started = await uow.deliveries.mark_send_started(delivery_id, claim_token)
         await uow.commit()
+    if not started:
+        logger.debug(
+            "delivery send start rejected",
+            extra={"delivery_id": delivery_id, "outcome": "claim_lost"},
+        )
+        return False
+    logger.debug("delivery send started", extra={"delivery_id": delivery_id})
     return started
 
 
@@ -97,9 +121,17 @@ async def execute_plan(
     publisher: TelegramPublisherPlan,
 ) -> PlanOutcome:
     """Send the plan and persist the roll-up; a rejection never aborts silently."""
+    logger.debug(
+        "publication plan execution started",
+        extra={"delivery_id": delivery_id, "operation_count": len(plan.operations)},
+    )
     try:
         outcomes = await publisher.publish_plan(plan)
     except PublicationAmbiguousError as error:
+        logger.warning(
+            "publication plan became ambiguous",
+            extra={"delivery_id": delivery_id, "reason": error.code},
+        )
         async with uow_factory() as uow:
             await uow.deliveries.mark_publication_ambiguous(
                 delivery_id, claim_token, error.code, str(error)
@@ -114,15 +146,32 @@ async def execute_plan(
                 delivery_id, claim_token, "cancelled", "cancelled"
             )
             await uow.commit()
+        logger.warning(
+            "publication plan cancelled and marked ambiguous",
+            extra={"delivery_id": delivery_id, "reason": "cancelled"},
+        )
         raise
     except DomainError as error:
+        logger.warning(
+            "publication plan rejected",
+            extra={"delivery_id": delivery_id, "reason": getattr(error, "code", None)},
+        )
         async with uow_factory() as uow:
             await uow.deliveries.mark_failed_permanent(
                 delivery_id, claim_token, getattr(error, "code", None), str(error)
             )
             await uow.commit()
         return PlanOutcome(published=False, message_ids=(), failed_permanent=True)
-    return await _finalize(uow_factory, delivery_id, claim_token, outcomes)
+    result = await _finalize(uow_factory, delivery_id, claim_token, outcomes)
+    logger.debug(
+        "publication plan execution completed",
+        extra={
+            "delivery_id": delivery_id,
+            "outcome": "published" if result.published else "failed",
+            "message_id_count": len(result.message_ids),
+        },
+    )
+    return result
 
 
 async def _finalize(
@@ -134,6 +183,15 @@ async def _finalize(
     message_ids = tuple(message_id for outcome in outcomes for message_id in outcome.message_ids)
     published = any(outcome.status in _WINNING_STATUSES for outcome in outcomes)
     ambiguous = any(outcome.status is OperationStatus.ACCEPTED_UNKNOWN for outcome in outcomes)
+    logger.debug(
+        "publication plan outcomes collected",
+        extra={
+            "delivery_id": delivery_id,
+            "operation_count": len(outcomes),
+            "message_id_count": len(message_ids),
+            "outcome": "ambiguous" if ambiguous else "published" if published else "failed",
+        },
+    )
     async with uow_factory() as uow:
         if published:
             marked = await uow.deliveries.mark_published(delivery_id, claim_token, message_ids)

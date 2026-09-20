@@ -87,6 +87,23 @@ def test_stdlib_record_reaches_loguru_sink(tmp_path: Path) -> None:
 
 
 @pytest.mark.usefixtures("logging_state")
+def test_stdlib_extra_context_is_rendered_without_unknown_fields(tmp_path: Path) -> None:
+    module = _logger_module()
+    module.configure_logging(_settings(tmp_path))
+    sink = _capture_sink()
+
+    logging.getLogger("vk_topic_bridge.test").info(
+        "context-event",
+        extra={"chat_id": 42, "reason": "diagnostic", "token": "do-not-log"},
+    )
+
+    message = next(message for message in sink.messages if "context-event" in message)
+    assert "chat_id=42" in message
+    assert "reason=diagnostic" in message
+    assert "do-not-log" not in message
+
+
+@pytest.mark.usefixtures("logging_state")
 def test_file_sink_creates_app_log_with_record(tmp_path: Path) -> None:
     module = _logger_module()
     settings = _settings(tmp_path)

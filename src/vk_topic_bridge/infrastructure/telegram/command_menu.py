@@ -39,6 +39,7 @@ class CommandMenuSynchronizer:
 
     async def apply_startup(self) -> None:
         """Clear all-user lists and set owner private scopes; failures are logged only."""
+        logger.info("telegram command menu startup synchronization started")
         for scope in (
             BotCommandScopeDefault(),
             BotCommandScopeAllPrivateChats(),
@@ -56,9 +57,14 @@ class CommandMenuSynchronizer:
                 ),
                 f"set owner private commands for {owner_id}",
             )
+        logger.info("telegram command menu startup synchronization completed")
 
     async def apply_registration_group(self, chat_id: int, owner_id: int) -> None:
         """Expose ``/register`` for one owner in one group while the master is active."""
+        logger.debug(
+            "applying Telegram registration command scope",
+            extra={"chat_id": chat_id, "owner_id": owner_id},
+        )
         await self._best_effort(
             self._bot.set_my_commands(
                 commands=registration_group_commands(),
@@ -69,6 +75,10 @@ class CommandMenuSynchronizer:
 
     async def clear_registration_group(self, chat_id: int, owner_id: int) -> None:
         """Delete the temporary ChatMember scope after success or cancellation."""
+        logger.debug(
+            "clearing Telegram registration command scope",
+            extra={"chat_id": chat_id, "owner_id": owner_id},
+        )
         await self._best_effort(
             self._bot.delete_my_commands(
                 scope=BotCommandScopeChatMember(chat_id=chat_id, user_id=owner_id)

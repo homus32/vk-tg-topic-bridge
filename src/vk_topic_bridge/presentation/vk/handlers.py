@@ -121,8 +121,19 @@ class VkUiDispatcher:
         """``VkUiRouter`` entry point; returns True when the DM was consumed by the UI."""
         message = self.normalize(update)
         if message is None:
+            logger.debug("vk UI message ignored: normalization failed")
             return False
+        logger.debug(
+            "vk UI message accepted",
+            extra={
+                "from_id": message.from_id,
+                "peer_id": message.peer_id,
+                "text_length": len(message.text),
+                "message_count": message.fwd_count,
+            },
+        )
         await self.dispatch(message)
+        logger.debug("vk UI message completed", extra={"from_id": message.from_id})
         return True
 
     def normalize(self, update: Mapping[str, object]) -> VkUiMessage | None:
@@ -155,6 +166,10 @@ class VkUiDispatcher:
     async def dispatch(self, message: VkUiMessage) -> None:
         session = self._sessions.get(message.from_id)
         state = session.state
+        logger.debug(
+            "vk UI FSM dispatch started",
+            extra={"from_id": message.from_id, "state_before": state.value},
+        )
         if state is VkUiState.WAIT_DESTINATION:
             await self._handle_wait_destination(message, session)
         elif state is VkUiState.ALIAS_MENU:
@@ -171,29 +186,65 @@ class VkUiDispatcher:
             await self._handle_alias_delete_confirm(message, session)
         else:
             await self._handle_idle(message, session)
+        logger.debug(
+            "vk UI FSM dispatch completed",
+            extra={
+                "from_id": message.from_id,
+                "state_before": state.value,
+                "state_after": session.state.value,
+            },
+        )
 
     # --- IDLE ---------------------------------------------------------------
 
     async def _handle_idle(self, message: VkUiMessage, session: VkUserSession) -> None:
         text = message.text.strip()
         if message.fwd_count >= 2:
+            logger.debug(
+                "vk UI idle branch selected",
+                extra={"from_id": message.from_id, "outcome": "multiple_forwards"},
+            )
             await self._reply(message, MULTI_MESSAGE_TEXT)
             return
         if message.fwd_count == 1:
+            logger.debug(
+                "vk UI idle branch selected",
+                extra={"from_id": message.from_id, "outcome": "forwarded_message"},
+            )
             await self._handle_forwarded(message, session, text)
             return
         if is_help_trigger(text) or text == BTN_HELP:
+            logger.debug(
+                "vk UI idle branch selected",
+                extra={"from_id": message.from_id, "outcome": "help"},
+            )
             await self._reply(message, HELP_TEXT, main_keyboard_json())
             return
         if text == BTN_ALIASES:
+            logger.debug(
+                "vk UI idle branch selected",
+                extra={"from_id": message.from_id, "outcome": "aliases"},
+            )
             await self._open_alias_menu(message, session)
             return
+        logger.debug(
+            "vk UI idle branch selected",
+            extra={"from_id": message.from_id, "outcome": "help_default"},
+        )
         await self._reply(message, HELP_TEXT, main_keyboard_json())
 
     async def _handle_forwarded(
         self, message: VkUiMessage, session: VkUserSession, text: str
     ) -> None:
         listing = await self._manual_forwarding.destination_list(message.from_id)
+        logger.debug(
+            "vk manual destinations loaded",
+            extra={
+                "from_id": message.from_id,
+                "outcome": "available" if listing.chat_registered else "unregistered",
+                "message_count": len(listing.destinations),
+            },
+        )
         if not listing.chat_registered or not listing.destinations:
             await self._reply(message, CONFIG_ERROR_TEXT)
             return
@@ -219,12 +270,21 @@ class VkUiDispatcher:
         session.state = VkUiState.WAIT_DESTINATION
         session.pending_message = message
         self._sessions.set(message.from_id, session)
+        logger.debug(
+            "vk UI FSM transition",
+            extra={
+                "from_id": message.from_id,
+                "state_before": VkUiState.IDLE.value,
+                "state_after": VkUiState.WAIT_DESTINATION.value,
+            },
+        )
 
     # --- WAIT_DESTINATION ---------------------------------------------------
 
     async def _handle_wait_destination(self, message: VkUiMessage, session: VkUserSession) -> None:
         text = message.text.strip()
         if text == BTN_CANCEL:
+            logger.info("vk manual forwarding cancelled", extra={"from_id": message.from_id})
             self._sessions.clear(message.from_id)
             await self._reply(message, CANCELLED_TEXT, main_keyboard_json())
             return
@@ -235,6 +295,10 @@ class VkUiDispatcher:
             return
         ordinal = _parse_ordinal(text)
         if ordinal is None or not 1 <= ordinal <= len(listing.destinations):
+            logger.debug(
+                "vk manual destination rejected",
+                extra={"from_id": message.from_id, "reason": "invalid_ordinal"},
+            )
             await self._reply(
                 message,
                 f"{TOPIC_NOT_FOUND_TEXT}\n\n{_destinations_text(listing)}\n\n{ORDINAL_ONLY_TEXT}",
@@ -243,6 +307,10 @@ class VkUiDispatcher:
             return
         offer = listing.destinations[ordinal - 1]
         if not offer.available:
+            logger.debug(
+                "vk manual destination rejected",
+                extra={"from_id": message.from_id, "reason": "stale_topic"},
+            )
             await self._reply(
                 message,
                 f"{STALE_TOPIC_TEXT}\n\n{_destinations_text(listing)}",
@@ -253,6 +321,14 @@ class VkUiDispatcher:
         session.pending_message = None
         session.state = VkUiState.IDLE
         self._sessions.set(message.from_id, session)
+        logger.debug(
+            "vk UI FSM transition",
+            extra={
+                "from_id": message.from_id,
+                "state_before": VkUiState.WAIT_DESTINATION.value,
+                "state_after": VkUiState.IDLE.value,
+            },
+        )
         if not isinstance(pending, VkUiMessage):
             await self._reply(message, PUBLISH_FAILED_TEXT, main_keyboard_json())
             return
@@ -401,6 +477,13 @@ class VkUiDispatcher:
         *,
         source: VkUiMessage,
     ) -> None:
+        logger.debug(
+            "vk manual publication started",
+            extra={
+                "from_id": message.from_id,
+                "destination_topic_id": resolution.topic.topic_id if resolution.topic else None,
+            },
+        )
         chat_id = resolution.chat_id
         topic = resolution.topic
         if chat_id is None or topic is None:
@@ -425,6 +508,7 @@ class VkUiDispatcher:
             await self._reply(message, _publication_error_text(error), main_keyboard_json())
             return
         self._sessions.clear(message.from_id)
+        logger.info("vk manual publication completed", extra={"from_id": message.from_id})
         await self._reply(message, SENT_TEXT, main_keyboard_json())
 
     async def _resolve_source(self, message: VkUiMessage) -> SourceMessage | None:
@@ -442,6 +526,10 @@ class VkUiDispatcher:
 
     async def _reply(self, message: VkUiMessage, text: str, keyboard: str | None = None) -> None:
         await self._send.send_user_message(message.from_id, text, keyboard)
+        logger.debug(
+            "vk UI reply sent",
+            extra={"from_id": message.from_id, "text_length": len(text)},
+        )
 
 
 def _parse_ordinal(text: str) -> int | None:

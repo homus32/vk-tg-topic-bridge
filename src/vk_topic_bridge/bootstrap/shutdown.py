@@ -40,6 +40,7 @@ async def _run_step(
 
 async def shutdown(container: AppContainer) -> None:
     """Release every resource; guaranteed to attempt all steps."""
+    logger.info("graceful shutdown started")
     failures: list[str] = []
     await _run_step("vk_polling_stop", container.vk_polling_stop, failures)
     await _run_step("polling_stop", container.polling_stop, failures)
@@ -56,3 +57,5 @@ async def shutdown(container: AppContainer) -> None:
         logger.exception("shutdown step failed: flush_logging")
     if failures:
         logger.warning("shutdown completed with failed steps: %s", ", ".join(failures))
+    else:
+        logger.info("graceful shutdown completed")

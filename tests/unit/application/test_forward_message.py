@@ -1,6 +1,7 @@
 """Unit tests for the fail-closed forwarding use case over the CAS delivery ledger."""
 
 import asyncio
+import logging
 from collections.abc import Sequence
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
@@ -629,6 +630,18 @@ async def test_all_token_publishes_once_and_reacts() -> None:
     assert record.publication_status is PublicationStatus.PUBLISHED
     assert record.reaction_status is ReactionStatus.SUCCEEDED
     assert record.telegram_message_ids == _MESSAGE_IDS
+
+
+async def test_forwarding_emits_pipeline_trace(caplog: pytest.LogCaptureFixture) -> None:
+    harness = _Harness()
+
+    with caplog.at_level(logging.DEBUG):
+        outcome = await harness.use_case.execute(_source("@all Привет", has_all=True))
+
+    assert outcome.published is True
+    assert "automatic message forwarding started" in caplog.text
+    assert "automatic message forwarding plan prepared" in caplog.text
+    assert "automatic message forwarding completed" in caplog.text
 
 
 async def test_hashtag_only_publishes_once() -> None:

@@ -45,18 +45,29 @@ class OwnerNotifier:
         self._port = port
 
     async def notify_all(self, text: str) -> None:
+        logger.debug(
+            "owner notification broadcast started",
+            extra={"owner_count": len(self._owner_ids), "text_length": len(text)},
+        )
         for owner_id in sorted(self._owner_ids):
             await self._send_one(owner_id, text)
+        logger.debug("owner notification broadcast completed")
 
     async def notify_others(self, initiator_id: int, text: str) -> None:
+        logger.debug(
+            "owner notification broadcast to others started",
+            extra={"owner_count": len(self._owner_ids), "owner_id": initiator_id},
+        )
         for owner_id in sorted(self._owner_ids):
             if owner_id == initiator_id:
                 continue
             await self._send_one(owner_id, text)
+        logger.debug("owner notification broadcast to others completed")
 
     async def _send_one(self, owner_id: int, text: str) -> None:
         try:
             await self._port.send_text(owner_id, text)
+            logger.debug("owner notification sent", extra={"owner_id": owner_id})
         except Exception:
             logger.exception("owner notification failed for %s", owner_id)
 

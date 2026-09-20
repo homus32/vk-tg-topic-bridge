@@ -76,10 +76,24 @@ class ForwardVkMessage:
         self._notifier = notifier
 
     async def execute(self, source: SourceMessage) -> ForwardOutcome:
+        logger.debug(
+            "automatic message forwarding started",
+            extra={
+                "source_type": source.source_type.value,
+                "group_id": source.group_id,
+                "peer_id": source.peer_id,
+                "conversation_message_id": source.conversation_message_id,
+                "source_key": source.source_key,
+                "attachment_count": len(source.attachments),
+            },
+        )
         async with self._uow_factory() as uow:
             state = await uow.bridge_settings.get()
             if state is None or state.telegram_chat_id is None:
-                logger.debug("message forwarding skipped: telegram_chat_not_registered")
+                logger.debug(
+                    "message forwarding skipped: telegram_chat_not_registered",
+                    extra={"peer_id": source.peer_id, "reason": "unregistered"},
+                )
                 return ForwardOutcome(
                     published=False, skipped=True, reason="unregistered", delivery_id=None
                 )
@@ -89,6 +103,14 @@ class ForwardVkMessage:
                 auto_forward_all=state.auto_forward_all,
                 auto_forward_hashtags=state.auto_forward_hashtags,
             )
+            logger.debug(
+                "automatic message forwarding filter evaluated",
+                extra={
+                    "peer_id": source.peer_id,
+                    "outcome": "forward" if decision.forward else "skip",
+                    "reason": "matched" if decision.forward else "filtered",
+                },
+            )
             if not decision.forward:
                 return ForwardOutcome(
                     published=False, skipped=True, reason="filtered", delivery_id=None
@@ -96,7 +118,10 @@ class ForwardVkMessage:
 
             kind = state.messages_destination_kind()
             if kind is DestinationKind.UNSET:
-                logger.debug("message forwarding skipped: destination_not_configured")
+                logger.debug(
+                    "message forwarding skipped: destination_not_configured",
+                    extra={"peer_id": source.peer_id, "reason": "unconfigured"},
+                )
                 return ForwardOutcome(
                     published=False, skipped=True, reason="unconfigured", delivery_id=None
                 )
@@ -119,6 +144,17 @@ class ForwardVkMessage:
                 thread_id = None
             chat_id = state.telegram_chat_id
             destination = Destination(chat_id=chat_id, message_thread_id=thread_id)
+            logger.debug(
+                "automatic message forwarding destination selected",
+                extra={
+                    "chat_id": chat_id,
+                    "destination_topic_id": thread_id,
+                    "source_key": source.source_key,
+                    "outcome": "fallback" if fallback_topic_id is not None else kind.value,
+                    "status": "fallback" if fallback_topic_id is not None else "ready",
+                    "reason": fallback_reason,
+                },
+            )
 
         publication = compose_publication(source, destination)
         media, warnings = await prepare_media(source.attachments, self._downloader)
@@ -126,6 +162,16 @@ class ForwardVkMessage:
             publication, html_text=append_media_warnings(publication.html_text, warnings)
         )
         plan = plan_publication(publication, media)
+        logger.debug(
+            "automatic message forwarding plan prepared",
+            extra={
+                "chat_id": chat_id,
+                "destination_topic_id": thread_id,
+                "operation_count": len(plan.operations),
+                "planned_media_count": len(media),
+                "warning_count": len(warnings),
+            },
+        )
 
         async with self._uow_factory() as uow:
             reservation = await uow.deliveries.reserve(
@@ -141,9 +187,17 @@ class ForwardVkMessage:
             await uow.commit()
             created = reservation.created
             record = reservation.record
+        logger.debug(
+            "automatic message forwarding delivery reserved",
+            extra={"delivery_id": record.id, "outcome": "created" if created else "existing"},
+        )
 
         if not created:
             if record.publication_status is PublicationStatus.PUBLISHED:
+                logger.debug(
+                    "automatic message forwarding reused published delivery",
+                    extra={"delivery_id": record.id, "outcome": "already_published"},
+                )
                 await self._ensure_reaction(source, record.id)
                 return ForwardOutcome(
                     published=True,
@@ -153,6 +207,13 @@ class ForwardVkMessage:
                     message_ids=record.telegram_message_ids,
                 )
             if must_not_republish(record.publication_status):
+                logger.debug(
+                    "automatic message forwarding skipped terminal delivery",
+                    extra={
+                        "delivery_id": record.id,
+                        "outcome": f"already_{record.publication_status.value}",
+                    },
+                )
                 return ForwardOutcome(
                     published=False,
                     skipped=True,
@@ -162,12 +223,24 @@ class ForwardVkMessage:
 
         delivery_id = record.id
         if not await begin_send(self._uow_factory, delivery_id, _CLAIM_TOKEN):
+            logger.debug(
+                "automatic message forwarding claim lost",
+                extra={"delivery_id": delivery_id, "outcome": "claim_lost"},
+            )
             return ForwardOutcome(
                 published=False, skipped=True, reason="claim_lost", delivery_id=delivery_id
             )
 
         outcome = await execute_plan(
             self._uow_factory, delivery_id, _CLAIM_TOKEN, plan, self._plan_publisher
+        )
+        logger.debug(
+            "automatic message forwarding plan completed",
+            extra={
+                "delivery_id": delivery_id,
+                "outcome": "published" if outcome.published else "failed",
+                "message_id_count": len(outcome.message_ids),
+            },
         )
         if outcome.claim_lost:
             logger.error("mark_published lost CAS for delivery %s", delivery_id)
@@ -180,8 +253,24 @@ class ForwardVkMessage:
             )
         if outcome.published:
             if fallback_topic_id is not None:
+                logger.warning(
+                    "automatic message forwarding fallback to General",
+                    extra={
+                        "delivery_id": delivery_id,
+                        "destination_topic_id": fallback_topic_id,
+                        "reason": fallback_reason,
+                    },
+                )
                 await self._notify_fallback(fallback_topic_id, fallback_reason or "missing")
             await self._ensure_reaction(source, delivery_id)
+            logger.info(
+                "automatic message forwarding completed",
+                extra={
+                    "delivery_id": delivery_id,
+                    "outcome": "published",
+                    "message_id_count": len(outcome.message_ids),
+                },
+            )
             return ForwardOutcome(
                 published=True,
                 skipped=False,
@@ -191,6 +280,10 @@ class ForwardVkMessage:
             )
         await self._notify_attention(delivery_id, outcome)
         reason = "ambiguous" if outcome.ambiguous else "rejected"
+        logger.warning(
+            "automatic message forwarding completed with failure",
+            extra={"delivery_id": delivery_id, "outcome": reason},
+        )
         return ForwardOutcome(
             published=False, skipped=False, reason=reason, delivery_id=delivery_id
         )
@@ -223,6 +316,10 @@ class ForwardVkMessage:
             claimed = await uow.deliveries.claim_reaction(delivery_id)
             await uow.commit()
         if not claimed:
+            logger.debug(
+                "vk reaction skipped: delivery already claimed",
+                extra={"delivery_id": delivery_id, "outcome": "not_claimed"},
+            )
             return
 
         try:
@@ -237,3 +334,12 @@ class ForwardVkMessage:
         async with self._uow_factory() as uow:
             await uow.deliveries.mark_reaction_succeeded(delivery_id)
             await uow.commit()
+        logger.debug(
+            "vk reaction completed",
+            extra={
+                "delivery_id": delivery_id,
+                "peer_id": source.peer_id,
+                "conversation_message_id": source.conversation_message_id,
+                "outcome": "succeeded",
+            },
+        )

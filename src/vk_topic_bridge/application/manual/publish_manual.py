@@ -8,6 +8,7 @@ explicitly chosen named topic.
 from __future__ import annotations
 
 import hashlib
+import logging
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from uuid import uuid4
@@ -33,6 +34,7 @@ from vk_topic_bridge.domain.enums import SourceType
 from vk_topic_bridge.domain.value_objects import Author, Destination, SourceMessage
 
 _CLAIM_TOKEN = "manual-publication"
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, slots=True)
@@ -75,6 +77,16 @@ class PublishManualMessage:
         self._downloader = downloader
 
     async def execute(self, request: ManualPublicationRequest) -> ManualPublicationResult:
+        logger.debug(
+            "manual publication started",
+            extra={
+                "owner_id": request.initiator.user_id,
+                "peer_id": request.source.peer_id,
+                "conversation_message_id": request.source.conversation_message_id,
+                "destination_topic_id": request.destination.message_thread_id,
+                "attachment_count": len(request.source.attachments),
+            },
+        )
         publication = compose_manual_publication(
             request.source, request.initiator, request.destination
         )
@@ -83,6 +95,15 @@ class PublishManualMessage:
             publication, html_text=append_media_warnings(publication.html_text, warnings)
         )
         plan = plan_publication(publication, media)
+        logger.debug(
+            "manual publication plan prepared",
+            extra={
+                "owner_id": request.initiator.user_id,
+                "operation_count": len(plan.operations),
+                "planned_media_count": len(media),
+                "warning_count": len(warnings),
+            },
+        )
         delivery_id = await reserve_delivery(
             self._uow_factory,
             source_type=SourceType.VK_MESSAGE,
@@ -96,13 +117,32 @@ class PublishManualMessage:
             intent="manual",
         )
         if not await begin_send(self._uow_factory, delivery_id, _CLAIM_TOKEN):
+            logger.warning(
+                "manual publication claim lost",
+                extra={"owner_id": request.initiator.user_id, "delivery_id": delivery_id},
+            )
             return ManualPublicationResult(published=False, message_ids=(), delivery_id=delivery_id)
         outcome = await execute_plan(
             self._uow_factory, delivery_id, _CLAIM_TOKEN, plan, self._plan_publisher
         )
-        return ManualPublicationResult(
+        result = ManualPublicationResult(
             published=outcome.published,
             message_ids=outcome.message_ids,
             delivery_id=delivery_id,
             error=None if outcome.published else "публикация не удалась",
         )
+        if result.published:
+            logger.info(
+                "manual publication completed",
+                extra={
+                    "owner_id": request.initiator.user_id,
+                    "delivery_id": delivery_id,
+                    "message_id_count": len(result.message_ids),
+                },
+            )
+        else:
+            logger.warning(
+                "manual publication completed with failure",
+                extra={"owner_id": request.initiator.user_id, "delivery_id": delivery_id},
+            )
+        return result

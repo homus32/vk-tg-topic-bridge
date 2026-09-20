@@ -54,6 +54,7 @@ from vk_topic_bridge.infrastructure.vk.api import RawVkApi, VkApiGateway
 from vk_topic_bridge.infrastructure.vk.mapper import extract_forwarded_payload, map_manual_source
 from vk_topic_bridge.infrastructure.vk.media_downloader import VkMediaDownloader
 from vk_topic_bridge.presentation.telegram.middlewares import OwnerOnlyMiddleware
+from vk_topic_bridge.presentation.telegram.registration_session import RegistrationCoordinator
 from vk_topic_bridge.presentation.telegram.routers.destinations import (
     build_destinations_router,
     default_run_id,
@@ -158,7 +159,11 @@ class DiagnosticsReader:
 
 def _build_telegram_polling(bot: Bot, dispatcher: Dispatcher) -> PollingTask:
     async def start() -> None:
-        await dispatcher.start_polling(bot, handle_signals=False)
+        logger.info("telegram polling started")
+        try:
+            await dispatcher.start_polling(bot, handle_signals=False)
+        finally:
+            logger.info("telegram polling stopped")
 
     return start
 
@@ -253,8 +258,10 @@ def _history_gap_notifier(notifier: OwnerNotifier) -> Callable[[str], Awaitable[
     """Build the long-poll gap callback; a failed broadcast never kills the poller."""
 
     async def notify(kind: str) -> None:
+        logger.warning("vk history gap detected", extra={"reason": kind})
         try:
             await notifier.notify_all(history_gap_notification_text(kind=kind))
+            logger.debug("vk history gap owner notification completed", extra={"reason": kind})
         except Exception:
             logger.exception("history gap owner notification failed")
 
@@ -270,17 +277,33 @@ def _manual_source_resolver(vk_gateway: VkApiGateway) -> SourceResolver:
     """
 
     async def resolve(message: VkUiMessage) -> SourceMessage | None:
+        logger.debug(
+            "manual VK source resolution started",
+            extra={"from_id": message.from_id, "peer_id": message.peer_id},
+        )
         raw = message.raw
         if not raw:
+            logger.debug("manual VK source resolution skipped: raw payload missing")
             return None
         fwd = extract_forwarded_payload(raw)
         author = await _resolve_content_author(vk_gateway, fwd, message)
-        return map_manual_source(
+        source = map_manual_source(
             message=raw,
             fwd=fwd,
             author=author,
             initiator_id=message.from_id,
         )
+        if source is None:
+            logger.debug(
+                "manual VK source resolution skipped: source missing",
+                extra={"from_id": message.from_id},
+            )
+            return None
+        logger.debug(
+            "manual VK source resolution completed",
+            extra={"from_id": message.from_id, "attachment_count": len(source.attachments)},
+        )
+        return source
 
     return resolve
 
@@ -333,9 +356,16 @@ def _register_routers(
     select_destination: SelectDestinationV2,
 ) -> None:
     owner_ids = frozenset(settings.OWNER_IDS)
+    registration = RegistrationCoordinator()
     dispatcher.message.outer_middleware(OwnerOnlyMiddleware(owner_ids))
     dispatcher.include_router(
-        build_registration_router(register_chat, reader, bot, menu_sync=command_menu)
+        build_registration_router(
+            register_chat,
+            reader,
+            bot,
+            menu_sync=command_menu,
+            registration=registration,
+        )
     )
     dispatcher.include_router(
         build_destinations_router(
@@ -358,7 +388,10 @@ def _register_routers(
         )
     )
     # Root last: its catch-all hint must only see text no feature router claimed.
-    dispatcher.include_router(build_root_router(reader))
+    dispatcher.include_router(
+        build_root_router(reader, registration=registration, menu_sync=command_menu)
+    )
+    logger.info("telegram routers registered", extra={"owner_count": len(owner_ids)})
 
 
 def build_dispatcher() -> Dispatcher:
@@ -373,6 +406,7 @@ def build_container(
     vk_api_raw: RawVkApi,
 ) -> AppContainer:
     """Construct the whole object graph; never connects, never sends."""
+    logger.info("application container build started")
     engine = create_async_engine(settings.DATABASE_URL)
     session_factory = create_session_factory(engine)
     uow_factory = _build_uow_factory(session_factory)
@@ -435,6 +469,8 @@ def build_container(
         cursor_dir=settings.VK_CURSOR_DIR,
         on_history_gap=_history_gap_notifier(owner_notifier),
     )
+
+    logger.info("application container build completed")
 
     return AppContainer(
         settings=settings,

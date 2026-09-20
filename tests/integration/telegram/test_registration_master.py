@@ -5,11 +5,13 @@ Handlers are invoked directly with fakes; no dispatcher session or network is in
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable, Coroutine
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from types import SimpleNamespace
 from typing import Any, cast
 
+import pytest
 from aiogram.types import (
     ReplyKeyboardMarkup,
 )
@@ -20,6 +22,7 @@ from vk_topic_bridge.application.admin.register_chat import (
 )
 from vk_topic_bridge.application.dto.settings import BridgeSettingsState
 from vk_topic_bridge.domain.value_objects import ChatCapabilities, TopicInfo
+from vk_topic_bridge.presentation.telegram.registration_session import RegistrationCoordinator
 from vk_topic_bridge.presentation.telegram.routers.registration import (
     build_registration_router,
 )
@@ -50,6 +53,7 @@ class FakeMessage:
     chat_type: str = "supergroup"
     user_id: int = OWNER_ID
     text: str = ""
+    fail_answers: bool = False
     answers: list[tuple[str, object | None]] = field(default_factory=list)
 
     @property
@@ -61,6 +65,8 @@ class FakeMessage:
         return SimpleNamespace(id=self.user_id)
 
     async def answer(self, text: str, **kwargs: object) -> None:
+        if self.fail_answers:
+            raise AssertionError("group answer must not be used for registration feedback")
         self.answers.append((text, kwargs.get("reply_markup")))
 
 
@@ -138,6 +144,7 @@ def _router(
     register_chat: FakeRegisterChat | None = None,
     bot: FakeBot | None = None,
     menu_sync: object | None = None,
+    registration: RegistrationCoordinator | None = None,
     username: str = "bridge_bot",
     fresh_state: BridgeSettingsState | None = None,
 ) -> tuple[object, FakeBot]:
@@ -148,6 +155,9 @@ def _router(
 
     real_bot = bot or FakeBot(username=username)
     fake_register = register_chat or FakeRegisterChat(result=_result())
+    coordinator = registration or RegistrationCoordinator()
+    if registration is None:
+        assert coordinator.acquire(OWNER_ID)
     original_execute = fake_register.execute
 
     async def execute(chat_id: int, title: str | None) -> RegisterChatResult:
@@ -162,6 +172,7 @@ def _router(
         reader,
         cast("object", real_bot),  # type: ignore[arg-type]
         menu_sync=menu_sync,
+        registration=coordinator,
     )
     return router, real_bot
 
@@ -169,17 +180,22 @@ def _router(
 # --- private /start master ---------------------------------------------------------
 
 
-async def test_private_start_sets_pending_and_shows_onboarding() -> None:
+async def test_private_start_sets_pending_and_shows_onboarding(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     router, _ = _router(state=_state())
     fsm = FakeFSMContext()
     message = FakeMessage(chat_type="private")
 
-    await _handler(router, "private_start")(message, fsm)
+    with caplog.at_level(logging.DEBUG):
+        await _handler(router, "private_start")(message, fsm)
 
     assert await fsm.get_state() == RegistrationMaster.pending.state
     text, _ = message.answers[0]
     assert "/register" in text
     assert "Добавьте бота" in text
+    assert "telegram registration started" in caplog.text
+    assert "telegram registration FSM transition" in caplog.text
 
 
 async def test_private_start_registered_shows_main_keyboard() -> None:
@@ -202,6 +218,32 @@ async def test_private_start_registered_shows_main_keyboard() -> None:
     text, markup = message.answers[0]
     assert CHAT_TITLE in text
     assert isinstance(markup, ReplyKeyboardMarkup)
+
+
+async def test_registration_master_is_exclusive_to_one_owner() -> None:
+    registration = RegistrationCoordinator()
+    register = FakeRegisterChat(result=_result())
+    router, _ = _router(state=_state(), register_chat=register, registration=registration)
+    start_handler = _handler(router, "private_start")
+    group_handler = _handler(router, "group_register")
+
+    owner_message = FakeMessage(chat_type="private", user_id=OWNER_ID)
+    owner_state = FakeFSMContext()
+    await start_handler(owner_message, owner_state)
+
+    other_message = FakeMessage(chat_type="private", user_id=OTHER_OWNER_ID)
+    other_state = FakeFSMContext()
+    await start_handler(other_message, other_state)
+
+    assert await owner_state.get_state() == RegistrationMaster.pending.state
+    assert await other_state.get_state() is None
+    assert other_message.answers == []
+
+    other_group_state = FakeFSMContext(state=RegistrationMaster.pending.state)
+    await group_handler(FakeMessage(user_id=OTHER_OWNER_ID), other_group_state)
+
+    assert register.calls == []
+    assert await other_group_state.get_state() == RegistrationMaster.pending.state
 
 
 # --- group /register ---------------------------------------------------------------
@@ -272,14 +314,44 @@ async def test_register_missing_capabilities_lists_rights_and_keeps_master() -> 
     register = FakeRegisterChat(error=MissingCapabilitiesError(("can_send_photo",)))
     router, bot = _router(state=_state(), register_chat=register)
     fsm = FakeFSMContext(state=RegistrationMaster.pending.state)
-    message = FakeMessage()
+    message = FakeMessage(fail_answers=True)
 
     await _handler(router, "group_register")(message, fsm)
 
-    text, _ = message.answers[0]
+    assert message.answers == []
+    assert len(bot.sent) == 1
+    assert bot.sent[0]["chat_id"] == OWNER_ID
+    text = str(bot.sent[0]["text"])
     assert "can_send_photo" in text
     assert await fsm.get_state() == RegistrationMaster.pending.state
-    assert bot.sent == []
+
+
+async def test_registration_ready_false_keeps_master_for_retry() -> None:
+    register = FakeRegisterChat(result=replace(_result(), ready=False))
+    menu_sync = RecordingMenuSync()
+    router, bot = _router(
+        state=_state(),
+        register_chat=register,
+        menu_sync=menu_sync,
+        fresh_state=_state(telegram_chat_id=CHAT_ID, telegram_chat_title=CHAT_TITLE),
+    )
+    fsm = FakeFSMContext(state=RegistrationMaster.pending.state)
+    message = FakeMessage()
+    handler = _handler(router, "group_register")
+
+    await handler(message, fsm)
+
+    assert await fsm.get_state() == RegistrationMaster.pending.state
+    assert menu_sync.cleared == []
+    assert len(bot.sent) == 1
+    assert "повторите /register" in str(bot.sent[0]["text"]).lower()
+
+    register.result = _result()
+    await handler(message, fsm)
+
+    assert await fsm.get_state() is None
+    assert register.calls == [(CHAT_ID, CHAT_TITLE), (CHAT_ID, CHAT_TITLE)]
+    assert menu_sync.cleared == [(CHAT_ID, OWNER_ID)]
 
 
 async def test_register_in_private_context_is_ignored_by_filter() -> None:

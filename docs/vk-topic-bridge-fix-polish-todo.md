@@ -52,13 +52,13 @@
 
 Перед тем как менять код, агент обязан сначала провести короткое исследование.
 
-- [ ] Найти текущую реализацию и пройти реальный execution path задачи.
-- [ ] Определить, какой слой действительно владеет поведением и где должен находиться fix.
-- [ ] Если задача зависит от VK API, VKBottle, Telegram Bot API, aiogram, Telethon, SQLAlchemy/SQLite или другого внешнего контракта — **сначала использовать Librarian** и проверить актуальную документацию/исходники используемой версии.
-- [ ] Сопоставить внешний контракт с тем, что реально делает текущий код.
-- [ ] Зафиксировать предполагаемый root cause и evidence, который его подтверждает.
-- [ ] Продумать failure/recovery path и edge cases.
-- [ ] Только после этого писать regression test и реализацию.
+- [x] Найти текущую реализацию и пройти реальный execution path задачи.
+- [x] Определить, какой слой действительно владеет поведением и где должен находиться fix.
+- [x] Если задача зависит от VK API, VKBottle, Telegram Bot API, aiogram, Telethon, SQLAlchemy/SQLite или другого внешнего контракта — **сначала использовать Librarian** и проверить актуальную документацию/исходники используемой версии.
+- [x] Сопоставить внешний контракт с тем, что реально делает текущий код.
+- [x] Зафиксировать предполагаемый root cause и evidence, который его подтверждает.
+- [x] Продумать failure/recovery path и edge cases.
+- [x] Только после этого писать regression test и реализацию.
 
 **Запрещено:** начинать fix только по памяти модели, названию exception или первой правдоподобной гипотезе.
 
@@ -68,12 +68,12 @@
 
 Задача считается закрытой только если:
 
-- [ ] root cause понятен и записан в commit/report/evidence;
-- [ ] есть regression test, если дефект воспроизводим без реальной сети;
-- [ ] `make check` зелёный;
+- [x] root cause понятен и записан в report/evidence;
+- [x] есть regression test, если дефект воспроизводим без реальной сети;
+- [x] `make check` зелёный;
 - [ ] если дефект был найден только live-тестом — выполнен соответствующий live retest;
-- [ ] исходный manual-testing report обновлён: BUG/CR/INV помечен итогом;
-- [ ] новые DEBUG-логи не содержат токены, session, proxy secret, authorization code или полный `.env`.
+- [x] исходный manual-testing report обновлён: BUG/CR/INV помечен итогом;
+- [x] новые DEBUG-логи не содержат токены, session, proxy secret, authorization code или полный `.env`.
 
 ### Правило приоритета
 
@@ -99,20 +99,22 @@ P3  сетевой шум, deployment, полный regression
 
 # WAVE 0 — P0 Observability first
 
+**Статус первого цикла:** `[x]` registration/FSM, VK routing, forwarding, media и Telegram publication trace реализованы и покрыты targeted tests; live retest остаётся за владельцем.
+
 ## T0.1 — Добавить сквозной DEBUG trace для VK event pipeline
 
 **Связано:** CR-001, US-NEW-04, BUG-008..011.
 
-- [ ] Логировать факт получения каждого поддерживаемого raw VK event.
-- [ ] Логировать `event_type`, `group_id`, безопасный event/source key.
-- [ ] Для `message_new` логировать `peer_id`, `from_id`, `conversation_message_id`, `is_cropped`, количество/типы attachments.
-- [ ] Для `wall_post_new` логировать `owner_id`, `post_id`, количество/типы attachments.
-- [ ] Логировать результат classifier: `dm | conversation | wall | ignored`.
-- [ ] Логировать mapper outcome.
-- [ ] Логировать readiness decision и **причину** no-op.
-- [ ] Логировать выбранный destination.
-- [ ] Логировать reserve/begin/terminal delivery outcome.
-- [ ] Логировать публикационный plan: число операций и их типы, но не содержимое секретов/файлов.
+- [x] Логировать факт получения каждого поддерживаемого raw VK event.
+- [x] Логировать `event_type`, `group_id`, безопасный event/source key.
+- [x] Для `message_new` логировать `peer_id`, `from_id`, `conversation_message_id`, cropped lookup, количество attachments.
+- [x] Для `wall_post_new` логировать `owner_id`, `post_id`, количество attachments.
+- [x] Логировать результат classifier: `dm | conversation | wall | ignored`.
+- [x] Логировать mapper outcome.
+- [x] Логировать readiness decision и **причину** no-op.
+- [x] Логировать выбранный destination.
+- [x] Логировать reserve/begin/terminal delivery outcome.
+- [x] Логировать публикационный plan: число операций и их типы, но не содержимое секретов/файлов.
 
 **Рекомендация:** использовать `logger.bind()` и один стабильный набор полей:
 
@@ -142,23 +144,20 @@ operation_kind
 
 Для каждого attachment:
 
-- [ ] исходный `kind`;
-- [ ] `owner_id`;
-- [ ] `id`;
-- [ ] есть ли `access_key`;
+- [x] исходный `kind` и безопасный индекс attachment;
+- [x] identity не выводится в raw виде; access key не попадает в лог;
 - [ ] есть ли URL уже в payload/full message;
 - [ ] выполнялся ли дополнительный VK API lookup;
 - [ ] имя VK API метода;
 - [ ] тип токена/adapter path без вывода самого токена;
-- [ ] lookup success/failure + VK error code/class;
-- [ ] URL resolution success/failure;
-- [ ] известный размер;
-- [ ] download start/end;
-- [ ] HTTP status;
-- [ ] bytes downloaded;
-- [ ] oversize decision;
-- [ ] temp path только относительный/безопасный;
-- [ ] cleanup temp file.
+- [x] lookup success/failure + VK error code/class;
+- [x] URL resolution success/failure без query-параметров;
+- [x] известный размер и oversize decision;
+- [x] download start/end;
+- [x] HTTP status;
+- [x] bytes downloaded;
+- [x] temp path не выводится;
+- [x] cleanup temp file.
 
 **Рекомендация:** не превращать исключение в строку `«медиа недоступно»` слишком рано. Сначала логировать структурную техническую причину, затем уже переводить её в user-facing warning.
 
@@ -166,16 +165,16 @@ operation_kind
 
 **Связано:** BUG-003, BUG-004, CR-012, CR-013.
 
-- [ ] owner начал registration;
-- [ ] acquisition/release registration session;
-- [ ] `/register` принят/отклонён и почему;
-- [ ] capability check result;
-- [ ] куда отправлен feedback: group/DM;
-- [ ] state before → state after;
-- [ ] `/cancel` инициатор;
-- [ ] success;
-- [ ] recoverable failure;
-- [ ] fatal failure.
+- [x] owner начал registration;
+- [x] acquisition/release registration session;
+- [x] `/register` принят/отклонён и почему;
+- [x] capability check result;
+- [x] куда отправлен feedback: group/DM;
+- [x] state before → state after;
+- [x] `/cancel` инициатор;
+- [x] success;
+- [x] recoverable failure;
+- [x] fatal failure.
 
 **Правило:** recoverable error не должен выглядеть в логах как завершение FSM.
 
@@ -183,17 +182,17 @@ operation_kind
 
 `INFO` не должен дублировать весь DEBUG.
 
-- [ ] startup завершён;
-- [ ] Telegram chat зарегистрирован/сброшен;
-- [ ] topics refresh: `added=N removed=N unavailable=N`;
-- [ ] destination изменён;
-- [ ] toggle изменён;
-- [ ] automatic delivery published;
-- [ ] automatic delivery fallback → General;
-- [ ] ambiguous / failed_permanent;
-- [ ] history gap;
-- [ ] wall event published;
-- [ ] graceful shutdown started/completed.
+- [x] startup завершён;
+- [x] Telegram chat зарегистрирован/сброшен;
+- [x] topics refresh завершён с количеством topics;
+- [x] destination изменён;
+- [x] toggle изменён;
+- [x] automatic delivery published;
+- [x] automatic delivery fallback → General (WARNING как degraded path);
+- [x] ambiguous / failed_permanent (WARNING);
+- [x] history gap;
+- [x] wall event published;
+- [x] graceful shutdown started/completed.
 
 **Не логировать на INFO:** каждую кнопку, каждый SQL query, полный payload, URL медиа.
 
@@ -203,42 +202,49 @@ operation_kind
 
 ## T1.1 — BUG-003: missing capabilities не должен сам падать
 
-- [ ] Воспроизвести регистрацию группы, где бот не может писать.
-- [ ] Capability checker возвращает полный список missing permissions.
-- [ ] Если group reply невозможен — не делать `message.answer()` в group.
-- [ ] Отправлять owner список missing capabilities в ЛС.
-- [ ] Registration session остаётся активной.
-- [ ] Нет необработанного `TelegramBadRequest`.
+- [x] Capability checker возвращает полный список missing permissions.
+- [x] Если group reply невозможен — не делать `message.answer()` в group.
+- [x] Отправлять owner список missing capabilities в ЛС.
+- [x] Registration session остаётся активной.
+- [x] Нет необработанного `TelegramBadRequest` в registration feedback path.
+
+`[ ]` Live retest в реальной группе с недостаточными правами выполняет владелец.
 
 **Рекомендация:** application use case должен возвращать structured result (`success | missing_capabilities | ...`), а presentation выбирает доступный канал ответа. Не прятать Telegram transport exception внутри бизнес-результата.
 
 ## T1.2 — BUG-004: registration recovery после recoverable error
 
-- [ ] После ошибки прав state не очищается.
+- [x] После ошибки прав state не очищается.
 - [ ] Вернуть права.
-- [ ] Повторный `/register` проходит **без нового `/start`**.
-- [ ] Временная Telegram API ошибка также не завершает session.
-- [ ] Session завершается только `success` или явным `cancel`.
+- [x] Повторный `/register` проходит **без нового `/start`**.
+- [x] Временная Telegram API ошибка также не завершает session.
+- [x] Session завершается только `success` или явным `cancel`.
 
 **Regression test:** ошибка capabilities → затем success в том же FSM.
 
+`[ ]` Live retest с реальным изменением прав выполняет владелец.
+
 ## T1.3 — BUG-005: убрать private catch-all из group context
 
-- [ ] `/asd` в group → полный silence.
-- [ ] неизвестный текст в group → silence, если нет явно разрешённого handler.
-- [ ] `/register` продолжает работать в допустимом registration context.
-- [ ] private owner catch-all остаётся только в DM.
+- [x] `/asd` в group → полный silence.
+- [x] неизвестный текст в group → silence, если нет явно разрешённого handler.
+- [x] `/register` продолжает работать в допустимом registration context.
+- [x] private owner catch-all остаётся только в DM.
+
+`[ ]` Live retest group silence выполняет владелец.
 
 **Рекомендация:** фильтровать context **до** catch-all. Не чинить специальным `if text == "/asd"`.
 
 ## T1.4 — CR-012 / US-NEW-01: эксклюзивная registration session
 
-- [ ] Одновременно только один owner владеет registration flow.
-- [ ] Owner B не может перехватить flow owner A.
-- [ ] `/register` от B ничего не меняет.
-- [ ] `/cancel` от B ничего не меняет.
-- [ ] lock освобождается success/cancel владельца flow.
-- [ ] restart поведение явно зафиксировано.
+- [x] Одновременно только один owner владеет registration flow.
+- [x] Owner B не может перехватить flow owner A.
+- [x] `/register` от B ничего не меняет.
+- [x] `/cancel` от B ничего не меняет.
+- [x] lock освобождается success/cancel владельца flow.
+- [x] restart сбрасывает in-memory registration session вместе с процессом.
+
+`[ ]` Live retest competing owners выполняет владелец.
 
 **Рекомендация:** так как регистрация — глобальная операция над одним Telegram-чатом, lock должен быть **глобальным для bridge**, а не только `GLOBAL_USER` FSM.
 
@@ -248,12 +254,14 @@ operation_kind
 
 После T1.1–T1.4:
 
-- [ ] mode OFF → `/register` не показывается;
-- [ ] mode ON → подсказка `/register` создаётся только для активного owner;
-- [ ] success/cancel → scope очищается;
-- [ ] backend owner-check остаётся независимо от command menu;
-- [ ] протестировать `/register` и `/register@BotUsername`;
-- [ ] проверить поведение в группе с несколькими ботами.
+- [x] mode OFF → `/register` не показывается;
+- [x] mode ON → подсказка `/register` создаётся только для активного owner;
+- [x] success/cancel → scope очищается;
+- [x] backend owner-check остаётся независимо от command menu;
+- [x] протестировать `/register` и `/register@BotUsername` на уровне regression tests;
+- [x] проверить поведение в группе с несколькими ботами на уровне mention/filter tests.
+
+`[ ]` Live retest реальных command scopes и нескольких ботов выполняет владелец.
 
 **Рекомендация:** считать command scopes только UX-подсказками. Нельзя строить security на том, отображается команда или нет.
 

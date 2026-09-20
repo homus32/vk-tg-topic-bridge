@@ -77,16 +77,35 @@ class ForwardWallPost:
         self._notifier = notifier
 
     async def execute(self, wall_post: SourceWallPost) -> WallForwardOutcome:
+        logger.debug(
+            "automatic wall forwarding started",
+            extra={
+                "source_type": wall_post.source_type.value,
+                "source_key": wall_post.source_key,
+                "group_id": wall_post.group_id,
+                "attachment_count": len(wall_post.attachments),
+            },
+        )
         async with self._uow_factory() as uow:
             state = await uow.bridge_settings.get()
             if state is None or state.telegram_chat_id is None:
-                logger.debug("wall forwarding skipped: telegram_chat_not_registered")
+                logger.debug(
+                    "wall forwarding skipped: telegram_chat_not_registered",
+                    extra={"group_id": wall_post.group_id, "reason": "unregistered"},
+                )
                 return WallForwardOutcome(published=False, skipped=True, reason="unregistered")
             if not state.auto_forward_wall:
+                logger.debug(
+                    "wall forwarding skipped: toggle_disabled",
+                    extra={"group_id": wall_post.group_id, "reason": "filtered"},
+                )
                 return WallForwardOutcome(published=False, skipped=True, reason="filtered")
             kind = state.wall_destination_kind()
             if kind is DestinationKind.UNSET:
-                logger.debug("wall forwarding skipped: destination_not_configured")
+                logger.debug(
+                    "wall forwarding skipped: destination_not_configured",
+                    extra={"group_id": wall_post.group_id, "reason": "unconfigured"},
+                )
                 return WallForwardOutcome(published=False, skipped=True, reason="unconfigured")
 
             topics = await uow.telegram_topics.list(state.telegram_chat_id)
@@ -108,6 +127,17 @@ class ForwardWallPost:
                 thread_id = None
             chat_id = state.telegram_chat_id
             destination = Destination(chat_id=chat_id, message_thread_id=thread_id)
+            logger.debug(
+                "automatic wall forwarding destination selected",
+                extra={
+                    "chat_id": chat_id,
+                    "destination_topic_id": thread_id,
+                    "source_key": wall_post.source_key,
+                    "outcome": "fallback" if fallback_topic_id is not None else kind.value,
+                    "status": "fallback" if fallback_topic_id is not None else "ready",
+                    "reason": fallback_reason,
+                },
+            )
 
         publication = compose_wall_publication(wall_post, destination)
         media, warnings = await prepare_media(wall_post.attachments, self._downloader)
@@ -115,6 +145,16 @@ class ForwardWallPost:
             publication, html_text=append_media_warnings(publication.html_text, warnings)
         )
         plan = plan_publication(publication, media)
+        logger.debug(
+            "automatic wall forwarding plan prepared",
+            extra={
+                "chat_id": chat_id,
+                "destination_topic_id": thread_id,
+                "operation_count": len(plan.operations),
+                "planned_media_count": len(media),
+                "warning_count": len(warnings),
+            },
+        )
 
         async with self._uow_factory() as uow:
             reservation = await uow.deliveries.reserve(
@@ -130,9 +170,17 @@ class ForwardWallPost:
             await uow.commit()
             created = reservation.created
             record = reservation.record
+        logger.debug(
+            "automatic wall forwarding delivery reserved",
+            extra={"delivery_id": record.id, "outcome": "created" if created else "existing"},
+        )
 
         if not created:
             if record.publication_status is PublicationStatus.PUBLISHED:
+                logger.debug(
+                    "automatic wall forwarding reused published delivery",
+                    extra={"delivery_id": record.id, "outcome": "already_published"},
+                )
                 return WallForwardOutcome(
                     published=True,
                     skipped=False,
@@ -141,6 +189,13 @@ class ForwardWallPost:
                     message_ids=record.telegram_message_ids,
                 )
             if must_not_republish(record.publication_status):
+                logger.debug(
+                    "automatic wall forwarding skipped terminal delivery",
+                    extra={
+                        "delivery_id": record.id,
+                        "outcome": f"already_{record.publication_status.value}",
+                    },
+                )
                 return WallForwardOutcome(
                     published=False,
                     skipped=True,
@@ -150,16 +205,44 @@ class ForwardWallPost:
 
         delivery_id = record.id
         if not await begin_send(self._uow_factory, delivery_id, _CLAIM_TOKEN):
+            logger.debug(
+                "automatic wall forwarding claim lost",
+                extra={"delivery_id": delivery_id, "outcome": "claim_lost"},
+            )
             return WallForwardOutcome(
                 published=False, skipped=True, reason="claim_lost", delivery_id=delivery_id
             )
         outcome = await execute_plan(
             self._uow_factory, delivery_id, _CLAIM_TOKEN, plan, self._plan_publisher
         )
+        logger.debug(
+            "automatic wall forwarding plan completed",
+            extra={
+                "delivery_id": delivery_id,
+                "outcome": "published" if outcome.published else "failed",
+                "message_id_count": len(outcome.message_ids),
+            },
+        )
         if outcome.published:
             if fallback_topic_id is not None:
+                logger.warning(
+                    "automatic wall forwarding fallback to General",
+                    extra={
+                        "delivery_id": delivery_id,
+                        "destination_topic_id": fallback_topic_id,
+                        "reason": fallback_reason,
+                    },
+                )
                 await self._notify_fallback(fallback_topic_id, fallback_reason or "missing")
             # No VK 👍 for wall posts: a wall post has no conversation_message_id.
+            logger.info(
+                "automatic wall forwarding completed",
+                extra={
+                    "delivery_id": delivery_id,
+                    "outcome": "published",
+                    "message_id_count": len(outcome.message_ids),
+                },
+            )
             return WallForwardOutcome(
                 published=True,
                 skipped=False,
@@ -169,6 +252,10 @@ class ForwardWallPost:
             )
         await self._notify_attention(delivery_id, outcome)
         reason = "ambiguous" if outcome.ambiguous else "rejected"
+        logger.warning(
+            "automatic wall forwarding completed with failure",
+            extra={"delivery_id": delivery_id, "outcome": reason},
+        )
         return WallForwardOutcome(
             published=False, skipped=False, reason=reason, delivery_id=delivery_id
         )

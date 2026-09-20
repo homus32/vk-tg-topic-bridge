@@ -18,6 +18,7 @@ import logging
 import tempfile
 from collections.abc import Mapping
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import aiohttp
 from vkbottle import VKAPIError
@@ -67,14 +68,21 @@ class VkMediaDownloader:
         ``source_ref`` is ``{owner_id}_{media_id}[_{access_key}]`` as produced by the
         mapper; the access key stays embedded in the identifier per the VK schema.
         """
+        logger.debug("vk media URL resolution started", extra={"attachment_kind": kind.value})
         if kind is AttachmentKind.PHOTO:
-            return await self._resolve_photo(source_ref)
-        if kind is AttachmentKind.VIDEO:
-            return await self._resolve_video(source_ref)
-        if kind is AttachmentKind.DOCUMENT:
-            return await self._resolve_document(source_ref)
-        msg = f"attachment kind {kind} has no download route"
-        raise VkMediaUnavailableError(msg)
+            url = await self._resolve_photo(source_ref)
+        elif kind is AttachmentKind.VIDEO:
+            url = await self._resolve_video(source_ref)
+        elif kind is AttachmentKind.DOCUMENT:
+            url = await self._resolve_document(source_ref)
+        else:
+            msg = f"attachment kind {kind} has no download route"
+            raise VkMediaUnavailableError(msg)
+        logger.debug(
+            "vk media URL resolution completed",
+            extra={"attachment_kind": kind.value, "url_host": urlsplit(url).hostname},
+        )
+        return url
 
     async def download(self, source_ref: str, url: str) -> str:
         """Stream ``url`` into a temp file inside the media dir; return its path.
@@ -88,6 +96,10 @@ class VkMediaDownloader:
         )
         path = Path(handle.name)
         written = 0
+        logger.debug(
+            "vk media download started",
+            extra={"url_host": urlsplit(url).hostname},
+        )
         try:
             try:
                 context = self._http.get(url)
@@ -98,27 +110,45 @@ class VkMediaDownloader:
                 raise AttachmentDownloadFailed(msg) from exc
             async with context as response:
                 if response.status != 200:
+                    logger.warning(
+                        "vk media download returned unexpected status",
+                        extra={"http_status": response.status},
+                    )
                     msg = f"media download returned HTTP {response.status}"
                     raise AttachmentDownloadFailed(msg)
                 async for chunk in response.content.iter_chunked(64 * 1024):
                     written += len(chunk)
                     if written > MAX_ATTACHMENT_BYTES:
+                        logger.warning(
+                            "vk media download exceeded size limit",
+                            extra={"written_bytes": written},
+                        )
                         msg = "attachment exceeds the 50 MB limit"
                         raise AttachmentTooLargeError(msg)
                     handle.write(chunk)
             handle.close()
+            logger.debug("vk media download completed", extra={"written_bytes": written})
             return str(path)
         except asyncio.CancelledError:
             handle.close()
             path.unlink(missing_ok=True)
+            logger.debug("vk media download cancelled", extra={"written_bytes": written})
             raise
         except AttachmentTooLargeError, AttachmentDownloadFailed:
             handle.close()
             path.unlink(missing_ok=True)
+            logger.warning(
+                "vk media download failed",
+                extra={"written_bytes": written, "reason": "download_failed"},
+            )
             raise
         except Exception as exc:
             handle.close()
             path.unlink(missing_ok=True)
+            logger.warning(
+                "vk media download failed mid-stream",
+                extra={"written_bytes": written, "reason": type(exc).__name__},
+            )
             msg = "media download failed mid-stream"
             raise AttachmentDownloadFailed(msg) from exc
 
@@ -173,15 +203,25 @@ class VkMediaDownloader:
         return url
 
     async def _request(self, method: str, params: dict[str, object]) -> object:
+        logger.debug("vk media API request started", extra={"method": method})
         try:
             response = await self._api.request(method, params)
         except VKAPIError as exc:
+            logger.warning(
+                "vk media API request failed",
+                extra={"method": method, "outcome": str(exc.code)},
+            )
             if exc.code in _ACCESS_DENIED_CODES:
                 raise VkMediaUnavailableError(f"vk access error {exc.code}") from exc
             raise AttachmentDownloadFailed(f"vk error {exc.code}") from exc
         if not isinstance(response, Mapping):
+            logger.warning(
+                "vk media API returned invalid response",
+                extra={"method": method, "reason": "invalid_response"},
+            )
             msg = f"unexpected VK response for {method}"
             raise AttachmentDownloadFailed(msg)
+        logger.debug("vk media API request completed", extra={"method": method})
         return response.get("response")
 
 

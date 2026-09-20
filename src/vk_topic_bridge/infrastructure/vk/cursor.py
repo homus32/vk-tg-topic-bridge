@@ -70,6 +70,7 @@ class RuntimePathBotPolling(BotPolling):
         return await super().handle_failed_event(server, event)
 
     async def listen(self) -> AsyncGenerator[dict[str, Any]]:
+        logger.info("vk persistent cursor polling started", extra={"poller": type(self).__name__})
         self._gap_reported = False
         async for event in super().listen():
             self._gap_reported = False

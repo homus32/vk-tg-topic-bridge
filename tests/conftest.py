@@ -5,6 +5,7 @@ Each test runs with dummy values for the required settings and with the
 because of keys that only exist in a local ``.env``.
 """
 
+import logging
 import sys
 from collections.abc import Iterator
 from importlib import import_module
@@ -62,4 +63,7 @@ def _isolated_settings_env(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     config = _config_module()
     if config is not None:
         monkeypatch.setitem(config.Settings.model_config, "env_file", None)
+    for logger in logging.Logger.manager.loggerDict.values():
+        if isinstance(logger, logging.Logger) and logger.name.startswith("vk_topic_bridge"):
+            logger.disabled = False
     yield

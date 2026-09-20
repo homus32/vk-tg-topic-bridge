@@ -8,7 +8,7 @@
 > Статус на дату отчёта (2026-09-19): весь код Stage 7–12 реализован и закоммичен
 > (6 коммитов), `make check` — EXIT=0 (847 passed, coverage 90%, basedpyright 0 ошибок),
 > независимый review вернул **APPROVE**. **Живое ручное тестирование ещё не выполнялось** —
-> это следующий шаг владельца (задача 25 / F3); см. `docs/handoff-manual-testing.md`.
+> это следующий шаг владельца (задача 25 / F3).
 
 ---
 
@@ -225,8 +225,6 @@ config.py                         (+ VK_MEDIA_DIR, VK_CURSOR_DIR)
 - **docs/01–06** синхронизированы с реализацией (354 insertions, 6 файлов; docs/07 не тронут).
 - **docs/deployment-runbook.md** — новый (install, reboot/autostart, логи, backup/restore,
   runtime-пути, secrets hygiene, known limitations).
-- **docs/handoff-manual-testing.md** — новый, **не закоммичен** (по указанию владельца): подробная
-  инструкция ручного тестирования с ожидаемыми признаками и отказами.
 - **`.env.example` не изменился**: новые настройки `VK_MEDIA_DIR`/`VK_CURSOR_DIR` имеют
   дефолты в `config.py` (`runtime/media`, `runtime/vk_cursor`) и в `.env` не обязательны.
 
@@ -357,8 +355,7 @@ AC-12.2/12.3. Исправлено: `MediaFailureReason.UNSUPPORTED` + стро�
 | **Живой history gap (failed=1/3)** | ⏳ Не наблюдался |
 | **`.env` содержимое** | ⏳ Не читался агентом (CC Safety Net + политика) |
 
-Полный чек-лист владельца (a)–(p) — в `.omo/evidence/finish-vk-topic-bridge/owner-gates.md`,
-пошаговая инструкция с ожиданиями — в `docs/handoff-manual-testing.md`.
+Полный чек-лист владельца (a)–(p) — в `.omo/evidence/finish-vk-topic-bridge/owner-gates.md`.
 
 ---
 
@@ -406,7 +403,7 @@ AC-12.2/12.3. Исправлено: `MediaFailureReason.UNSUPPORTED` + стро�
     e2e smoke требует credentials; логика покрыта mock-ботом.
 
 Если что-то из этого списка сломается на ручном прогоне — это ожидаемо, не сюрприз:
-все места помечены в `handoff-manual-testing.md` с признаками и вероятными причинами.
+для каждого пункта указаны признаки и вероятные причины.
 
 ---
 
@@ -442,15 +439,15 @@ e07accd refactor(admin): удалить временные /topics и /set_topic
 ba2faa9 chore(omo): план finish-vk-topic-bridge, notepads и evidence
 ```
 
-**Не закоммичено** (осознанно): `docs/handoff-manual-testing.md` — файл следующей сессии;
-этот отчёт (`docs/stage-7-12-report.md`) — ждёт решения владельца о коммите.
+**Не закоммичено** (осознанно): этот отчёт (`docs/stage-7-12-report.md`) — ждёт решения
+владельца о коммите.
 
 ---
 
 ## 12. Что осталось сделать (рекомендации)
 
-1. **Пройти owner gates (a)–(p)** по `docs/handoff-manual-testing.md`; результаты внести
-   в `.omo/evidence/finish-vk-topic-bridge/owner-gates.md`. Это закроет F1/F3 и позволит
+1. **Пройти owner gates (a)–(p)**; результаты внести в
+   `.omo/evidence/finish-vk-topic-bridge/owner-gates.md`. Это закроет F1/F3 и позволит
    объявить проект завершённым.
 2. **Приоритетно проверить живой E2E-контур:** `@all`/хештег → публикация + 👍; `/start`→`/register`;
    ручная пересылка (алиас и ординал); пост стены; fallback (закрыть/удалить целевой топик).
@@ -464,7 +461,7 @@ ba2faa9 chore(omo): план finish-vk-topic-bridge, notepads и evidence
    - dead-параметр `publisher` в `PublishManualMessage`;
    - `vk_ex.py::VkMediaFacade = object` — мёртвый alias;
    - PEP 758 стиль `except A, B:` — вопрос вкуса (Python 3.14).
-6. **После успешных гейтов**: коммит этого отчёта + handoff (если нужно), закрытие задачи 25
+6. **После успешных гейтов**: коммит этого отчёта (если нужно), закрытие задачи 25
    и F1/F3 в плане.
 7. **Если live-прогон вскроет расхождения контрактов** (VK payload, лимиты Bot API,
    media-формы) — следовать правилу: Librarian против официальных доков + pinned-версии,

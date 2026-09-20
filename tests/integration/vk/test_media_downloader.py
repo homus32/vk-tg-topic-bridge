@@ -220,6 +220,21 @@ async def test_download_streams_chunks_into_media_dir(tmp_path: Path) -> None:
     assert http.gets == ["https://vk.example/f.bin"]
 
 
+async def test_download_emits_safe_media_trace(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    payload = b"x" * 1024
+    http = FakeHttp(response=FakeResponse(chunks=(payload,)))
+    downloader = _downloader(FakeVkApi(), http, tmp_path)
+
+    with caplog.at_level("DEBUG"):
+        await downloader.download(DOC_REF, "https://vk.example/f.bin?key=ACCESSKEYXX")
+
+    assert "vk media download started" in caplog.text
+    assert "vk media download completed" in caplog.text
+    assert "ACCESSKEYXX" not in caplog.text
+
+
 async def test_download_midstream_oversize_aborts_and_removes_temp(tmp_path: Path) -> None:
     chunk = b"y" * (1024 * 1024)
     chunks = (chunk,) * (MAX_ATTACHMENT_BYTES // len(chunk) + 2)

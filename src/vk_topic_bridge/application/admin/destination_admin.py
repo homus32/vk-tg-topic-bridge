@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -9,6 +10,8 @@ from vk_topic_bridge.application.errors import ProvisioningError
 from vk_topic_bridge.application.ports.telegram import TelegramAdminPort, TelethonPort
 from vk_topic_bridge.application.ports.unit_of_work import UnitOfWork
 from vk_topic_bridge.domain.value_objects import TopicInfo
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, slots=True)
@@ -60,6 +63,15 @@ class SelectDestinationV2:
             else:
                 await uow.bridge_settings.set_wall_topic(topic.topic_id)
             await uow.commit()
+        logger.info(
+            "telegram destination changed",
+            extra={
+                "chat_id": chat_id,
+                "destination_topic_id": topic.topic_id,
+                "operation": kind,
+                "outcome": "general" if general_selected else "named_topic",
+            },
+        )
         return DestinationConfirmationResult(
             persisted=True,
             message_id=message_id,
@@ -91,6 +103,7 @@ class ResetBridge:
                 await uow.telegram_topics.delete_chat(chat_id)
             aliases_deleted = await uow.vk_aliases.delete_all()
             await uow.commit()
+        logger.info("telegram bridge reset completed", extra={"chat_id": chat_id})
         return ChangeChatOutcome(chat_cleared=True, aliases_deleted=aliases_deleted)
 
 
@@ -117,4 +130,8 @@ class RefreshTopicsV2:
         async with self._uow_factory() as uow:
             await uow.telegram_topics.replace_all(chat_id, topics)
             await uow.commit()
+        logger.info(
+            "telegram topics refreshed",
+            extra={"chat_id": chat_id, "topic_count": len(topics)},
+        )
         return topics

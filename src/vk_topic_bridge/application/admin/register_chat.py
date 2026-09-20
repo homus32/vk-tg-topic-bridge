@@ -57,15 +57,22 @@ class RegisterChat:
         self._refresh = refresh
 
     async def execute(self, chat_id: int, title: str | None) -> RegisterChatResult:
+        logger.debug("telegram registration capability check started", extra={"chat_id": chat_id})
         capabilities = await self._admin.get_chat_capabilities(chat_id)
+        logger.debug(
+            "telegram registration capability check",
+            extra={"chat_id": chat_id, "missing": capabilities.missing},
+        )
         if capabilities.missing:
             raise MissingCapabilitiesError(capabilities.missing)
 
         async with self._uow_factory() as uow:
             await uow.bridge_settings.upsert_chat(chat_id, title)
             await uow.commit()
+        logger.debug("telegram registration chat persisted", extra={"chat_id": chat_id})
 
         try:
+            logger.debug("telegram registration topic refresh started", extra={"chat_id": chat_id})
             topics = await self._refresh.refresh(chat_id)
         except ProvisioningError as error:
             logger.warning(
@@ -81,6 +88,10 @@ class RegisterChat:
                 ready=False,
             )
 
+        logger.debug(
+            "telegram registration topic refresh completed",
+            extra={"chat_id": chat_id, "topic_count": len(topics), "outcome": "ready"},
+        )
         return RegisterChatResult(
             chat_id=chat_id,
             title=title,

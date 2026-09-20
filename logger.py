@@ -26,6 +26,52 @@ _NOISY_LOGGER_PREFIXES: tuple[str, ...] = (
     "asyncio",
 )
 
+_SAFE_CONTEXT_FIELDS = frozenset(
+    {
+        "active_owner_id",
+        "attachment_count",
+        "attachment_index",
+        "attachment_kind",
+        "chat_id",
+        "conversation_message_id",
+        "delivery_id",
+        "destination_topic_id",
+        "event_id",
+        "event_type",
+        "from_id",
+        "group_id",
+        "http_status",
+        "message_count",
+        "message_id_count",
+        "media_count",
+        "method",
+        "missing",
+        "operation",
+        "operation_count",
+        "operation_kind",
+        "outcome",
+        "owner_id",
+        "owner_count",
+        "post_id",
+        "peer_id",
+        "planned_media_count",
+        "poller",
+        "reason",
+        "route",
+        "source_type",
+        "source_key",
+        "state_after",
+        "state_before",
+        "status",
+        "text_length",
+        "topic_count",
+        "update_count",
+        "url_host",
+        "warning_count",
+        "written_bytes",
+    }
+)
+
 _CONSOLE_FORMAT = (
     "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
     "<level>{level: <8}</level> | "
@@ -67,7 +113,26 @@ class _InterceptHandler(logging.Handler):
             frame = frame.f_back
             depth += 1
 
-        logger.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
+        message = record.getMessage()
+        context = _safe_context(record)
+        if context:
+            message = f"{message} | {context}"
+        logger.opt(depth=depth, exception=record.exc_info).log(level, message)
+
+
+def _safe_context(record: logging.LogRecord) -> str:
+    """Render an allow-listed subset of stdlib ``extra`` fields for the Loguru sink."""
+    fields: list[str] = []
+    for name in sorted(_SAFE_CONTEXT_FIELDS):
+        value = getattr(record, name, None)
+        if value is None:
+            continue
+        if isinstance(value, (tuple, list, set, frozenset)):
+            rendered = ",".join(str(item) for item in value)
+        else:
+            rendered = str(value)
+        fields.append(f"{name}={rendered}")
+    return " ".join(fields)
 
 
 def configure_logging(settings: Settings) -> None:
