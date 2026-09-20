@@ -437,7 +437,9 @@ class _FakeVk:
         return 777
 
     async def check_long_poll(self) -> LongPollInfo:
-        return LongPollInfo(server="lp.vk.com", key="key", ts="1", enabled=True)
+        return LongPollInfo(
+            server="lp.vk.com", key="key", ts="1", enabled=True, wall_post_new_enabled=True
+        )
 
     async def get_full_message(self, peer_id: int, conversation_message_id: int) -> SourceMessage:
         raise NotImplementedError

@@ -134,7 +134,7 @@ async def test_check_long_poll_shapes_info() -> None:
     fake = FakeVkApi(
         {
             "groups.getById": _ok({"groups": [{"id": GROUP_ID}]}),
-            "groups.getLongPollSettings": _ok({"is_enabled": True}),
+            "groups.getLongPollSettings": _ok({"is_enabled": True, "events": {"wall_post_new": 1}}),
             "groups.getLongPollServer": _ok(
                 {"server": "https://lp.vk.com/wh42", "key": "abc", "ts": "99"}
             ),
@@ -148,6 +148,7 @@ async def test_check_long_poll_shapes_info() -> None:
     assert info.key == "abc"
     assert info.ts == "99"
     assert info.enabled is True
+    assert info.wall_post_new_enabled is True
     assert fake.params_for("groups.getLongPollSettings") == [{"group_id": GROUP_ID}]
     assert fake.params_for("groups.getLongPollServer") == [{"group_id": GROUP_ID}]
 
@@ -157,7 +158,9 @@ async def test_check_long_poll_reports_disabled() -> None:
     fake = FakeVkApi(
         {
             "groups.getById": _ok({"groups": [{"id": GROUP_ID}]}),
-            "groups.getLongPollSettings": _ok({"is_enabled": False}),
+            "groups.getLongPollSettings": _ok(
+                {"is_enabled": False, "events": {"wall_post_new": 0}}
+            ),
             "groups.getLongPollServer": _ok({"server": "s", "key": "k", "ts": 1}),
         }
     )
@@ -167,6 +170,23 @@ async def test_check_long_poll_reports_disabled() -> None:
 
     assert info.enabled is False
     assert info.ts == "1"
+
+
+async def test_check_long_poll_reports_wall_event_disabled() -> None:
+    module = _api_module()
+    fake = FakeVkApi(
+        {
+            "groups.getById": _ok({"groups": [{"id": GROUP_ID}]}),
+            "groups.getLongPollSettings": _ok({"is_enabled": True, "events": {"wall_post_new": 0}}),
+            "groups.getLongPollServer": _ok({"server": "s", "key": "k", "ts": 1}),
+        }
+    )
+    gateway = module.VkApiGateway(fake, _settings())
+
+    info = await gateway.check_long_poll()
+
+    assert info.enabled is True
+    assert info.wall_post_new_enabled is False
 
 
 # --- author ------------------------------------------------------------------

@@ -136,7 +136,9 @@ class FakeVkApi:
         if method == "groups.getById":
             return {"response": {"groups": [{"id": 42}]}}
         if method == "groups.getLongPollSettings":
-            return {"response": {"is_enabled": self.long_poll_enabled}}
+            return {
+                "response": {"is_enabled": self.long_poll_enabled, "events": {"wall_post_new": 1}}
+            }
         if method == "groups.getLongPollServer":
             return {"response": {"server": "lp.example", "key": "key", "ts": "1"}}
         raise AssertionError(f"unexpected VK method: {method}")

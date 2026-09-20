@@ -164,6 +164,11 @@ async def _verify_vk(container: AppContainer) -> None:
         raise FatalStartupError(
             FatalStartupReason.VK_LONGPOLL_DISABLED, "Long Poll is disabled for the community"
         )
+    if not long_poll.wall_post_new_enabled:
+        raise FatalStartupError(
+            FatalStartupReason.VK_LONGPOLL_DISABLED,
+            "VK Group Long Poll event wall_post_new is disabled",
+        )
 
 
 async def _verify_persisted_chat(container: AppContainer) -> bool:

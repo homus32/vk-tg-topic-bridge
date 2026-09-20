@@ -14,6 +14,7 @@ from dataclasses import dataclass, replace
 
 from vk_topic_bridge.application.dto.delivery import ReserveRequest
 from vk_topic_bridge.application.dto.settings import DestinationKind
+from vk_topic_bridge.application.errors import TELEGRAM_TOPIC_NOT_FOUND_CODE
 from vk_topic_bridge.application.forwarding.composition import (
     append_media_warnings,
     compose_wall_publication,
@@ -23,6 +24,7 @@ from vk_topic_bridge.application.forwarding.plan_execution import (
     PlanOutcome,
     begin_send,
     execute_plan,
+    reserve_delivery,
 )
 from vk_topic_bridge.application.forwarding.publication_planning import plan_publication
 from vk_topic_bridge.application.notifications.owner_notifier import (
@@ -42,7 +44,7 @@ from vk_topic_bridge.application.readiness_features import (
 )
 from vk_topic_bridge.domain.enums import PublicationStatus, SourceType
 from vk_topic_bridge.domain.policies.delivery_policy import must_not_republish
-from vk_topic_bridge.domain.value_objects import Destination, SourceWallPost
+from vk_topic_bridge.domain.value_objects import Destination, Publication, SourceWallPost
 
 logger = logging.getLogger(__name__)
 
@@ -101,6 +103,7 @@ class ForwardWallPost:
                 )
                 return WallForwardOutcome(published=False, skipped=True, reason="filtered")
             kind = state.wall_destination_kind()
+            configured_topic_id = state.telegram_wall_topic_id
             if kind is DestinationKind.UNSET:
                 logger.debug(
                     "wall forwarding skipped: destination_not_configured",
@@ -116,9 +119,9 @@ class ForwardWallPost:
             if kind is DestinationKind.GENERAL:
                 thread_id: int | None = None
             elif ready:
-                thread_id = state.telegram_wall_topic_id
+                thread_id = configured_topic_id
             else:
-                fallback_topic_id = state.telegram_wall_topic_id
+                fallback_topic_id = configured_topic_id
                 fallback_reason = (
                     unavailable_reason(topics, fallback_topic_id)
                     if fallback_topic_id is not None
@@ -223,6 +226,74 @@ class ForwardWallPost:
                 "message_id_count": len(outcome.message_ids),
             },
         )
+        runtime_stale = (
+            not outcome.published
+            and outcome.failed_permanent
+            and outcome.failure_code == TELEGRAM_TOPIC_NOT_FOUND_CODE
+            and configured_topic_id is not None
+            and fallback_topic_id is None
+        )
+        if runtime_stale and media:
+            logger.warning(
+                "automatic runtime stale-topic fallback skipped for wall media plan",
+                extra={
+                    "delivery_id": delivery_id,
+                    "destination_topic_id": configured_topic_id,
+                    "media_count": len(media),
+                },
+            )
+        if runtime_stale and not media and configured_topic_id is not None:
+            logger.warning(
+                "automatic wall runtime stale topic detected",
+                extra={
+                    "delivery_id": delivery_id,
+                    "destination_topic_id": configured_topic_id,
+                    "reason": outcome.failure_code,
+                },
+            )
+            fallback_delivery_id, fallback_outcome = await self._publish_runtime_general_fallback(
+                wall_post, publication, configured_topic_id
+            )
+            if fallback_outcome.claim_lost:
+                logger.error(
+                    "automatic wall runtime General fallback claim lost",
+                    extra={"delivery_id": fallback_delivery_id},
+                )
+                return WallForwardOutcome(
+                    published=False,
+                    skipped=False,
+                    reason="claim_lost",
+                    delivery_id=fallback_delivery_id,
+                )
+            if fallback_outcome.published:
+                await self._notify_fallback(configured_topic_id, "stale")
+                logger.info(
+                    "automatic wall runtime stale-topic fallback completed",
+                    extra={
+                        "delivery_id": fallback_delivery_id,
+                        "destination_topic_id": configured_topic_id,
+                        "outcome": "published",
+                    },
+                )
+                return WallForwardOutcome(
+                    published=True,
+                    skipped=False,
+                    reason="published",
+                    delivery_id=fallback_delivery_id,
+                    message_ids=fallback_outcome.message_ids,
+                )
+            await self._notify_attention(fallback_delivery_id, fallback_outcome)
+            fallback_reason = "ambiguous" if fallback_outcome.ambiguous else "rejected"
+            logger.warning(
+                "automatic wall runtime stale-topic fallback failed",
+                extra={"delivery_id": fallback_delivery_id, "outcome": fallback_reason},
+            )
+            return WallForwardOutcome(
+                published=False,
+                skipped=False,
+                reason=fallback_reason,
+                delivery_id=fallback_delivery_id,
+            )
         if outcome.published:
             if fallback_topic_id is not None:
                 logger.warning(
@@ -259,6 +330,47 @@ class ForwardWallPost:
         return WallForwardOutcome(
             published=False, skipped=False, reason=reason, delivery_id=delivery_id
         )
+
+    async def _publish_runtime_general_fallback(
+        self,
+        wall_post: SourceWallPost,
+        publication: Publication,
+        stale_topic_id: int,
+    ) -> tuple[int, PlanOutcome]:
+        fallback_publication = replace(publication, message_thread_id=None)
+        fallback_plan = plan_publication(fallback_publication, ())
+        fallback_source_key = f"{wall_post.source_key}:general-fallback"
+        fallback_delivery_id = await reserve_delivery(
+            self._uow_factory,
+            source_type=SourceType.VK_WALL,
+            source_key=fallback_source_key,
+            destination_chat_id=fallback_publication.chat_id,
+            destination_topic_id=None,
+            payload_hash=hashlib.sha256(fallback_publication.html_text.encode()).hexdigest(),
+            intent="automatic",
+        )
+        logger.debug(
+            "automatic wall runtime General fallback delivery reserved",
+            extra={
+                "delivery_id": fallback_delivery_id,
+                "destination_topic_id": stale_topic_id,
+                "outcome": "fallback",
+            },
+        )
+        if not await begin_send(self._uow_factory, fallback_delivery_id, _CLAIM_TOKEN):
+            return fallback_delivery_id, PlanOutcome(
+                published=False,
+                message_ids=(),
+                claim_lost=True,
+            )
+        outcome = await execute_plan(
+            self._uow_factory,
+            fallback_delivery_id,
+            _CLAIM_TOKEN,
+            fallback_plan,
+            self._plan_publisher,
+        )
+        return fallback_delivery_id, outcome
 
     async def _notify_fallback(self, topic_id: int, reason: str) -> None:
         if self._notifier is None:

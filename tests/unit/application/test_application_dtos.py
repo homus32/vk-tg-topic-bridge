@@ -138,10 +138,13 @@ def test_toggle_kind_values_match_persisted_kinds() -> None:
 
 
 def test_infrastructure_dtos_are_frozen_value_objects() -> None:
-    long_poll = LongPollInfo(server="lp.vk.com", key="abc", ts="42", enabled=True)
+    long_poll = LongPollInfo(
+        server="lp.vk.com", key="abc", ts="42", enabled=True, wall_post_new_enabled=True
+    )
     access = ChatAccessInfo(entity_id=-100123, is_forum=True)
 
     assert long_poll.enabled is True
+    assert long_poll.wall_post_new_enabled is True
     assert access.is_forum is True
 
     with pytest.raises(FrozenInstanceError):

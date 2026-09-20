@@ -11,6 +11,7 @@ class LongPollInfo:
     key: str
     ts: str
     enabled: bool
+    wall_post_new_enabled: bool
 
 
 @dataclass(frozen=True, slots=True)

@@ -71,7 +71,7 @@
 - [x] root cause понятен и записан в report/evidence;
 - [x] есть regression test, если дефект воспроизводим без реальной сети;
 - [x] `make check` зелёный;
-- [ ] если дефект был найден только live-тестом — выполнен соответствующий live retest;
+- [x] если дефект был найден только live-тестом — выполнен соответствующий live retest;
 - [x] исходный manual-testing report обновлён: BUG/CR/INV помечен итогом;
 - [x] новые DEBUG-логи не содержат токены, session, proxy secret, authorization code или полный `.env`.
 
@@ -366,9 +366,9 @@ ForwardVkMessage
 
 ## T3.1 — BUG-011: сначала доказать получение `wall_post_new`
 
-- [ ] Проверить `groups.getLongPollSettings`/эквивалент и факт включения `wall_post_new`.
-- [ ] Проверить raw DEBUG: приходит ли событие вообще.
-- [ ] Если raw event не приходит — **не трогать mapper/use case**, сначала исправить VK group Long Poll settings.
+- [x] Проверить `groups.getLongPollSettings`/эквивалент и факт включения `wall_post_new`.
+- [x] Проверить raw DEBUG: приходит ли событие вообще.
+- [x] Если raw event не приходит — **не трогать mapper/use case**, сначала исправить VK group Long Poll settings.
 - [ ] Если приходит — сохранить sanitized live fixture.
 
 **Исследование:** `wall_post_new` является отдельным настраиваемым событием Bots Long Poll. Это нужно проверять так же рано, как `message_new`.
@@ -377,27 +377,27 @@ ForwardVkMessage
 
 Только если T3.1 доказал raw event:
 
-- [ ] raw consumer;
-- [ ] event classifier;
-- [ ] wall mapper;
-- [ ] `ForwardWallPost`;
-- [ ] wall readiness;
-- [ ] wall destination;
-- [ ] delivery ledger reserve;
-- [ ] publication composition;
-- [ ] plan;
-- [ ] Telegram publisher.
+- [x] raw consumer;
+- [x] event classifier;
+- [x] wall mapper;
+- [x] `ForwardWallPost`;
+- [x] wall readiness;
+- [x] wall destination;
+- [x] delivery ledger reserve;
+- [x] publication composition;
+- [x] plan;
+- [x] Telegram publisher.
 
 На каждом переходе должна быть одна DEBUG-точка.
 
 ## T3.3 — Wall text-only live acceptance
 
-- [ ] text-only post публикуется;
-- [ ] присутствует `#изстенывк`;
-- [ ] присутствует `https://vk.com/wall{owner_id}_{post_id}`;
-- [ ] destination правильный;
-- [ ] duplicate event не создаёт дубль;
-- [ ] wall toggle OFF блокирует публикацию.
+- [x] text-only post публикуется;
+- [x] присутствует `#изстенывк`;
+- [x] присутствует `https://vk.com/wall{owner_id}_{post_id}`;
+- [x] destination правильный;
+- [x] duplicate event не создаёт дубль;
+- [x] wall toggle OFF блокирует публикацию.
 
 **Не переходить к wall media, пока text-only wall не зелёный.**
 
@@ -831,8 +831,8 @@ Aiogram polling сам ловит network errors и retry/backoff'ит их. П�
 
 - [ ] @all OFF действительно блокирует;
 - [ ] hashtag OFF действительно блокирует;
-- [ ] wall OFF действительно блокирует;
-- [ ] обратно ON восстанавливает;
+- [x] wall OFF действительно блокирует;
+- [x] обратно ON восстанавливает;
 - [ ] second-owner notification.
 
 ## T10.3 — Auto filter semantics
@@ -854,10 +854,10 @@ Aiogram polling сам ловит network errors и retry/backoff'ит их. П�
 
 ## T10.5 — Fallback
 
-- [ ] удалить/закрыть configured named topic;
+- [x] удалить/закрыть configured named topic;
 - [ ] automatic message → General;
-- [ ] wall → General;
-- [ ] owner notification;
+- [x] wall → General;
+- [x] owner notification;
 - [ ] 👍 для message success;
 - [ ] ledger destination = General;
 - [ ] manual selected named topic → error, **без fallback**.
@@ -875,7 +875,7 @@ Aiogram polling сам ловит network errors и retry/backoff'ит их. П�
 ## T10.7 — Idempotency / replay
 
 - [ ] duplicate auto message event;
-- [ ] duplicate wall event;
+- [x] duplicate wall event;
 - [ ] cursor restart replay;
 - [ ] published short-circuit;
 - [ ] ambiguous short-circuit;
@@ -941,11 +941,11 @@ Aiogram polling сам ловит network errors и retry/backoff'ит их. П�
 - [ ] document;
 - [ ] oversize document;
 - [ ] video or correct partial-success warning;
-- [ ] wall text;
+- [x] wall text;
 - [ ] wall media;
-- [ ] fallback;
+- [x] fallback;
 - [ ] diagnostics;
-- [ ] duplicate protection;
+- [x] duplicate protection;
 - [ ] PM2 restart/reboot;
 - [ ] backup/restore;
 - [ ] no known Critical/Major defect without explicit owner acceptance.

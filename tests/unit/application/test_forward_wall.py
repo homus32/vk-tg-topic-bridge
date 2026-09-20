@@ -96,6 +96,29 @@ class FakePlanPublisher:
         )
 
 
+class RuntimeStalePublisher(FakePlanPublisher):
+    def __init__(self, *, fallback_status: OperationStatus = OperationStatus.PUBLISHED) -> None:
+        super().__init__()
+        self.fallback_status = fallback_status
+
+    async def publish_plan(self, plan: PublicationPlan) -> tuple[OperationOutcome, ...]:
+        self.plans.append(plan)
+        status = OperationStatus.FAILED_PERMANENT if len(self.plans) == 1 else self.fallback_status
+        error_code = "telegram_topic_not_found" if len(self.plans) == 1 else None
+        error_message = "Bad Request: message thread not found" if error_code else None
+        message_ids = self.message_ids if status is OperationStatus.PUBLISHED else ()
+        return tuple(
+            OperationOutcome(
+                operation=operation,
+                status=status,
+                message_ids=message_ids,
+                error_code=error_code,
+                error_message=error_message,
+            )
+            for operation in plan.operations
+        )
+
+
 class FakeNotifier:
     def __init__(self) -> None:
         self.all_texts: list[str] = []
@@ -197,6 +220,7 @@ async def test_wall_publication_contains_tag_and_original_url() -> None:
     await use_case.execute(_wall_post())
 
     html = publisher.plans[0].base.html_text
+    assert "текст поста" in html
     assert "#изстенывк" in html
     assert f"https://vk.com/wall{OWNER_ID}_{POST_ID}" in html
 
@@ -296,6 +320,48 @@ async def test_wall_closed_topic_falls_back_to_general() -> None:
     assert "закрыт" in notifier.all_texts[0]
 
 
+async def test_wall_runtime_stale_topic_falls_back_to_general_and_notifies() -> None:
+    notifier = FakeNotifier()
+    publisher = RuntimeStalePublisher()
+    uow = FakeUow(_registered_state())
+    use_case, _, _ = _use_case(uow, publisher=publisher, notifier=notifier)
+
+    outcome = await use_case.execute(_wall_post())
+
+    assert outcome.published is True
+    assert [plan.base.message_thread_id for plan in publisher.plans] == [WALL_TOPIC_ID, None]
+    assert len(notifier.all_texts) == 1
+    assert "General" in notifier.all_texts[0]
+    records = _records(uow)
+    named_record = next(
+        record for record in records if record.destination_topic_id == WALL_TOPIC_ID
+    )
+    fallback_record = next(record for record in records if record.destination_topic_id is None)
+    assert named_record.publication_status is PublicationStatus.FAILED_PERMANENT
+    assert fallback_record.publication_status is PublicationStatus.PUBLISHED
+    assert fallback_record.source_key.endswith(":general-fallback")
+
+
+async def test_wall_runtime_general_fallback_keeps_ambiguous_fail_closed() -> None:
+    notifier = FakeNotifier()
+    publisher = RuntimeStalePublisher(fallback_status=OperationStatus.ACCEPTED_UNKNOWN)
+    uow = FakeUow(_registered_state())
+    use_case, _, _ = _use_case(uow, publisher=publisher, notifier=notifier)
+
+    outcome = await use_case.execute(_wall_post())
+
+    assert outcome.published is False
+    assert outcome.reason == "ambiguous"
+    assert [plan.base.message_thread_id for plan in publisher.plans] == [WALL_TOPIC_ID, None]
+    records = _records(uow)
+    assert any(
+        record.publication_status is PublicationStatus.FAILED_PERMANENT for record in records
+    )
+    assert any(record.publication_status is PublicationStatus.AMBIGUOUS for record in records)
+    assert len(notifier.all_texts) == 1
+    assert "Проблема с доставкой" in notifier.all_texts[0]  # noqa: RUF001
+
+
 async def test_wall_never_notifies_on_healthy_destination() -> None:
     notifier = FakeNotifier()
     uow = FakeUow(_registered_state())
@@ -371,3 +437,17 @@ async def test_wall_dedup_uses_wall_key_not_message_key() -> None:
     keys = list(uow.deliveries.records.keys())
     assert len(keys) == 1
     assert keys[0].startswith("vk_wall:")
+
+
+async def test_duplicate_wall_event_reuses_published_delivery() -> None:
+    uow = FakeUow(_registered_state())
+    use_case, publisher, _ = _use_case(uow)
+
+    first = await use_case.execute(_wall_post())
+    second = await use_case.execute(_wall_post())
+
+    assert first.published is True
+    assert second.published is True
+    assert second.reason == "already_published"
+    assert len(publisher.plans) == 1
+    assert len(_records(uow)) == 1

@@ -106,6 +106,10 @@ class VkApiGateway:
         group_id = await self.get_community_id()
         settings = await self._request("groups.getLongPollSettings", {"group_id": group_id})
         enabled = bool(settings.get("is_enabled")) if isinstance(settings, Mapping) else False
+        events = settings.get("events") if isinstance(settings, Mapping) else None
+        wall_post_new_enabled = (
+            bool(events.get("wall_post_new")) if isinstance(events, Mapping) else False
+        )
         server_info = await self._request("groups.getLongPollServer", {"group_id": group_id})
         if not isinstance(server_info, Mapping):
             msg = "VK groups.getLongPollServer returned no server data"
@@ -115,10 +119,15 @@ class VkApiGateway:
             key=str(server_info.get("key", "")),
             ts=str(server_info.get("ts", "")),
             enabled=enabled,
+            wall_post_new_enabled=wall_post_new_enabled,
         )
         logger.info(
             "vk long poll settings checked",
-            extra={"group_id": group_id, "status": "enabled" if enabled else "disabled"},
+            extra={
+                "group_id": group_id,
+                "status": "enabled" if enabled else "disabled",
+                "wall_post_new": "enabled" if wall_post_new_enabled else "disabled",
+            },
         )
         return info
 
