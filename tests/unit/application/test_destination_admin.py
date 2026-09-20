@@ -25,7 +25,7 @@ from vk_topic_bridge.application.dto.settings import (
     DestinationKind,
     ToggleKind,
 )
-from vk_topic_bridge.application.errors import ProvisioningError
+from vk_topic_bridge.application.errors import ProvisioningError, PublicationRejectedError
 from vk_topic_bridge.domain.value_objects import TopicInfo
 
 CHAT_ID = -1001234567890
@@ -245,20 +245,67 @@ async def test_named_topic_for_wall_uses_wall_destination() -> None:
     assert state.messages_destination_kind() is DestinationKind.UNSET
 
 
-async def test_general_selection_skips_proof_send_and_persists_configured_null() -> None:
+async def test_general_selection_is_proof_sent_then_persisted_configured_null() -> None:
     uow = FakeUnitOfWork()
     admin = FakeAdminPort()
     use_case = SelectDestinationV2(lambda: uow, admin)
 
     result = await use_case.execute(CHAT_ID, GENERAL, "messages", RUN_ID)
 
-    assert admin.calls == []
+    assert admin.calls == [(CHAT_ID, None, f"destination check for run {RUN_ID} (General)")]
     assert result.persisted is True
     assert result.general_selected is True
-    assert result.message_id is None
+    assert result.message_id == PROOF_MESSAGE_ID
     state = uow.bridge_settings.state
     assert state.messages_destination_kind() is DestinationKind.GENERAL
     assert state.telegram_messages_topic_id is None
+
+
+async def test_general_proof_send_failure_does_not_persist_destination() -> None:
+    class FailingAdmin(FakeAdminPort):
+        async def send_test_into_topic(
+            self, chat_id: int, message_thread_id: int | None, text: str
+        ) -> int:
+            raise ProvisioningError("general proof failed")
+
+    uow = FakeUnitOfWork(
+        settings=_settings(
+            telegram_messages_topic_id=NEWS.topic_id,
+            telegram_messages_topic_configured=True,
+        )
+    )
+    use_case = SelectDestinationV2(lambda: uow, FailingAdmin())
+
+    with pytest.raises(ProvisioningError, match="general proof failed"):
+        await use_case.execute(CHAT_ID, GENERAL, "messages", RUN_ID)
+
+    assert uow.bridge_settings.state.messages_destination_kind() is DestinationKind.NAMED_TOPIC
+    assert uow.bridge_settings.state.telegram_messages_topic_id == NEWS.topic_id
+
+
+async def test_stale_topic_proof_failure_does_not_persist_new_destination() -> None:
+    class StaleAdmin(FakeAdminPort):
+        async def send_test_into_topic(
+            self, chat_id: int, message_thread_id: int | None, text: str
+        ) -> int:
+            raise PublicationRejectedError(
+                "Bad Request: message thread not found", code="telegram_topic_not_found"
+            )
+
+    uow = FakeUnitOfWork(
+        settings=_settings(
+            telegram_messages_topic_id=NEWS.topic_id,
+            telegram_messages_topic_configured=True,
+        )
+    )
+    use_case = SelectDestinationV2(lambda: uow, StaleAdmin())
+
+    with pytest.raises(PublicationRejectedError):
+        await use_case.execute(
+            CHAT_ID, TopicInfo(11, "Удалённая", False, False, False), "messages", RUN_ID
+        )
+
+    assert uow.bridge_settings.state.telegram_messages_topic_id == NEWS.topic_id
 
 
 async def test_general_selection_for_wall_persists_wall_general() -> None:

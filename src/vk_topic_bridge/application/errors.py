@@ -23,6 +23,15 @@ class PublicationRejectedError(DomainError):
         super().__init__(message)
 
 
+TELEGRAM_TOPIC_NOT_FOUND_CODE = "telegram_topic_not_found"
+
+
+def is_stale_topic_rejection(error: BaseException) -> bool:
+    return (
+        isinstance(error, PublicationRejectedError) and error.code == TELEGRAM_TOPIC_NOT_FOUND_CODE
+    )
+
+
 class ProvisioningError(DomainError):
     """Chat or topic provisioning precondition failed (empty topic list, missing capabilities)."""
 

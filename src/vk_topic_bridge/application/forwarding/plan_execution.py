@@ -44,6 +44,7 @@ class PlanOutcome:
     ambiguous: bool = False
     failed_permanent: bool = False
     claim_lost: bool = False
+    failure_code: str | None = None
 
 
 async def reserve_delivery(
@@ -161,7 +162,12 @@ async def execute_plan(
                 delivery_id, claim_token, getattr(error, "code", None), str(error)
             )
             await uow.commit()
-        return PlanOutcome(published=False, message_ids=(), failed_permanent=True)
+        return PlanOutcome(
+            published=False,
+            message_ids=(),
+            failed_permanent=True,
+            failure_code=getattr(error, "code", None),
+        )
     result = await _finalize(uow_factory, delivery_id, claim_token, outcomes)
     logger.debug(
         "publication plan execution completed",
@@ -169,6 +175,7 @@ async def execute_plan(
             "delivery_id": delivery_id,
             "outcome": "published" if result.published else "failed",
             "message_id_count": len(result.message_ids),
+            "reason": result.failure_code,
         },
     )
     return result
@@ -183,6 +190,12 @@ async def _finalize(
     message_ids = tuple(message_id for outcome in outcomes for message_id in outcome.message_ids)
     published = any(outcome.status in _WINNING_STATUSES for outcome in outcomes)
     ambiguous = any(outcome.status is OperationStatus.ACCEPTED_UNKNOWN for outcome in outcomes)
+    failure_codes = {
+        outcome.error_code
+        for outcome in outcomes
+        if outcome.status is OperationStatus.FAILED_PERMANENT and outcome.error_code is not None
+    }
+    failure_code = next(iter(failure_codes)) if len(failure_codes) == 1 else None
     logger.debug(
         "publication plan outcomes collected",
         extra={
@@ -201,7 +214,7 @@ async def _finalize(
             )
         else:
             marked = await uow.deliveries.mark_failed_permanent(
-                delivery_id, claim_token, None, "all operations failed"
+                delivery_id, claim_token, failure_code, "all operations failed"
             )
         await uow.commit()
     if published and not marked:
@@ -213,4 +226,5 @@ async def _finalize(
         message_ids=message_ids if published else (),
         ambiguous=ambiguous,
         failed_permanent=not published and not ambiguous,
+        failure_code=failure_code,
     )

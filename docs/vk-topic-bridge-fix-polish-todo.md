@@ -273,18 +273,18 @@ operation_kind
 
 **Связано:** BUG-012, US-NEW-05, CR-004.
 
-Сценарий уже подтверждён live: topic удалён в Telegram, но остаётся в локальном кеше; при выборе proof-send получает `message thread not found`.
+Сценарий уже подтверждён live: topic удалён или закрыт в Telegram, но остаётся в локальном кеше; при выборе proof-send Telegram возвращает `message thread not found` или `TOPIC_CLOSED`.
 
-- [ ] Воспроизвести сценарий с сохранённым stale topic.
-- [ ] Перехватить ожидаемую `PublicationRejectedError`, соответствующую отсутствующему thread/topic.
-- [ ] Не отправлять exception в общий aiogram error pipeline как необработанную пользовательскую ошибку.
-- [ ] Автоматически выполнить refresh topics через существующий Telethon path.
-- [ ] Обновить availability/cache.
-- [ ] Пометить исчезнувший topic unavailable/inactive.
-- [ ] Не сохранять stale topic как новый destination.
-- [ ] Оставить FSM в состоянии выбора destination.
-- [ ] Сразу показать owner актуальный список: General + доступные topics.
-- [ ] Дать понятный пользовательский feedback без traceback.
+- [x] Воспроизвести сценарий с сохранённым stale topic.
+- [x] Перехватить ожидаемую `PublicationRejectedError`, соответствующую отсутствующему thread/topic.
+- [x] Не отправлять exception в общий aiogram error pipeline как необработанную пользовательскую ошибку.
+- [x] Автоматически выполнить refresh topics через существующий Telethon path.
+- [x] Обновить availability/cache.
+- [x] Пометить исчезнувший topic unavailable/inactive.
+- [x] Не сохранять stale topic как новый destination.
+- [x] Оставить FSM в состоянии выбора destination.
+- [x] Сразу показать owner актуальный список: General + доступные topics.
+- [x] Дать понятный пользовательский feedback без traceback.
 
 **Рекомендация:** не делать отдельный второй механизм refresh. Использовать тот же use case/service, который уже корректно обнаруживает удалённые topics при ручном `Обновить список`.
 
@@ -292,12 +292,12 @@ operation_kind
 
 ### Regression cases
 
-- [ ] named topic существует → proof-send success → destination сохраняется;
-- [ ] topic удалён после кеширования → auto refresh → wizard продолжает работу;
-- [ ] General после recovery можно выбрать без `/cancel`;
-- [ ] другой named topic после recovery можно выбрать;
-- [ ] временная network/API ошибка не помечает topic удалённым без достаточного evidence;
-- [ ] старый destination не перезаписывается при failed proof-send.
+- [x] named topic существует → proof-send success → destination сохраняется;
+- [x] topic удалён после кеширования → auto refresh → wizard продолжает работу;
+- [x] General после recovery можно выбрать без `/cancel`;
+- [x] другой named topic после recovery можно выбрать;
+- [x] временная network/API ошибка не помечает topic удалённым без достаточного evidence;
+- [x] старый destination не перезаписывается при failed proof-send.
 
 ---
 
@@ -318,14 +318,16 @@ ForwardVkMessage
 → broadcast owners
 ```
 
-- [ ] notifier действительно вызывается при fallback;
-- [ ] корректно используются `OWNER_IDS`;
-- [ ] notification отправляется каждому owner;
-- [ ] ошибка отправки одному owner не останавливает остальных;
-- [ ] notification содержит прежний destination;
-- [ ] notification явно говорит, что применён General fallback;
-- [ ] успех/неуспех notification не влияет на публикацию;
-- [ ] 👍 не зависит от broadcast результата.
+- [x] notifier действительно вызывается при fallback;
+- [x] корректно используются `OWNER_IDS`;
+- [x] notification отправляется каждому owner;
+- [x] ошибка отправки одному owner не останавливает остальных;
+- [x] notification содержит прежний destination;
+- [x] notification явно говорит, что применён General fallback;
+- [x] успех/неуспех notification не влияет на публикацию;
+- [x] 👍 не зависит от broadcast результата.
+
+`[x]` Live retest BUG-013 выполнен владельцем; локальный integration regression test пройден.
 
 **Рекомендация:** broadcast должен иметь best-effort fan-out semantics. Ошибка одного recipient логируется отдельно, но не отменяет уже успешную delivery.
 
@@ -696,10 +698,10 @@ General — гл
 
 В manual-testing report это сформулировано как новый intent.
 
-- [ ] General получает такой же реальный proof-send;
-- [ ] destination сохраняется только после success;
-- [ ] failure не изменяет persisted destination;
-- [ ] owner получает понятную ошибку.
+- [x] General получает такой же реальный proof-send;
+- [x] destination сохраняется только после success;
+- [x] failure не изменяет persisted destination;
+- [x] owner получает понятную ошибку.
 
 **Предположение этого TODO:** CR-005 считается утверждённым. Если владелец передумает — снять задачу до реализации.
 
@@ -915,17 +917,17 @@ Aiogram polling сам ловит network errors и retry/backoff'ит их. П�
 
 Закрывать fix cycle только когда:
 
-- [ ] `make check` зелёный;
+- [x] `make check` зелёный;
 - [ ] registration happy path;
 - [ ] registration missing-rights recovery;
 - [ ] competing owner protection;
 - [ ] group unknown commands silent;
 - [ ] Telegram Back/start FSM;
 - [ ] topic refresh transparent;
-- [ ] named + General proof-send;
-- [ ] stale topic selection → automatic refresh → wizard recovery;
-- [ ] invalid/stale topic никогда не сохраняется;
-- [ ] General fallback уведомляет всех owners;
+- [x] named + General proof-send (локальные regression tests и live-проверка владельца);
+- [x] stale topic selection → automatic refresh → wizard recovery (локальные regression tests и live-проверка владельца);
+- [x] invalid/stale topic никогда не сохраняется;
+- [x] General fallback уведомляет всех owners (локальный integration regression test и live-проверка владельца);
 - [ ] fallback publication warning, если CR-015 утверждён;
 - [ ] VK alias add/edit/delete;
 - [ ] VK inline/callback UI;

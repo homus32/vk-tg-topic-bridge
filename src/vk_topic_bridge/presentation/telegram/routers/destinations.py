@@ -1,14 +1,17 @@
 """Destination wizards (messages/wall) with General as an explicit selectable destination.
 
-Named topics are proof-gated (real Bot API send into the thread, then persist);
-General persists as the explicit configured state (configured=True, topic_id=NULL) with
-no proof send. Unavailable topics (closed/hidden) are shown but never selectable.
+Named topics are proof-gated (real Bot API send into the thread, then persist); General
+uses the same proof-send with no thread id, then persists as the explicit configured state
+(configured=True, topic_id=NULL). Unavailable topics (closed/hidden) are shown but never
+selectable.
 """
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
+from typing import Protocol
 from uuid import uuid4
 
 from aiogram import F, Router
@@ -22,7 +25,12 @@ from vk_topic_bridge.application.admin.destination_admin import (
     SelectDestinationV2,
 )
 from vk_topic_bridge.application.dto.settings import BridgeSettingsState
-from vk_topic_bridge.application.errors import ProvisioningError
+from vk_topic_bridge.application.errors import (
+    ProvisioningError,
+    PublicationAmbiguousError,
+    PublicationRejectedError,
+    is_stale_topic_rejection,
+)
 from vk_topic_bridge.domain.value_objects import TopicInfo
 from vk_topic_bridge.presentation.telegram import filters as btn
 from vk_topic_bridge.presentation.telegram.keyboards import (
@@ -39,6 +47,12 @@ from vk_topic_bridge.presentation.telegram.states import (
 type SettingsReader = Callable[[], Awaitable[BridgeSettingsState | None]]
 type TopicsReader = Callable[[int], Awaitable[list[TopicInfo]]]
 type RunIdFactory = Callable[[], str]
+
+logger = logging.getLogger(__name__)
+
+
+class RefreshUseCase(Protocol):
+    async def refresh(self, chat_id: int) -> list[TopicInfo]: ...
 
 
 def default_run_id() -> str:
@@ -106,6 +120,7 @@ def build_destinations_router(
     topics_reader: TopicsReader,
     *,
     run_id_factory: Callable[[], str],
+    refresh_use_case: RefreshUseCase,
 ) -> Router:
     """Wire both destination wizards; General is selectable, unavailable topics are not."""
     router = Router(name="destinations")
@@ -156,16 +171,96 @@ def build_destinations_router(
             return
         try:
             result = await select_destination.execute(chat_id, topic, kind, run_id_factory())
+        except PublicationRejectedError as error:
+            if is_stale_topic_rejection(error):
+                await _recover_stale_topic(message, chat_id, topic, refresh_use_case)
+                return
+            logger.warning(
+                "telegram destination proof rejected",
+                extra={
+                    "chat_id": chat_id,
+                    "destination_topic_id": topic.topic_id,
+                    "reason": error.code,
+                },
+            )
+            await message.answer(
+                f"Не удалось подтвердить топик «{topic.title}». "  # noqa: RUF001
+                "Ничего не сохранено. Повторите попытку."
+            )
+            return
+        except PublicationAmbiguousError as error:
+            logger.warning(
+                "telegram destination proof became ambiguous",
+                extra={
+                    "chat_id": chat_id,
+                    "destination_topic_id": topic.topic_id,
+                    "reason": error.code,
+                },
+            )
+            await message.answer(
+                f"Не удалось подтвердить топик «{topic.title}»: "  # noqa: RUF001
+                "Telegram не подтвердил результат. Ничего не сохранено. Повторите попытку."
+            )
+            return
         except ProvisioningError as error:
             await message.answer(
                 f"Не удалось подтвердить топик «{topic.title}»: {error}\n"  # noqa: RUF001
                 "Ничего не сохранено. Повторите попытку."
             )
             return
-        await state.set_state(None)
-        fresh = await settings_reader()
-        markup = owner_main_keyboard(fresh) if fresh is not None else ordinal_choice_keyboard()
-        await message.answer(_confirmation_text(kind, topic, result), reply_markup=markup)
+        except Exception:
+            logger.exception(
+                "telegram destination proof failed unexpectedly",
+                extra={
+                    "chat_id": chat_id,
+                    "destination_topic_id": topic.topic_id,
+                },
+            )
+            await message.answer(
+                f"Не удалось подтвердить топик «{topic.title}». "  # noqa: RUF001
+                "Ничего не сохранено. Повторите попытку."
+            )
+            return
+        else:
+            await state.set_state(None)
+            fresh = await settings_reader()
+            markup = owner_main_keyboard(fresh) if fresh is not None else ordinal_choice_keyboard()
+            await message.answer(_confirmation_text(kind, topic, result), reply_markup=markup)
+
+    async def _recover_stale_topic(
+        message: Message,
+        chat_id: int,
+        topic: TopicInfo,
+        refresh_use_case: RefreshUseCase,
+    ) -> None:
+        try:
+            topics = await refresh_use_case.refresh(chat_id)
+        except Exception:
+            logger.exception(
+                "telegram stale destination refresh failed",
+                extra={"chat_id": chat_id, "destination_topic_id": topic.topic_id},
+            )
+            cached_topics = await topics_reader(chat_id)
+            await message.answer(
+                f"Топик «{topic.title}» больше недоступен, но список не удалось "
+                "обновить. Повторите попытку и выберите destination снова.\n\n"
+                f"{_render_destination_list(_destination_rows(cached_topics))}",
+                reply_markup=ordinal_choice_keyboard(),
+            )
+            return
+        logger.info(
+            "telegram stale destination recovered",
+            extra={
+                "chat_id": chat_id,
+                "destination_topic_id": topic.topic_id,
+                "topic_count": len(topics),
+            },
+        )
+        await message.answer(
+            f"Топик «{topic.title}» больше недоступен. Список destinations обновлён.\n\n"
+            f"{_render_destination_list(_destination_rows(topics))}",
+            reply_markup=ordinal_choice_keyboard(),
+        )
 
     async def messages_pick(message: Message, state: FSMContext) -> None:
         if not _in_wizard(await state.get_state(), "messages"):

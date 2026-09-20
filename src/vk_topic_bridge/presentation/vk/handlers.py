@@ -12,12 +12,13 @@ import logging
 from collections.abc import Awaitable, Callable, Mapping, Sequence
 from dataclasses import dataclass
 
-from vk_topic_bridge.application.errors import DomainError
+from vk_topic_bridge.application.errors import TELEGRAM_TOPIC_NOT_FOUND_CODE, DomainError
 from vk_topic_bridge.application.manual.aliasing import (
     AliasEntry,
     AliasManager,
     AliasResolution,
     ManualDestinationList,
+    ManualDestinationOffer,
     ManualForwarding,
 )
 from vk_topic_bridge.application.manual.publish_manual import (
@@ -318,18 +319,8 @@ class VkUiDispatcher:
             )
             return
         pending = session.pending_message
-        session.pending_message = None
-        session.state = VkUiState.IDLE
-        self._sessions.set(message.from_id, session)
-        logger.debug(
-            "vk UI FSM transition",
-            extra={
-                "from_id": message.from_id,
-                "state_before": VkUiState.WAIT_DESTINATION.value,
-                "state_after": VkUiState.IDLE.value,
-            },
-        )
         if not isinstance(pending, VkUiMessage):
+            self._sessions.clear(message.from_id)
             await self._reply(message, PUBLISH_FAILED_TEXT, main_keyboard_json())
             return
         resolution = AliasResolution(
@@ -501,15 +492,75 @@ class VkUiDispatcher:
             destination=Destination(chat_id=chat_id, message_thread_id=topic.topic_id),
         )
         try:
-            await self._manual_publisher.execute(request)
+            result = await self._manual_publisher.execute(request)
         except DomainError as error:
             logger.warning("manual publication failed for user %s: %s", message.from_id, error)
             self._sessions.clear(message.from_id)
             await self._reply(message, _publication_error_text(error), main_keyboard_json())
             return
+        if not result.published:
+            logger.warning(
+                "vk manual publication completed with failure",
+                extra={"from_id": message.from_id, "reason": result.error},
+            )
+            if result.error == TELEGRAM_TOPIC_NOT_FOUND_CODE:
+                await self._keep_manual_destination_open(
+                    message, session, source, topic.topic_id, result.error
+                )
+                return
+            self._sessions.clear(message.from_id)
+            await self._reply(
+                message, _manual_result_error_text(result.error), main_keyboard_json()
+            )
+            return
         self._sessions.clear(message.from_id)
         logger.info("vk manual publication completed", extra={"from_id": message.from_id})
         await self._reply(message, SENT_TEXT, main_keyboard_json())
+
+    async def _keep_manual_destination_open(
+        self,
+        message: VkUiMessage,
+        session: VkUserSession,
+        source: VkUiMessage,
+        failed_topic_id: int | None,
+        error_code: str,
+    ) -> None:
+        listing = await self._manual_forwarding.destination_list(message.from_id)
+        if not listing.chat_registered or not listing.destinations:
+            self._sessions.clear(message.from_id)
+            await self._reply(message, CONFIG_ERROR_TEXT)
+            return
+        destinations = tuple(
+            ManualDestinationOffer(
+                topic=offer.topic,
+                available=offer.available and offer.topic.topic_id != failed_topic_id,
+            )
+            for offer in listing.destinations
+        )
+        session.state = VkUiState.WAIT_DESTINATION
+        session.pending_message = source
+        self._sessions.set(message.from_id, session)
+        retry_listing = ManualDestinationList(
+            chat_registered=listing.chat_registered,
+            destinations=destinations,
+            chat_id=listing.chat_id,
+        )
+        logger.debug(
+            "vk manual destination retry offered",
+            extra={
+                "from_id": message.from_id,
+                "state_after": VkUiState.WAIT_DESTINATION.value,
+                "reason": error_code,
+                "message_count": len(destinations),
+            },
+        )
+        await self._reply(
+            message,
+            f"{_manual_result_error_text(error_code)}\n\n"
+            f"{_destinations_text(retry_listing)}"
+            f"\n\n{ORDINAL_ONLY_TEXT}",
+            wait_destination_keyboard_json(),
+        )
 
     async def _resolve_source(self, message: VkUiMessage) -> SourceMessage | None:
         return await self._source_resolver(message)
@@ -573,4 +624,15 @@ def _publication_error_text(error: DomainError) -> str:
 
     if isinstance(error, ProvisioningError):
         return f"{PUBLISH_FAILED_TEXT}\n{error}"
+    return PUBLISH_FAILED_TEXT
+
+
+def _manual_result_error_text(error_code: str | None) -> str:
+    if error_code == TELEGRAM_TOPIC_NOT_FOUND_CODE:
+        return (
+            "Выбранный Telegram-топик удалён или закрыт. "
+            "Сообщение не отправлено. Выберите другой топик."
+        )
+    if error_code == "publication_ambiguous":
+        return "Telegram не подтвердил отправку. Сообщение не отправлено. Попробуйте позже."
     return PUBLISH_FAILED_TEXT

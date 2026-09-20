@@ -104,12 +104,15 @@ class FakeUow:
 @dataclass(slots=True)
 class FakeManualPublisher:
     error: Exception | None = None
+    result: ManualPublicationResult | None = None
     calls: list[ManualPublicationRequest] = field(default_factory=list)
 
     async def execute(self, request: ManualPublicationRequest) -> ManualPublicationResult:
         self.calls.append(request)
         if self.error is not None:
             raise self.error
+        if self.result is not None:
+            return self.result
         return ManualPublicationResult(published=True, message_ids=(1,), delivery_id=1)
 
 
@@ -341,6 +344,39 @@ async def test_manual_publication_failure_clears_fsm() -> None:
     await h.dispatcher.dispatch(_msg("2"))
     assert h.sessions.get(USER_ID).state is VkUiState.IDLE
     assert "Не удалось" in h.send.last_text  # noqa: RUF001
+
+
+async def test_manual_publication_result_failure_keeps_destination_fsm() -> None:
+    publisher = FakeManualPublisher(
+        result=ManualPublicationResult(
+            published=False,
+            message_ids=(),
+            delivery_id=1,
+            error="telegram_topic_not_found",
+        )
+    )
+    h = _harness(publisher=publisher)
+
+    await h.dispatcher.dispatch(_msg("", fwd=1))
+    await h.dispatcher.dispatch(_msg("2"))
+
+    assert h.sessions.get(USER_ID).state is VkUiState.WAIT_DESTINATION
+    assert "топик" in h.send.last_text.lower()
+    assert "не отправлено" in h.send.last_text.lower()
+    assert "1. General" in h.send.last_text
+    assert "2. Новости (недоступна)" in h.send.last_text
+
+    publisher.result = ManualPublicationResult(
+        published=True,
+        message_ids=(2,),
+        delivery_id=2,
+    )
+    await h.dispatcher.dispatch(_msg("1"))
+
+    assert h.sessions.get(USER_ID).state is VkUiState.IDLE
+    assert len(publisher.calls) == 2
+    assert publisher.calls[1].destination.message_thread_id is None
+    assert "отправлено" in h.send.last_text
 
 
 # --- session isolation -------------------------------------------------------

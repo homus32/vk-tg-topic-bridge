@@ -94,12 +94,20 @@ def test_stdlib_extra_context_is_rendered_without_unknown_fields(tmp_path: Path)
 
     logging.getLogger("vk_topic_bridge.test").info(
         "context-event",
-        extra={"chat_id": 42, "reason": "diagnostic", "token": "do-not-log"},
+        extra={
+            "chat_id": 42,
+            "failed_count": 1,
+            "reason": "diagnostic",
+            "sent_count": 2,
+            "token": "do-not-log",
+        },
     )
 
     message = next(message for message in sink.messages if "context-event" in message)
     assert "chat_id=42" in message
+    assert "failed_count=1" in message
     assert "reason=diagnostic" in message
+    assert "sent_count=2" in message
     assert "do-not-log" not in message
 
 

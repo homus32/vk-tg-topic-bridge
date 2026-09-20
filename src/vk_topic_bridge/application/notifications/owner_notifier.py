@@ -16,7 +16,12 @@ from vk_topic_bridge.application.ports.telegram_ex import TelegramNotifierPort
 logger = logging.getLogger(__name__)
 
 _FEATURE_LABELS = {"messages": "сообщений", "wall": "постов стены"}
-_REASON_LABELS = {"missing": "не найден", "closed": "закрыт", "hidden": "скрыт"}
+_REASON_LABELS = {
+    "missing": "не найден",
+    "closed": "закрыт",
+    "hidden": "скрыт",
+    "stale": "удалён или закрыт",
+}
 
 
 @runtime_checkable
@@ -49,27 +54,54 @@ class OwnerNotifier:
             "owner notification broadcast started",
             extra={"owner_count": len(self._owner_ids), "text_length": len(text)},
         )
+        sent_count = 0
+        failed_count = 0
         for owner_id in sorted(self._owner_ids):
-            await self._send_one(owner_id, text)
-        logger.debug("owner notification broadcast completed")
+            if await self._send_one(owner_id, text):
+                sent_count += 1
+            else:
+                failed_count += 1
+        logger.info(
+            "owner notification broadcast completed",
+            extra={
+                "owner_count": len(self._owner_ids),
+                "sent_count": sent_count,
+                "failed_count": failed_count,
+            },
+        )
 
     async def notify_others(self, initiator_id: int, text: str) -> None:
         logger.debug(
             "owner notification broadcast to others started",
             extra={"owner_count": len(self._owner_ids), "owner_id": initiator_id},
         )
+        sent_count = 0
+        failed_count = 0
         for owner_id in sorted(self._owner_ids):
             if owner_id == initiator_id:
                 continue
-            await self._send_one(owner_id, text)
-        logger.debug("owner notification broadcast to others completed")
+            if await self._send_one(owner_id, text):
+                sent_count += 1
+            else:
+                failed_count += 1
+        logger.info(
+            "owner notification broadcast to others completed",
+            extra={
+                "owner_count": len(self._owner_ids),
+                "owner_id": initiator_id,
+                "sent_count": sent_count,
+                "failed_count": failed_count,
+            },
+        )
 
-    async def _send_one(self, owner_id: int, text: str) -> None:
+    async def _send_one(self, owner_id: int, text: str) -> bool:
         try:
             await self._port.send_text(owner_id, text)
             logger.debug("owner notification sent", extra={"owner_id": owner_id})
+            return True
         except Exception:
             logger.exception("owner notification failed for %s", owner_id)
+            return False
 
 
 def fallback_notification_text(

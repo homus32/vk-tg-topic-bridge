@@ -362,6 +362,32 @@ class _FakePublisher:
         return 1
 
 
+class _RuntimeStalePublisher(_FakePublisher):
+    async def publish_plan(self, plan: PublicationPlan) -> tuple[OperationOutcome, ...]:
+        self.plans.append(plan)
+        self.calls.append(plan.base)
+        await asyncio.sleep(0)
+        if len(self.plans) == 1:
+            return tuple(
+                OperationOutcome(
+                    operation=operation,
+                    status=OperationStatus.FAILED_PERMANENT,
+                    message_ids=(),
+                    error_code="telegram_topic_not_found",
+                    error_message="Telegram server says - Bad Request: TOPIC_CLOSED",
+                )
+                for operation in plan.operations
+            )
+        return tuple(
+            OperationOutcome(
+                operation=operation,
+                status=OperationStatus.PUBLISHED,
+                message_ids=self.message_ids,
+            )
+            for operation in plan.operations
+        )
+
+
 class _BlockingPublisher(_FakePublisher):
     """Publisher whose ``publish_plan`` blocks until the test cancels the use-case task."""
 
@@ -585,6 +611,7 @@ class _Harness:
         settings_missing: bool = False,
         topics: Sequence[TopicInfo] | None = None,
         publisher_error: BaseException | None = None,
+        publisher: _FakePublisher | None = None,
         vk_error: Exception | None = None,
         blocking_publisher: bool = False,
         with_notifier: bool = False,
@@ -596,7 +623,7 @@ class _Harness:
             self.settings = _FakeSettings(settings)
         else:
             self.settings = _FakeSettings(_registered_settings())
-        self.publisher: _FakePublisher = (
+        self.publisher: _FakePublisher = publisher or (
             _BlockingPublisher() if blocking_publisher else _FakePublisher(error=publisher_error)
         )
         self.vk = _FakeVk(error=vk_error)
@@ -909,6 +936,35 @@ async def test_closed_topic_falls_back_to_general() -> None:
     assert outcome.published is True
     assert harness.publisher.plans[0].base.message_thread_id is None
     assert "закрыт" in harness.notifier.all_texts[0]
+
+
+async def test_runtime_stale_topic_falls_back_to_general_and_notifies_owner(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    publisher = _RuntimeStalePublisher()
+    harness = _Harness(publisher=publisher, with_notifier=True)
+
+    with caplog.at_level(logging.DEBUG):
+        outcome = await harness.use_case.execute(_source("@all Привет"))
+
+    assert outcome.published is True
+    assert [plan.base.message_thread_id for plan in publisher.plans] == [_TOPIC_ID, None]
+    assert len(harness.notifier.all_texts) == 1
+    assert "удалён или закрыт" in harness.notifier.all_texts[0]
+    assert harness.vk.reaction_calls == [(_PEER_ID, _CONVERSATION_MESSAGE_ID)]
+    records = list(harness.ledger.records.values())
+    assert any(
+        record.destination_topic_id == _TOPIC_ID
+        and record.publication_status is PublicationStatus.FAILED_PERMANENT
+        for record in records
+    )
+    assert any(
+        record.destination_topic_id is None
+        and record.publication_status is PublicationStatus.PUBLISHED
+        for record in records
+    )
+    assert "automatic runtime stale topic detected" in caplog.text
+    assert "automatic runtime stale-topic fallback completed" in caplog.text
 
 
 async def test_explicit_general_publishes_without_fallback_notification() -> None:

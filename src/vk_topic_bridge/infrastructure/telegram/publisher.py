@@ -36,6 +36,7 @@ from aiogram.types import (
 )
 
 from vk_topic_bridge.application.errors import (
+    TELEGRAM_TOPIC_NOT_FOUND_CODE,
     PublicationAmbiguousError,
     PublicationRejectedError,
 )
@@ -58,6 +59,7 @@ logger = logging.getLogger(__name__)
 
 _ERROR_TEXT_LIMIT = 200
 _TOKEN_PATTERN = re.compile(r"\d{5,}:[A-Za-z0-9_-]{20,}")
+_STALE_TOPIC_DESCRIPTIONS = frozenset({"topic_closed", "message thread not found"})
 
 # Bot API flag -> public capability name, in the frozen reporting order.
 _CAPABILITY_FLAGS: tuple[tuple[str, str], ...] = (
@@ -113,9 +115,26 @@ def _safe_error_text(exc: BaseException) -> str:
     return " ".join(text.split())[:_ERROR_TEXT_LIMIT]
 
 
-def _classify(exc: BaseException) -> PublicationAmbiguousError | PublicationRejectedError:
+def _is_stale_topic_description(message: str) -> bool:
+    description = message.strip().casefold()
+    if description.startswith("bad request:"):
+        description = description.removeprefix("bad request:").strip()
+    return description in _STALE_TOPIC_DESCRIPTIONS
+
+
+def _classify(
+    exc: BaseException, *, destination_topic_id: int | None = None
+) -> PublicationAmbiguousError | PublicationRejectedError:
     """Map a failed Bot API call onto the frozen fail-closed error taxonomy."""
     if isinstance(exc, _REJECTED_FAILURES):
+        if (
+            destination_topic_id is not None
+            and isinstance(exc, TelegramBadRequest)
+            and _is_stale_topic_description(exc.message)
+        ):
+            return PublicationRejectedError(
+                _safe_error_text(exc), code=TELEGRAM_TOPIC_NOT_FOUND_CODE
+            )
         return PublicationRejectedError(_safe_error_text(exc), code="bot_api_rejected")
     if isinstance(exc, _AMBIGUOUS_FAILURES):
         code = _ambiguous_code(exc)
@@ -177,7 +196,7 @@ async def _send_message(
         # Cancellation semantics belong to the caller: it marks the outcome ambiguous.
         raise
     except BaseException as exc:
-        raise _classify(exc) from exc
+        raise _classify(exc, destination_topic_id=destination.message_thread_id) from exc
 
 
 class BotApiPublisher:
@@ -358,7 +377,7 @@ class BotApiPublisher:
         except asyncio.CancelledError:
             raise
         except BaseException as exc:
-            raise _classify(exc) from exc
+            raise _classify(exc, destination_topic_id=thread_id) from exc
 
 
 def _build_input_media(
@@ -436,7 +455,7 @@ class BotApiAdminPort:
     ) -> int:
         message_id = await self._publisher.send_text(chat_id, text, message_thread_id)
         logger.info(
-            "telegram registration topic test sent",
+            "telegram destination proof sent",
             extra={"chat_id": chat_id, "destination_topic_id": message_thread_id},
         )
         return message_id

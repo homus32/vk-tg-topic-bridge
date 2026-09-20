@@ -16,7 +16,11 @@ from vk_topic_bridge.application.admin.destination_admin import (
     DestinationConfirmationResult,
 )
 from vk_topic_bridge.application.dto.settings import BridgeSettingsState
-from vk_topic_bridge.application.errors import ProvisioningError
+from vk_topic_bridge.application.errors import (
+    ProvisioningError,
+    PublicationAmbiguousError,
+    PublicationRejectedError,
+)
 from vk_topic_bridge.domain.value_objects import TopicInfo
 from vk_topic_bridge.presentation.telegram import filters as btn
 from vk_topic_bridge.presentation.telegram.routers.destinations import build_destinations_router
@@ -77,6 +81,19 @@ class FakeSelectDestination:
         return self.result
 
 
+@dataclass
+class FakeRefreshTopics:
+    topics: list[TopicInfo]
+    error: Exception | None = None
+    calls: list[int] = field(default_factory=list)
+
+    async def refresh(self, chat_id: int) -> list[TopicInfo]:
+        self.calls.append(chat_id)
+        if self.error is not None:
+            raise self.error
+        return list(self.topics)
+
+
 def _registered(**overrides: object) -> BridgeSettingsState:
     base = BridgeSettingsState(
         telegram_chat_id=CHAT_ID,
@@ -101,6 +118,7 @@ def _harness(
     state: BridgeSettingsState | None = None,
     topics: list[TopicInfo] | None = None,
     select: FakeSelectDestination | None = None,
+    refresh: FakeRefreshTopics | None = None,
 ) -> Harness:
     current = state if state is not None else _registered()
     topic_list = topics if topics is not None else TOPICS
@@ -119,6 +137,7 @@ def _harness(
         settings_reader,
         topics_reader,
         run_id_factory=lambda: RUN_ID,
+        refresh_use_case=cast("Any", refresh or FakeRefreshTopics(topic_list)),
     )
     return Harness(router=router, select=use_case)
 
@@ -217,6 +236,146 @@ async def test_proof_failure_reports_and_persists_nothing() -> None:
     text, _ = message.answers[0]
     assert "test send failed" in text
     assert await fsm.get_state() == MessagesDestinationWizard.wait_ordinal.state
+
+
+async def test_unexpected_proof_failure_reports_and_keeps_wizard_active() -> None:
+    select = FakeSelectDestination(error=RuntimeError("unexpected proof failure"))
+    harness = _harness(select=select)
+    fsm = FakeFSMContext(state=MessagesDestinationWizard.wait_ordinal.state)
+    message = FakeMessage(text="2")
+
+    await _handler(harness.router, "messages_pick")(message, fsm)
+
+    text, _ = message.answers[0]
+    assert "Не удалось подтвердить топик" in text  # noqa: RUF001
+    assert "Повторите попытку" in text
+    assert await fsm.get_state() == MessagesDestinationWizard.wait_ordinal.state
+
+
+async def test_stale_topic_recovers_refreshes_list_and_keeps_wizard_active() -> None:
+    stale = TopicInfo(
+        topic_id=11, title="Удалённая", is_general=False, is_closed=False, is_hidden=False
+    )
+    refreshed = [GENERAL, VAZHNYE]
+    select = FakeSelectDestination(
+        error=PublicationRejectedError(
+            "Bad Request: message thread not found", code="telegram_topic_not_found"
+        )
+    )
+    refresh = FakeRefreshTopics(refreshed)
+    harness = _harness(topics=[GENERAL, stale], select=select, refresh=refresh)
+    fsm = FakeFSMContext(state=MessagesDestinationWizard.wait_ordinal.state)
+    message = FakeMessage(text="2")
+
+    await _handler(harness.router, "messages_pick")(message, fsm)
+
+    assert refresh.calls == [CHAT_ID]
+    assert await fsm.get_state() == MessagesDestinationWizard.wait_ordinal.state
+    text, _ = message.answers[0]
+    assert "больше недоступен" in text
+    assert "2. Удалённая" not in text
+    assert "Важные" in text
+
+
+async def test_stale_topic_refresh_failure_keeps_cached_selection_recoverable() -> None:
+    stale = TopicInfo(
+        topic_id=11, title="Удалённая", is_general=False, is_closed=False, is_hidden=False
+    )
+    select = FakeSelectDestination(
+        error=PublicationRejectedError(
+            "Bad Request: message thread not found", code="telegram_topic_not_found"
+        )
+    )
+    refresh = FakeRefreshTopics([GENERAL], error=RuntimeError("telethon unavailable"))
+    harness = _harness(topics=[GENERAL, stale], select=select, refresh=refresh)
+    fsm = FakeFSMContext(state=MessagesDestinationWizard.wait_ordinal.state)
+    message = FakeMessage(text="2")
+
+    await _handler(harness.router, "messages_pick")(message, fsm)
+
+    assert await fsm.get_state() == MessagesDestinationWizard.wait_ordinal.state
+    text, _ = message.answers[0]
+    assert "не удалось обновить" in text
+
+
+async def test_transient_proof_failure_does_not_trigger_stale_refresh() -> None:
+    select = FakeSelectDestination(
+        error=PublicationAmbiguousError("network timeout", code="bot_api_network")
+    )
+    refresh = FakeRefreshTopics([GENERAL, VAZHNYE])
+    harness = _harness(select=select, refresh=refresh)
+    fsm = FakeFSMContext(state=MessagesDestinationWizard.wait_ordinal.state)
+    message = FakeMessage(text="2")
+
+    await _handler(harness.router, "messages_pick")(message, fsm)
+
+    assert refresh.calls == []
+    assert await fsm.get_state() == MessagesDestinationWizard.wait_ordinal.state
+    assert "telegram не подтвердил" in message.answers[0][0].lower()
+
+
+async def test_general_can_be_selected_after_stale_topic_recovery() -> None:
+    stale = TopicInfo(
+        topic_id=11, title="Удалённая", is_general=False, is_closed=False, is_hidden=False
+    )
+    cached_topics = [GENERAL, stale]
+    select = FakeSelectDestination(
+        result=DestinationConfirmationResult(persisted=True, message_id=555, general_selected=True),
+        error=PublicationRejectedError(
+            "Bad Request: message thread not found", code="telegram_topic_not_found"
+        ),
+    )
+    refresh = FakeRefreshTopics([GENERAL, VAZHNYE])
+    harness = _harness(topics=cached_topics, select=select, refresh=refresh)
+    fsm = FakeFSMContext(state=MessagesDestinationWizard.wait_ordinal.state)
+    stale_message = FakeMessage(text="2")
+
+    await _handler(harness.router, "messages_pick")(stale_message, fsm)
+
+    cached_topics[:] = [GENERAL, VAZHNYE]
+    select.error = None
+    message = FakeMessage(text="1")
+
+    await _handler(harness.router, "messages_pick")(message, fsm)
+
+    assert await fsm.get_state() is None
+    assert select.calls == [
+        (CHAT_ID, stale, "messages", RUN_ID),
+        (CHAT_ID, GENERAL, "messages", RUN_ID),
+    ]
+
+
+async def test_named_topic_can_be_selected_after_stale_topic_recovery() -> None:
+    stale = TopicInfo(
+        topic_id=11, title="Удалённая", is_general=False, is_closed=False, is_hidden=False
+    )
+    cached_topics = [GENERAL, stale]
+    select = FakeSelectDestination(
+        result=DestinationConfirmationResult(
+            persisted=True, message_id=556, general_selected=False
+        ),
+        error=PublicationRejectedError(
+            "Bad Request: message thread not found", code="telegram_topic_not_found"
+        ),
+    )
+    refresh = FakeRefreshTopics([GENERAL, VAZHNYE])
+    harness = _harness(topics=cached_topics, select=select, refresh=refresh)
+    fsm = FakeFSMContext(state=MessagesDestinationWizard.wait_ordinal.state)
+    stale_message = FakeMessage(text="2")
+
+    await _handler(harness.router, "messages_pick")(stale_message, fsm)
+
+    cached_topics[:] = [GENERAL, VAZHNYE]
+    select.error = None
+    message = FakeMessage(text="2")
+
+    await _handler(harness.router, "messages_pick")(message, fsm)
+
+    assert await fsm.get_state() is None
+    assert select.calls == [
+        (CHAT_ID, stale, "messages", RUN_ID),
+        (CHAT_ID, VAZHNYE, "messages", RUN_ID),
+    ]
 
 
 async def test_wall_wizard_separate_state_and_kind() -> None:

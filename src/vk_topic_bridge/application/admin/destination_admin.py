@@ -43,19 +43,19 @@ class SelectDestinationV2:
             raise ProvisioningError(f"unknown destination kind {kind!r}")
         general_selected = topic.is_general and topic.topic_id is None
         message_id: int | None = None
-        if not general_selected:
-            if topic.topic_id is None:
-                raise ProvisioningError(
-                    f"topic {topic.title!r} has no thread id and is not marked as General"
-                )
-            confirmation_text = f"destination check for run {run_id} (topic {topic.topic_id!r})"
-            message_id = await self._admin.send_test_into_topic(
-                chat_id, topic.topic_id, confirmation_text
+        if not general_selected and topic.topic_id is None:
+            raise ProvisioningError(
+                f"topic {topic.title!r} has no thread id and is not marked as General"
             )
-            if message_id <= 0:
-                raise ProvisioningError(
-                    f"test send into chat {chat_id} topic {topic.topic_id!r} returned no message id"
-                )
+        destination_label = "General" if general_selected else f"topic {topic.topic_id}"
+        confirmation_text = f"destination check for run {run_id} ({destination_label})"
+        message_id = await self._admin.send_test_into_topic(
+            chat_id, topic.topic_id, confirmation_text
+        )
+        if message_id <= 0:
+            raise ProvisioningError(
+                f"test send into chat {chat_id} topic {topic.topic_id!r} returned no message id"
+            )
 
         async with self._uow_factory() as uow:
             if kind == "messages":

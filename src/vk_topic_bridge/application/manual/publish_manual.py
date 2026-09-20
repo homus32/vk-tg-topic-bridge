@@ -129,7 +129,12 @@ class PublishManualMessage:
             published=outcome.published,
             message_ids=outcome.message_ids,
             delivery_id=delivery_id,
-            error=None if outcome.published else "публикация не удалась",
+            error=(
+                None
+                if outcome.published
+                else outcome.failure_code
+                or ("publication_ambiguous" if outcome.ambiguous else "publication_rejected")
+            ),
         )
         if result.published:
             logger.info(
@@ -143,6 +148,10 @@ class PublishManualMessage:
         else:
             logger.warning(
                 "manual publication completed with failure",
-                extra={"owner_id": request.initiator.user_id, "delivery_id": delivery_id},
+                extra={
+                    "owner_id": request.initiator.user_id,
+                    "delivery_id": delivery_id,
+                    "reason": result.error,
+                },
             )
         return result

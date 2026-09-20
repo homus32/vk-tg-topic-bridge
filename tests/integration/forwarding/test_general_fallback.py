@@ -66,6 +66,17 @@ class FakeVk:
         raise NotImplementedError
 
 
+class OwnerSelectivePublisher(RecordingPublisher):
+    def __init__(self, *, failing_owner_ids: frozenset[int]) -> None:
+        super().__init__(message_ids=PUBLISHED_MESSAGE_IDS)
+        self._failing_owner_ids = failing_owner_ids
+
+    async def send_text(self, chat_id: int, text: str, message_thread_id: int | None = None) -> int:
+        if chat_id in self._failing_owner_ids:
+            raise RuntimeError(f"owner notification failed for {chat_id}")
+        return await super().send_text(chat_id, text, message_thread_id)
+
+
 @pytest.fixture
 def database_url(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> str:
     url = f"sqlite+aiosqlite:///{tmp_path / 'general-fallback.db'}"
@@ -168,3 +179,24 @@ async def test_available_configured_topic_publishes_directly(
     assert publisher.sent_text == []
     row = (await _rows(session_factory))[0]
     assert row.destination_topic_id == PRESENT_TOPIC_ID
+
+
+async def test_fallback_notifies_all_owners_without_blocking_reaction(
+    session_factory: SessionFactory,
+) -> None:
+    await _seed(session_factory, MISSING_TOPIC_ID, snapshot_topic_id=PRESENT_TOPIC_ID)
+    publisher = OwnerSelectivePublisher(failing_owner_ids=frozenset({222}))
+    notifier = OwnerNotifier(frozenset({111, 222, 333}), publisher)
+    vk = FakeVk()
+    use_case = ForwardVkMessage(
+        uow_factory=lambda: SqlAlchemyUnitOfWork(session_factory),
+        plan_publisher=publisher,
+        vk=vk,
+        notifier=notifier,
+    )
+
+    outcome = await use_case.execute(make_source("@all Привет"))
+
+    assert outcome.published is True
+    assert [owner_id for owner_id, _, _ in publisher.sent_text] == [111, 333]
+    assert vk.reactions == [(PEER_ID, CONVERSATION_MESSAGE_ID)]

@@ -383,6 +383,33 @@ async def test_send_text_maps_rejections_too() -> None:
         await publisher.send_text(CHAT_ID, "hi")
 
 
+@pytest.mark.parametrize(
+    "description",
+    [
+        "Bad Request: message thread not found",
+        "Bad Request: TOPIC_CLOSED",
+    ],
+)
+async def test_unavailable_topic_rejection_has_stale_topic_code(description: str) -> None:
+    fake = FakeBot(error=TelegramBadRequest(_send_error(), description))
+    publisher, _ = _publisher(fake)
+
+    with pytest.raises(PublicationRejectedError) as raised:
+        await publisher.publish(_publication(7))
+
+    assert raised.value.code == "telegram_topic_not_found"
+
+
+async def test_unrelated_bad_request_does_not_get_stale_topic_code() -> None:
+    fake = FakeBot(error=TelegramBadRequest(_send_error(), "Bad Request: chat not found"))
+    publisher, _ = _publisher(fake)
+
+    with pytest.raises(PublicationRejectedError) as raised:
+        await publisher.publish(_publication(7))
+
+    assert raised.value.code == "bot_api_rejected"
+
+
 async def test_long_error_message_is_truncated() -> None:
     fake = FakeBot(error=TelegramBadRequest(_send_error(), "x" * 5000))
     publisher, _ = _publisher(fake)
