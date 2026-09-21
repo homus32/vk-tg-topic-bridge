@@ -4,12 +4,11 @@ from __future__ import annotations
 
 from typing import Protocol, runtime_checkable
 
-from vk_topic_bridge.domain.enums import AttachmentKind
 from vk_topic_bridge.domain.publication import (
     OperationOutcome,
     PublicationPlan,
 )
-from vk_topic_bridge.domain.value_objects import Destination
+from vk_topic_bridge.domain.value_objects import Attachment, Destination
 
 
 @runtime_checkable
@@ -49,18 +48,10 @@ class TelegramNotifierPort(Protocol):
 
 @runtime_checkable
 class VkMediaDownloaderPort(Protocol):
-    """Downloads one VK attachment to a local temp file before upload.
+    """Downloads one normalized VK attachment to a local temp file before upload."""
 
-    TODO(finish): implemented over ``RawVkApi`` + aiohttp. ``resolve_url`` turns the
-    attachment ``source_ref`` (``{owner_id}_{media_id}[_{access_key}]``) into the direct
-    download URL for its kind. ``download`` streams that URL into a temp file and
-    returns its path. Pre-check size when known and refuse >50 MB before downloading
-    (domain policy). Failures raise ``RecoverableInfraError`` subclasses already defined
-    for VK; a 50 MB refusal is a domain-policy warning, not an infrastructure error.
-    """
-
-    async def resolve_url(self, source_ref: str, kind: AttachmentKind) -> str: ...
-    async def download(self, source_ref: str, url: str) -> str: ...
+    async def resolve_url(self, attachment: Attachment) -> str: ...
+    async def download(self, attachment: Attachment, url: str) -> str: ...
 
 
 @runtime_checkable

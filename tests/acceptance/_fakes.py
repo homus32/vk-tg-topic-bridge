@@ -526,13 +526,17 @@ class FakeDownloader:
         self.resolved: list[tuple[str, AttachmentKind]] = []
         self.downloaded: list[str] = []
 
-    async def resolve_url(self, source_ref: str, kind: AttachmentKind) -> str:
+    async def resolve_url(self, attachment: Attachment) -> str:
+        source_ref = attachment.source_ref or ""
+        kind = attachment.kind
         self.resolved.append((source_ref, kind))
         if self.error is not None:
             raise self.error
         return f"https://cdn.example/{source_ref}"
 
-    async def download(self, source_ref: str, url: str) -> str:
+    async def download(self, attachment: Attachment, url: str) -> str:
+        source_ref = attachment.source_ref or ""
+        _ = url
         if self.error is not None:
             raise self.error
         if source_ref in self.fail_refs:

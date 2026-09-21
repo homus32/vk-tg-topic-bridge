@@ -18,6 +18,7 @@ from aiogram.methods import SendMediaGroup, SendMessage
 from aiogram.types import (
     FSInputFile,
     InputMediaPhoto,
+    ReplyParameters,
 )
 
 from vk_topic_bridge.application.forwarding.publication_planning import plan_publication
@@ -104,7 +105,7 @@ class FakeBot:
         error = self.errors.get("send_document")
         if error is not None:
             raise error
-        return FakeMessage(MESSAGE_ID)
+        return FakeMessage(MESSAGE_ID + len(self.send_document_calls) - 1)
 
     async def send_media_group(self, **kwargs: object) -> list[FakeMessage]:
         self.send_media_group_calls.append(kwargs)
@@ -206,7 +207,126 @@ async def test_single_document_uses_send_document(tmp_path: Path) -> None:
 
     assert len(fake.send_document_calls) == 1
     assert fake.send_document_calls[0]["document"] is not None
+    assert "reply_parameters" not in fake.send_document_calls[0]
     assert not Path(media[0].file_path).exists()
+
+
+async def test_document_replies_to_previous_photo_message(tmp_path: Path) -> None:
+    fake = FakeBot()
+    publisher = _publisher(fake)
+    photo_dir = tmp_path / "photos"
+    doc_dir = tmp_path / "docs"
+    photo_dir.mkdir()
+    doc_dir.mkdir()
+    photo = _media_files(photo_dir, 1)[0]
+    document = _media_files(doc_dir, 1, kind=OperationKind.DOCUMENT)[0]
+    plan = PublicationPlan(
+        base=_publication(""),
+        operations=(
+            PublicationOperation(kind=OperationKind.PHOTO, text=None, position=0, media=(photo,)),
+            PublicationOperation(
+                kind=OperationKind.DOCUMENT, text=None, position=1, media=(document,)
+            ),
+        ),
+    )
+
+    await publisher.publish_plan(plan)
+
+    reply = fake.send_document_calls[0]["reply_parameters"]
+    assert isinstance(reply, ReplyParameters)
+    assert reply.message_id == MESSAGE_ID
+
+
+async def test_document_replies_to_last_message_of_previous_media_group(tmp_path: Path) -> None:
+    fake = FakeBot()
+    publisher = _publisher(fake)
+    photo_dir = tmp_path / "photos"
+    doc_dir = tmp_path / "docs"
+    photo_dir.mkdir()
+    doc_dir.mkdir()
+    photos = _media_files(photo_dir, 2)
+    document = _media_files(doc_dir, 1, kind=OperationKind.DOCUMENT)[0]
+    plan = PublicationPlan(
+        base=_publication(""),
+        operations=(
+            PublicationOperation(
+                kind=OperationKind.MEDIA_GROUP, text=None, position=0, media=tuple(photos)
+            ),
+            PublicationOperation(
+                kind=OperationKind.DOCUMENT, text=None, position=1, media=(document,)
+            ),
+        ),
+    )
+
+    await publisher.publish_plan(plan)
+
+    reply = fake.send_document_calls[0]["reply_parameters"]
+    assert isinstance(reply, ReplyParameters)
+    assert reply.message_id == MESSAGE_ID + 1
+
+
+async def test_multiple_documents_reply_to_previous_publication_message(tmp_path: Path) -> None:
+    fake = FakeBot()
+    publisher = _publisher(fake)
+    photo_dir = tmp_path / "photos"
+    doc_dir = tmp_path / "docs"
+    photo_dir.mkdir()
+    doc_dir.mkdir()
+    photo = _media_files(photo_dir, 1)[0]
+    documents = _media_files(doc_dir, 2, kind=OperationKind.DOCUMENT)
+    plan = PublicationPlan(
+        base=_publication(""),
+        operations=(
+            PublicationOperation(kind=OperationKind.PHOTO, text=None, position=0, media=(photo,)),
+            *(
+                PublicationOperation(
+                    kind=OperationKind.DOCUMENT,
+                    text=None,
+                    position=index + 1,
+                    media=(document,),
+                )
+                for index, document in enumerate(documents)
+            ),
+        ),
+    )
+
+    await publisher.publish_plan(plan)
+
+    first_reply = fake.send_document_calls[0]["reply_parameters"]
+    second_reply = fake.send_document_calls[1]["reply_parameters"]
+    assert isinstance(first_reply, ReplyParameters)
+    assert isinstance(second_reply, ReplyParameters)
+    assert first_reply.message_id == MESSAGE_ID
+    assert second_reply.message_id == MESSAGE_ID
+
+
+async def test_document_without_successful_previous_media_has_no_reply(tmp_path: Path) -> None:
+    fake = FakeBot()
+    fake.errors["send_photo"] = TelegramBadRequest(
+        SendMediaGroup(chat_id=CHAT_ID, media=[]), "Bad Request"
+    )
+    publisher = _publisher(fake)
+    photo_dir = tmp_path / "photos"
+    doc_dir = tmp_path / "docs"
+    photo_dir.mkdir()
+    doc_dir.mkdir()
+    photo = _media_files(photo_dir, 1)[0]
+    document = _media_files(doc_dir, 1, kind=OperationKind.DOCUMENT)[0]
+    plan = PublicationPlan(
+        base=_publication(""),
+        operations=(
+            PublicationOperation(kind=OperationKind.PHOTO, text=None, position=0, media=(photo,)),
+            PublicationOperation(
+                kind=OperationKind.DOCUMENT, text=None, position=1, media=(document,)
+            ),
+        ),
+    )
+
+    outcomes = await publisher.publish_plan(plan)
+
+    assert outcomes[0].status is OperationStatus.FAILED_PERMANENT
+    assert outcomes[1].status is OperationStatus.PUBLISHED
+    assert "reply_parameters" not in fake.send_document_calls[0]
 
 
 # --- media groups ------------------------------------------------------------------

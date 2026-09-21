@@ -59,6 +59,29 @@ def _full_message() -> dict[str, object]:
     }
 
 
+def _full_message_with_photo() -> dict[str, object]:
+    message = _full_message()
+    message["attachments"] = [
+        {
+            "type": "photo",
+            "photo": {
+                "owner_id": -1,
+                "id": 11,
+                "access_key": "PHOTO_KEY",
+                "sizes": [
+                    {
+                        "type": "w",
+                        "url": "https://vk.example/photo.jpg",
+                        "width": 1920,
+                        "height": 1080,
+                    }
+                ],
+            },
+        }
+    ]
+    return message
+
+
 class FakeVkApi:
     """Minimal stand-in for ``vkbottle.API``: records calls and replays responses."""
 
@@ -74,6 +97,7 @@ class FakeVkApi:
     async def request(
         self, method: str, data: dict[str, object], version: str | None = None
     ) -> dict[str, object]:
+        _ = version
         self.calls.append((method, dict(data)))
         if method in self._errors:
             code = self._errors[method]
@@ -306,6 +330,27 @@ async def test_get_full_message_maps_by_conversation_message_id() -> None:
 
     assert source.conversation_message_id == CMID
     assert source.source_key == f"{GROUP_ID}:{PEER_ID}:{CMID}"
+
+
+async def test_cropped_full_message_preserves_media_contract() -> None:
+    module = _api_module()
+    fake = FakeVkApi(
+        {
+            "groups.getById": _ok({"groups": [{"id": GROUP_ID}]}),
+            "messages.getByConversationMessageId": _ok({"items": [_full_message_with_photo()]}),
+            "users.get": _ok(
+                [{"id": 123, "first_name": "И", "last_name": "И", "screen_name": None}]
+            ),
+        }
+    )
+    gateway = module.VkApiGateway(fake, _settings())
+
+    source = await gateway.get_full_message(PEER_ID, CMID)
+
+    attachment = source.attachments[0]
+    assert attachment.source_ref == "-1_11_PHOTO_KEY"
+    assert attachment.access_key == "PHOTO_KEY"
+    assert attachment.variants[0].url == "https://vk.example/photo.jpg"
 
 
 # --- reaction ----------------------------------------------------------------

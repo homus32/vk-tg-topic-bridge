@@ -60,18 +60,33 @@ def _classify(code: int) -> VkError:
 class VkApiGateway:
     """``VkGateway`` implementation writing through a VKBottle-style raw API."""
 
-    def __init__(self, api: RawVkApi, settings: Settings) -> None:
+    def __init__(self, api: RawVkApi, settings: Settings, *, token_type: str = "group") -> None:
         self._api = api
         self._settings = settings
+        self._token_type = token_type
 
     async def _request(self, method: str, params: dict[str, object]) -> object:
-        logger.debug("vk API request started", extra={"method": method})
+        logger.debug(
+            "vk API request started",
+            extra={
+                "method": method,
+                "api_adapter": "vkbottle_raw_api",
+                "token_type": self._token_type,
+            },
+        )
         try:
             response = await self._api.request(method, params)
         except VKAPIError as exc:
             logger.warning(
                 "vk API request failed",
-                extra={"method": method, "reason": str(exc.code)},
+                extra={
+                    "method": method,
+                    "reason": "vk_error",
+                    "vk_error_code": exc.code,
+                    "vk_error_class": type(exc).__name__,
+                    "api_adapter": "vkbottle_raw_api",
+                    "token_type": self._token_type,
+                },
             )
             raise _classify(exc.code) from exc
         if not isinstance(response, Mapping):
@@ -81,7 +96,7 @@ class VkApiGateway:
             )
             msg = f"unexpected VK response for {method}"
             raise VkRetryableError(1, msg)
-        logger.debug("vk API request completed", extra={"method": method})
+        logger.debug("vk API request completed", extra={"method": method, "outcome": "success"})
         return response.get("response")
 
     async def get_community_id(self) -> int:
@@ -151,7 +166,12 @@ class VkApiGateway:
     async def get_full_message(self, peer_id: int, conversation_message_id: int) -> SourceMessage:
         logger.debug(
             "vk full message lookup started",
-            extra={"peer_id": peer_id, "conversation_message_id": conversation_message_id},
+            extra={
+                "peer_id": peer_id,
+                "conversation_message_id": conversation_message_id,
+                "lookup": True,
+                "lookup_method": "messages.getByConversationMessageId",
+            },
         )
         response = await self._request(
             "messages.getByConversationMessageId",
@@ -173,6 +193,9 @@ class VkApiGateway:
                 "peer_id": peer_id,
                 "conversation_message_id": conversation_message_id,
                 "attachment_count": len(source.attachments),
+                "lookup": True,
+                "lookup_method": "messages.getByConversationMessageId",
+                "outcome": "success",
             },
         )
         return source
@@ -233,7 +256,14 @@ class VkApiGateway:
             msg = "VK event payload is missing the object message mapping"
             raise ValueError(msg)
         if mapper.is_cropped(obj):
-            logger.debug("vk message normalization requires full lookup")
+            logger.debug(
+                "vk message normalization requires full lookup",
+                extra={
+                    "lookup": True,
+                    "lookup_method": "messages.getByConversationMessageId",
+                    "reason": "cropped_message",
+                },
+            )
             peer_id = obj.get("peer_id")
             cmid = obj.get("conversation_message_id")
             if not isinstance(peer_id, int) or isinstance(peer_id, bool):

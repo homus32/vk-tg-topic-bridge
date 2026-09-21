@@ -128,17 +128,58 @@ def test_is_cropped_absent_is_false() -> None:
     assert mapper.is_cropped({}) is False
 
 
-def test_attachments_are_classified() -> None:
+def test_attachments_are_classified(caplog: pytest.LogCaptureFixture) -> None:
     mapper = _mapper()
     message = _message(
         attachments=[
-            {"type": "photo", "photo": {"id": 11, "owner_id": -1}},
-            {"type": "video", "video": {"id": 22, "owner_id": -1, "title": "clip", "size": 10}},
-            {"type": "doc", "doc": {"id": 33, "owner_id": -1, "title": "file.pdf", "size": 2048}},
+            {
+                "type": "photo",
+                "photo": {
+                    "id": 11,
+                    "owner_id": -1,
+                    "access_key": "photo-key",
+                    "sizes": [
+                        {
+                            "type": "s",
+                            "url": "https://vk.example/s.jpg",
+                            "width": 100,
+                            "height": 80,
+                        },
+                        {
+                            "type": "w",
+                            "url": "https://vk.example/w.jpg",
+                            "width": 1920,
+                            "height": 1080,
+                        },
+                    ],
+                },
+            },
+            {
+                "type": "video",
+                "video": {
+                    "id": 22,
+                    "owner_id": -1,
+                    "title": "clip",
+                    "size": 10,
+                    "files": {"mp4_720": "https://vk.example/v720.mp4"},
+                },
+            },
+            {
+                "type": "doc",
+                "doc": {
+                    "id": 33,
+                    "owner_id": -1,
+                    "access_key": "doc-key",
+                    "title": "file.pdf",
+                    "size": 2048,
+                    "url": "https://vk.example/file.pdf",
+                },
+            },
             {"type": "sticker", "sticker": {"id": 44}},
         ]
     )
-    source = mapper.map_message(group_id=GROUP_ID, message=message, author=_author())
+    with caplog.at_level("DEBUG"):
+        source = mapper.map_message(group_id=GROUP_ID, message=message, author=_author())
 
     assert [attachment.kind for attachment in source.attachments] == [
         AttachmentKind.PHOTO,
@@ -146,14 +187,30 @@ def test_attachments_are_classified() -> None:
         AttachmentKind.DOCUMENT,
         AttachmentKind.UNSUPPORTED,
     ]
+    photo = source.attachments[0]
+    assert photo.source_ref == "-1_11_photo-key"
+    assert photo.owner_id == -1
+    assert photo.media_id == 11
+    assert photo.access_key == "photo-key"
+    assert [variant.url for variant in photo.variants] == [
+        "https://vk.example/s.jpg",
+        "https://vk.example/w.jpg",
+    ]
     video = source.attachments[1]
     assert video.file_name == "clip"
     assert video.size_bytes == 10
+    assert video.link_url == "https://vk.com/video-1_22"
+    assert video.variants[0].quality == "mp4_720"
     document = source.attachments[2]
     assert document.file_name == "file.pdf"
     assert document.size_bytes == 2048
+    assert document.source_ref == "-1_33_doc-key"
+    assert document.direct_url == "https://vk.example/file.pdf"
     assert source.attachments[3].file_name is None
     assert source.attachments[3].size_bytes is None
+    assert "photo-key" not in caplog.text
+    assert "doc-key" not in caplog.text
+    assert any(getattr(record, "access_key_present", False) for record in caplog.records)
 
 
 def test_non_list_attachments_are_ignored() -> None:
@@ -163,6 +220,28 @@ def test_non_list_attachments_are_ignored() -> None:
     )
 
     assert source.attachments == ()
+
+
+def test_video_player_link_is_preserved() -> None:
+    mapper = _mapper()
+    source = mapper.map_message(
+        group_id=GROUP_ID,
+        message=_message(
+            attachments=[
+                {
+                    "type": "video",
+                    "video": {
+                        "id": 22,
+                        "owner_id": -1,
+                        "player": "https://vk.example/player",
+                    },
+                }
+            ]
+        ),
+        author=_author(),
+    )
+
+    assert source.attachments[0].link_url == "https://vk.example/player"
 
 
 def test_first_peer_guard_binds_once_and_rejects_other() -> None:
@@ -240,7 +319,8 @@ def test_map_manual_source_uses_forwarded_text_and_attachments() -> None:
     assert source is not None
     assert source.text == "пересланный текст"
     assert len(source.attachments) == 1
-    assert source.attachments[0].source_ref == "-1_5"
+    assert source.attachments[0].source_ref == "-1_5_abc"
+    assert source.attachments[0].access_key == "abc"
     assert source.source_key == "manual:555:9001"
     assert source.conversation_message_id == 9001
 

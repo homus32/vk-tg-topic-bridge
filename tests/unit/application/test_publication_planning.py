@@ -207,6 +207,13 @@ def test_document_breaks_a_media_run() -> None:
     assert len(plan.operations[0].media) == 2
 
 
+def test_photo_and_document_use_separate_bot_api_operations() -> None:
+    plan = plan_publication(_publication(""), [_media(PHOTO, 0), _media(DOCUMENT, 1)])
+
+    assert [op.kind for op in plan.operations] == [PHOTO, DOCUMENT]
+    assert all(len(op.media) == 1 for op in plan.operations)
+
+
 def test_single_video_uses_video_operation() -> None:
     plan = plan_publication(_publication(""), [_media(VIDEO, 0)])
 

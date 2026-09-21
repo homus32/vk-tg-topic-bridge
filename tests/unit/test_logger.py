@@ -139,6 +139,19 @@ def test_library_filter_drops_noisy_record_below_lib_level(
 
 
 @pytest.mark.usefixtures("logging_state")
+def test_loguru_library_filter_drops_direct_noisy_record(tmp_path: Path) -> None:
+    module = _logger_module()
+    settings = _settings(tmp_path)
+    module.configure_logging(settings)
+    noisy_logger = logger.patch(lambda record: record.update(name="vkbottle.api.api"))
+
+    noisy_logger.debug("raw-library-debug")
+    module.flush_logging()
+
+    assert "raw-library-debug" not in settings.log_file().read_text(encoding="utf-8")
+
+
+@pytest.mark.usefixtures("logging_state")
 def test_library_filter_keeps_noisy_record_at_lib_level(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

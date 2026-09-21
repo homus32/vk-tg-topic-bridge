@@ -51,6 +51,16 @@ def test_full_environment_builds_settings(monkeypatch: pytest.MonkeyPatch) -> No
     assert isinstance(settings.VK_GROUP_TOKEN, SecretStr)
 
 
+def test_optional_vk_user_token_is_secret(monkeypatch: pytest.MonkeyPatch) -> None:
+    config = _config()
+    _prepare_env(monkeypatch, VK_USER_TOKEN="vk1.a.user-token")
+
+    settings = config.Settings(_env_file=None)
+
+    assert isinstance(settings.VK_USER_TOKEN, SecretStr)
+    assert settings.VK_USER_TOKEN.get_secret_value() == "vk1.a.user-token"
+
+
 def test_owner_ids_parsed_from_csv_with_spaces(monkeypatch: pytest.MonkeyPatch) -> None:
     config = _config()
     _prepare_env(monkeypatch, OWNER_IDS="1, 2")

@@ -34,6 +34,10 @@ class AttachmentDownloadFailed(RecoverableInfraError):
 class MediaUnavailableError(RecoverableInfraError):
     """One attachment has no downloadable resource (e.g. a video without files)."""
 
+    def __init__(self, message: str, *, fallback_url: str | None = None) -> None:
+        super().__init__(message)
+        self.fallback_url = fallback_url
+
 
 class TargetTopicUnavailable(RecoverableInfraError):
     """Destination topic is temporarily unavailable for publication."""

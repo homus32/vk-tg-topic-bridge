@@ -12,7 +12,9 @@ from collections.abc import Sequence
 
 from vk_topic_bridge.application.forwarding.composition import (
     MediaFailureReason,
+    MediaWarning,
     media_failure_warning,
+    media_link_warning,
 )
 from vk_topic_bridge.application.forwarding.publication_planning import OperationKind
 from vk_topic_bridge.application.ports.telegram_ex import VkMediaDownloaderPort
@@ -33,7 +35,7 @@ logger = logging.getLogger(__name__)
 async def prepare_media(
     attachments: Sequence[Attachment],
     downloader: VkMediaDownloaderPort | None,
-) -> tuple[tuple[PlannedMedia, ...], list[str]]:
+) -> tuple[tuple[PlannedMedia, ...], list[MediaWarning]]:
     """Download supported attachments; failures become warning lines, never operations."""
     if downloader is None:
         if attachments:
@@ -44,7 +46,7 @@ async def prepare_media(
         return (), []
     logger.debug("media preparation started", extra={"attachment_count": len(attachments)})
     planned: list[PlannedMedia] = []
-    warnings: list[str] = []
+    warnings: list[MediaWarning] = []
     for index, attachment in enumerate(attachments):
         operation_kind = operation_kind_for(attachment.kind)
         if operation_kind is None:
@@ -64,6 +66,8 @@ async def prepare_media(
             continue
         size = attachment.size_bytes
         if size is not None and size > MAX_ATTACHMENT_BYTES:
+            if _append_video_link_warning(attachment, index, warnings):
+                continue
             logger.debug(
                 "media attachment skipped: too_large",
                 extra={
@@ -78,8 +82,11 @@ async def prepare_media(
                 )
             )
             continue
-        source_ref = attachment.source_ref
-        if not source_ref:
+        if not attachment.source_ref:
+            link_url = _video_link(attachment)
+            if link_url is not None:
+                warnings.append(media_link_warning(attachment.file_name, link_url))
+                continue
             logger.debug(
                 "media attachment skipped: source_unavailable",
                 extra={
@@ -95,9 +102,11 @@ async def prepare_media(
             )
             continue
         try:
-            url = await downloader.resolve_url(source_ref, attachment.kind)
-            path = await downloader.download(source_ref, url)
-        except MediaUnavailableError:
+            url = await downloader.resolve_url(attachment)
+            path = await downloader.download(attachment, url)
+        except MediaUnavailableError as exc:
+            if _append_video_link_warning(attachment, index, warnings, exc.fallback_url):
+                continue
             logger.debug(
                 "media attachment unavailable",
                 extra={
@@ -113,6 +122,8 @@ async def prepare_media(
             )
             continue
         except AttachmentTooLargeError, AttachmentDownloadFailed, RecoverableInfraError:
+            if _append_video_link_warning(attachment, index, warnings):
+                continue
             logger.debug(
                 "media attachment download failed",
                 extra={
@@ -168,3 +179,30 @@ def operation_kind_for(kind: AttachmentKind) -> OperationKind | None:
     if kind is AttachmentKind.DOCUMENT:
         return OperationKind.DOCUMENT
     return None
+
+
+def _video_link(attachment: Attachment, fallback_url: str | None = None) -> str | None:
+    if attachment.kind is not AttachmentKind.VIDEO:
+        return None
+    return fallback_url or attachment.link_url
+
+
+def _append_video_link_warning(
+    attachment: Attachment,
+    index: int,
+    warnings: list[MediaWarning],
+    fallback_url: str | None = None,
+) -> bool:
+    link_url = _video_link(attachment, fallback_url)
+    if link_url is None:
+        return False
+    logger.debug(
+        "media attachment link fallback",
+        extra={
+            "attachment_index": index,
+            "attachment_kind": attachment.kind.value,
+            "resolution_source": "vk_link",
+        },
+    )
+    warnings.append(media_link_warning(attachment.file_name, link_url))
+    return True

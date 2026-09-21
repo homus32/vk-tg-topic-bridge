@@ -48,6 +48,7 @@ class FakeRawVkApi:
     async def request(
         self, method: str, data: dict[str, object], version: str | None = None
     ) -> dict[str, object]:
+        _ = version
         self.calls.append((method, data))
         if method == "messages.getByConversationMessageId":
             return {"response": {"items": [dict(self.full_message)]}}
@@ -116,7 +117,12 @@ async def test_us08_ac082_analysis_and_publication_use_the_full_message(
         AttachmentKind.UNSUPPORTED,
     ]
     assert source.attachments[0] == Attachment(
-        kind=AttachmentKind.PHOTO, file_name=None, size_bytes=None, source_ref=f"-{GROUP_ID}_11"
+        kind=AttachmentKind.PHOTO,
+        file_name=None,
+        size_bytes=None,
+        source_ref=f"-{GROUP_ID}_11",
+        owner_id=-GROUP_ID,
+        media_id=11,
     )
 
     publication = compose_publication(source, Destination(chat_id=-100, message_thread_id=7))

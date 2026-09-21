@@ -11,6 +11,7 @@ from vk_topic_bridge.application.forwarding.composition import (
     compose_manual_publication,
     compose_wall_publication,
     media_failure_warning,
+    media_link_warning,
     split_text_safely,
 )
 from vk_topic_bridge.domain.enums import AttachmentKind, SourceType
@@ -117,6 +118,21 @@ def test_append_media_warnings_empty_returns_original() -> None:
     assert append_media_warnings("текст", []) == "текст"
 
 
+def test_append_media_warnings_renders_video_link_as_safe_anchor() -> None:
+    warning = media_link_warning(
+        "clip",
+        'https://vk.com/video-1_22?param="quoted"&view=full',
+    )
+
+    result = append_media_warnings("текст", [warning])
+
+    assert (
+        "Видео «clip» не удалось скачать. "
+        '<a href="https://vk.com/video-1_22?param=&quot;quoted&quot;&amp;view=full">'
+        "Открыть видео в VK</a>"
+    ) in result
+
+
 def test_media_failure_warning_names_kind_and_reason() -> None:
     warning = media_failure_warning(
         AttachmentKind.VIDEO, "clip.mp4", MediaFailureReason.UNAVAILABLE
@@ -132,8 +148,9 @@ def test_media_failure_warning_without_name() -> None:
         AttachmentKind.DOCUMENT, None, MediaFailureReason.DOWNLOAD_FAILED
     )
 
-    assert "без имени" in warning
+    assert "без имени" not in warning
     assert "Документ" in warning
+    assert "не удалось скачать" in warning
 
 
 def test_media_failure_warning_oversize_reason() -> None:

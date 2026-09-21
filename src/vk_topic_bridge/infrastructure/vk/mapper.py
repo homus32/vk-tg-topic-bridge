@@ -4,6 +4,7 @@ No SDK types cross this boundary: the presentation layer hands raw ``Mapping``
 payloads in and receives ``SourceMessage``/``Author`` back.
 """
 
+import logging
 from collections.abc import Mapping
 
 from vk_topic_bridge.domain.enums import SourceType
@@ -12,12 +13,14 @@ from vk_topic_bridge.domain.policies.forwarding_policy import decide, source_key
 from vk_topic_bridge.domain.value_objects import (
     Attachment,
     Author,
+    MediaVariant,
     SourceMessage,
     SourceWallPost,
 )
 from vk_topic_bridge.domain.wall_post import wall_post_url, wall_source_key
 
 _MISSING = object()
+logger = logging.getLogger(__name__)
 
 
 def extract_message_payload(
@@ -67,11 +70,49 @@ def _optional_str(message: Mapping[str, object], field: str) -> str | None:
     return None
 
 
+def _optional_https_url(message: Mapping[str, object], field: str) -> str | None:
+    value = _optional_str(message, field)
+    return value if value is not None and value.startswith("https://") else None
+
+
 def _optional_int(message: Mapping[str, object], field: str) -> int | None:
     value = message.get(field)
     if isinstance(value, bool) or not isinstance(value, int):
         return None
     return value
+
+
+def _map_variants(payload: Mapping[str, object], raw_type: str) -> tuple[MediaVariant, ...]:
+    variants: list[MediaVariant] = []
+    seen: set[str] = set()
+    if raw_type == "video":
+        files = payload.get("files")
+        if isinstance(files, Mapping):
+            for quality, raw_url in files.items():
+                if isinstance(quality, str) and isinstance(raw_url, str) and raw_url:
+                    variants.append(MediaVariant(url=raw_url, quality=quality))
+        return tuple(variants)
+    sources = (payload.get("images"), payload.get("sizes")) if raw_type == "photo" else ()
+    for source in sources:
+        if not isinstance(source, list):
+            continue
+        for raw_variant in source:
+            if not isinstance(raw_variant, Mapping):
+                continue
+            url = raw_variant.get("url")
+            if not isinstance(url, str) or not url or url in seen:
+                continue
+            seen.add(url)
+            quality = _optional_str(raw_variant, "type")
+            variants.append(
+                MediaVariant(
+                    url=url,
+                    quality=quality,
+                    width=_optional_int(raw_variant, "width"),
+                    height=_optional_int(raw_variant, "height"),
+                )
+            )
+    return tuple(variants)
 
 
 def _map_attachment(raw: object) -> Attachment | None:
@@ -84,18 +125,56 @@ def _map_attachment(raw: object) -> Attachment | None:
     file_name: str | None = None
     size_bytes: int | None = None
     source_ref: str | None = None
+    owner_id: int | None = None
+    media_id: int | None = None
+    access_key: str | None = None
+    direct_url: str | None = None
+    link_url: str | None = None
+    variants: tuple[MediaVariant, ...] = ()
     if isinstance(payload, Mapping):
         file_name = _optional_str(payload, "title")
         size_bytes = _optional_int(payload, "size")
         owner_id = _optional_int(payload, "owner_id")
         media_id = _optional_int(payload, "id")
+        access_key = _optional_str(payload, "access_key")
         if owner_id is not None and media_id is not None:
             source_ref = f"{owner_id}_{media_id}"
+            if access_key is not None:
+                source_ref = f"{source_ref}_{access_key}"
+        direct_url = _optional_str(payload, "url")
+        link_url = _optional_https_url(payload, "player")
+        if (
+            raw_type == "video"
+            and link_url is None
+            and owner_id is not None
+            and media_id is not None
+        ):
+            link_url = f"https://vk.com/video{owner_id}_{media_id}"
+        variants = _map_variants(payload, raw_type)
+    logger.debug(
+        "vk attachment mapped",
+        extra={
+            "attachment_kind": raw_type,
+            "owner_id": owner_id,
+            "media_id": media_id,
+            "access_key_present": access_key is not None,
+            "direct_url_present": direct_url is not None,
+            "variant_count": len(variants),
+            "filename_present": file_name is not None,
+            "size_bytes": size_bytes,
+        },
+    )
     return Attachment(
         kind=classify_attachment_type(raw_type),
         file_name=file_name,
         size_bytes=size_bytes,
         source_ref=source_ref,
+        owner_id=owner_id,
+        media_id=media_id,
+        access_key=access_key,
+        direct_url=direct_url,
+        link_url=link_url,
+        variants=variants,
     )
 
 

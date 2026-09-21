@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 import sys
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable, Mapping
 
 from loguru import logger
 
@@ -32,6 +32,8 @@ _SAFE_CONTEXT_FIELDS = frozenset(
         "attachment_count",
         "attachment_index",
         "attachment_kind",
+        "access_key_present",
+        "api_adapter",
         "chat_id",
         "conversation_message_id",
         "delivery_id",
@@ -39,12 +41,15 @@ _SAFE_CONTEXT_FIELDS = frozenset(
         "event_id",
         "event_type",
         "failed_count",
+        "filename_present",
+        "files_present",
         "from_id",
         "group_id",
         "http_status",
         "message_count",
         "message_id_count",
         "media_count",
+        "media_id",
         "method",
         "missing",
         "operation",
@@ -56,8 +61,10 @@ _SAFE_CONTEXT_FIELDS = frozenset(
         "post_id",
         "peer_id",
         "planned_media_count",
+        "player_present",
         "poller",
         "reason",
+        "resolution_source",
         "route",
         "sent_count",
         "source_type",
@@ -67,8 +74,17 @@ _SAFE_CONTEXT_FIELDS = frozenset(
         "status",
         "text_length",
         "topic_count",
+        "token_type",
         "update_count",
         "url_host",
+        "direct_url_present",
+        "download_result",
+        "lookup",
+        "lookup_method",
+        "size_bytes",
+        "variant_count",
+        "vk_error_class",
+        "vk_error_code",
         "warning_count",
         "written_bytes",
     }
@@ -122,6 +138,23 @@ class _InterceptHandler(logging.Handler):
         logger.opt(depth=depth, exception=record.exc_info).log(level, message)
 
 
+def _sink_filter(noisy_level: int) -> Callable[[object], bool]:
+    def allow(record: object) -> bool:
+        if not isinstance(record, Mapping):
+            return True
+        name = record.get("name")
+        level = record.get("level")
+        level_number = getattr(level, "no", None)
+        return not (
+            isinstance(name, str)
+            and name.startswith(_NOISY_LOGGER_PREFIXES)
+            and isinstance(level_number, int)
+            and level_number < noisy_level
+        )
+
+    return allow
+
+
 def _safe_context(record: logging.LogRecord) -> str:
     """Render an allow-listed subset of stdlib ``extra`` fields for the Loguru sink."""
     fields: list[str] = []
@@ -140,10 +173,13 @@ def _safe_context(record: logging.LogRecord) -> str:
 def configure_logging(settings: Settings) -> None:
     """(Re)build the Loguru pipeline from `Settings`; safe to call repeatedly."""
     logger.remove()
+    noisy_level = logger.level(settings.LOG_LEVEL_LIBS).no
+    sink_filter = _sink_filter(noisy_level)
     logger.add(
         sys.stderr,
         level=settings.LOG_LEVEL,
         format=_CONSOLE_FORMAT,
+        filter=sink_filter,
         backtrace=True,
         diagnose=False,
     )
@@ -154,6 +190,7 @@ def configure_logging(settings: Settings) -> None:
         settings.log_file(),
         level=settings.LOG_LEVEL,
         format=_FILE_FORMAT,
+        filter=sink_filter,
         enqueue=True,
         rotation=settings.LOG_ROTATION,
         retention=settings.LOG_RETENTION,
@@ -162,7 +199,7 @@ def configure_logging(settings: Settings) -> None:
         diagnose=False,
     )
     logging.basicConfig(
-        handlers=[_InterceptHandler(logger.level(settings.LOG_LEVEL_LIBS).no)],
+        handlers=[_InterceptHandler(noisy_level)],
         level=0,
         force=True,
     )

@@ -50,3 +50,6 @@ runtime/media/
 vk_topic_bridge.db
 vk_topic_bridge.db-*
 vk_topic_bridge.session
+
+docs/tmp
+docs/tmp/**/*

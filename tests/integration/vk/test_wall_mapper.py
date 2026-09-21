@@ -92,5 +92,6 @@ def test_map_wall_post_maps_attachments() -> None:
         AttachmentKind.PHOTO,
         AttachmentKind.DOCUMENT,
     ]
-    assert wall_post.attachments[0].source_ref == f"{OWNER_ID}_11"
+    assert wall_post.attachments[0].source_ref == f"{OWNER_ID}_11_key"
+    assert wall_post.attachments[0].access_key == "key"
     assert wall_post.attachments[1].file_name == "file.pdf"

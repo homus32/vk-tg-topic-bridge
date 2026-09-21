@@ -106,11 +106,13 @@ class FakeDownloader:
         self.resolved: list[tuple[str, AttachmentKind]] = []
         self.downloaded: list[tuple[str, str]] = []
 
-    async def resolve_url(self, source_ref: str, kind: AttachmentKind) -> str:
-        self.resolved.append((source_ref, kind))
+    async def resolve_url(self, attachment: Attachment) -> str:
+        source_ref = attachment.source_ref or ""
+        self.resolved.append((source_ref, attachment.kind))
         return self.url
 
-    async def download(self, source_ref: str, url: str) -> str:
+    async def download(self, attachment: Attachment, url: str) -> str:
+        source_ref = attachment.source_ref or ""
         self.downloaded.append((source_ref, url))
         return f"/tmp/{source_ref}.bin"
 

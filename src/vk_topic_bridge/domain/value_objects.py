@@ -27,6 +27,16 @@ class Author:
 
 
 @dataclass(frozen=True, slots=True)
+class MediaVariant:
+    """SDK-neutral downloadable variant exposed by a VK attachment."""
+
+    url: str
+    quality: str | None = None
+    width: int | None = None
+    height: int | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class Attachment:
     """Attachment-neutral metadata; no download logic lives in this layer."""
 
@@ -34,6 +44,12 @@ class Attachment:
     file_name: str | None
     size_bytes: int | None
     source_ref: str | None
+    owner_id: int | None = None
+    media_id: int | None = None
+    access_key: str | None = None
+    direct_url: str | None = None
+    link_url: str | None = None
+    variants: tuple[MediaVariant, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)

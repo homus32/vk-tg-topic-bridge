@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import html
 from collections.abc import Sequence
+from dataclasses import dataclass
 from enum import StrEnum
 
 from vk_topic_bridge.domain.enums import AttachmentKind
@@ -29,6 +30,15 @@ _KIND_LABELS = {
     AttachmentKind.DOCUMENT: "Документ",
 }
 _FALLBACK_KIND_LABEL = "Вложение"
+
+
+@dataclass(frozen=True, slots=True)
+class MediaLinkWarning:
+    text: str
+    link_url: str
+
+
+type MediaWarning = str | MediaLinkWarning
 
 
 class MediaFailureReason(StrEnum):
@@ -102,16 +112,26 @@ def compose_wall_publication(
 HTML_ESCAPED_WALL_LINK_TEXT = "Оригинал поста"
 
 
-def append_media_warnings(html_text: str, warnings: Sequence[str]) -> str:
-    """Append plain-text warnings to a composed publication, one escaped line each.
+def append_media_warnings(html_text: str, warnings: Sequence[MediaWarning]) -> str:
+    """Append escaped warning lines and safe media links to a composed publication.
 
     Every warning becomes its own line (US-12.3 — warnings must not be collapsed) and
-    is escaped here exactly once; an empty warning list returns the text unchanged.
+    ordinary text is escaped here exactly once; an empty warning list returns the text
+    unchanged.
     """
     if not warnings:
         return html_text
-    escaped = "\n".join(html.escape(warning) for warning in warnings)
+    escaped = "\n".join(_render_media_warning(warning) for warning in warnings)
     return f"{html_text}\n{escaped}"
+
+
+def _render_media_warning(warning: MediaWarning) -> str:
+    if isinstance(warning, MediaLinkWarning):
+        return (
+            f'{html.escape(warning.text)} <a href="{html.escape(warning.link_url, quote=True)}">'
+            "Открыть видео в VK</a>"
+        )
+    return html.escape(warning)
 
 
 def media_failure_warning(
@@ -126,8 +146,15 @@ def media_failure_warning(
     ``OperationOutcome``. The text is plain; ``append_media_warnings`` escapes it.
     """
     label = _KIND_LABELS.get(kind, _FALLBACK_KIND_LABEL)
-    name = file_name or "без имени"
-    return f"{label} «{name}» {_REASON_TEXTS[reason]}."
+    if file_name:
+        return f"{label} «{file_name}» {_REASON_TEXTS[reason]}."
+    return f"{label} {_REASON_TEXTS[reason]}."
+
+
+def media_link_warning(file_name: str | None, link_url: str) -> MediaLinkWarning:
+    if file_name:
+        return MediaLinkWarning(f"Видео «{file_name}» не удалось скачать.", link_url)
+    return MediaLinkWarning("Видео не удалось скачать.", link_url)
 
 
 def _unsafe_boundaries(text: str, length: int) -> bytearray:

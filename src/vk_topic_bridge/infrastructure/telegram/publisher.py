@@ -33,6 +33,7 @@ from aiogram.types import (
     LinkPreviewOptions,
     MediaUnion,
     Message,
+    ReplyParameters,
 )
 
 from vk_topic_bridge.application.errors import (
@@ -229,6 +230,8 @@ class BotApiPublisher:
     async def publish_plan(self, plan: PublicationPlan) -> tuple[OperationOutcome, ...]:
         """Execute planned operations in order; classified failures do not abort the plan."""
         outcomes: list[OperationOutcome] = []
+        reply_anchor_message_id: int | None = None
+        reply_enabled = False
         for operation in plan.operations:
             logger.debug(
                 "telegram publication operation started",
@@ -239,7 +242,11 @@ class BotApiPublisher:
                 },
             )
             try:
-                message_ids = await self._execute_operation(plan.base, operation)
+                message_ids = await self._execute_operation(
+                    plan.base,
+                    operation,
+                    reply_to_message_id=reply_anchor_message_id if reply_enabled else None,
+                )
             except PublicationRejectedError as exc:
                 logger.warning(
                     "telegram publication operation rejected",
@@ -277,6 +284,16 @@ class BotApiPublisher:
                     )
                 )
             else:
+                if message_ids:
+                    if operation.kind in {
+                        OperationKind.PHOTO,
+                        OperationKind.VIDEO,
+                        OperationKind.MEDIA_GROUP,
+                    }:
+                        reply_enabled = True
+                        reply_anchor_message_id = message_ids[-1]
+                    elif operation.kind is OperationKind.DOCUMENT and reply_enabled:
+                        reply_anchor_message_id = message_ids[-1]
                 logger.debug(
                     "telegram publication operation succeeded",
                     extra={
@@ -301,7 +318,11 @@ class BotApiPublisher:
         return tuple(outcomes)
 
     async def _execute_operation(
-        self, base: Publication, operation: PublicationOperation
+        self,
+        base: Publication,
+        operation: PublicationOperation,
+        *,
+        reply_to_message_id: int | None = None,
     ) -> tuple[int, ...]:
         thread_id = base.message_thread_id
         try:
@@ -359,20 +380,39 @@ class BotApiPublisher:
                     )
             else:
                 if thread_id is None:
-                    message = await self._bot.send_document(
-                        chat_id=base.chat_id,
-                        document=source,
-                        caption=caption,
-                        parse_mode=parse_mode,
-                    )
+                    if reply_to_message_id is None:
+                        message = await self._bot.send_document(
+                            chat_id=base.chat_id,
+                            document=source,
+                            caption=caption,
+                            parse_mode=parse_mode,
+                        )
+                    else:
+                        message = await self._bot.send_document(
+                            chat_id=base.chat_id,
+                            document=source,
+                            caption=caption,
+                            parse_mode=parse_mode,
+                            reply_parameters=ReplyParameters(message_id=reply_to_message_id),
+                        )
                 else:
-                    message = await self._bot.send_document(
-                        chat_id=base.chat_id,
-                        document=source,
-                        caption=caption,
-                        parse_mode=parse_mode,
-                        message_thread_id=thread_id,
-                    )
+                    if reply_to_message_id is None:
+                        message = await self._bot.send_document(
+                            chat_id=base.chat_id,
+                            document=source,
+                            caption=caption,
+                            parse_mode=parse_mode,
+                            message_thread_id=thread_id,
+                        )
+                    else:
+                        message = await self._bot.send_document(
+                            chat_id=base.chat_id,
+                            document=source,
+                            caption=caption,
+                            parse_mode=parse_mode,
+                            message_thread_id=thread_id,
+                            reply_parameters=ReplyParameters(message_id=reply_to_message_id),
+                        )
             return (message.message_id,)
         except asyncio.CancelledError:
             raise

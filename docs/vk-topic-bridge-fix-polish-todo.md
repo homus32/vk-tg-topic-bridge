@@ -409,13 +409,13 @@ ForwardVkMessage
 
 До трёх отдельных фиксов:
 
-- [ ] получить live fixture одного сообщения с photo;
-- [ ] получить fixture с doc;
-- [ ] получить fixture с video;
-- [ ] сравнить, что именно mapper сохраняет из каждого attachment;
-- [ ] проверить `owner_id/id/access_key`;
-- [ ] проверить наличие URL в полном объекте сообщения;
-- [ ] проверить, не теряется `access_key` при преобразовании в domain DTO.
+- [x] получить live fixture одного сообщения с photo;
+- [x] получить fixture с doc;
+- [x] получить fixture с video;
+- [x] сравнить, что именно mapper сохраняет из каждого attachment;
+- [x] проверить `owner_id/id/access_key`;
+- [x] проверить наличие URL в полном объекте сообщения;
+- [x] проверить, не теряется `access_key` при преобразовании в domain DTO.
 
 ### Важное исследование
 
@@ -425,11 +425,11 @@ VKBottle рекомендует `Message.get_full_message()` перед рабо
 
 ## T4.2 — Проверить token/API compatibility lookup-методов
 
-- [ ] отдельно записать реальный результат `photos.getById`;
-- [ ] отдельно `docs.getById`;
-- [ ] отдельно `video.get`;
-- [ ] для ошибки записать VK error code и method;
-- [ ] не менять token model до получения live evidence.
+- [x] отдельно записать реальный результат `photos.getById`;
+- [x] отдельно `docs.getById`;
+- [x] отдельно `video.get`;
+- [x] для ошибки записать VK error code и method;
+- [x] не менять token model до получения live evidence.
 
 ### Нюанс из исследования
 
@@ -444,63 +444,88 @@ VKBottle рекомендует `Message.get_full_message()` перед рабо
 
 ## T4.3 — BUG-008: Photo
 
-- [ ] сохраняется корректная attachment identity;
-- [ ] выбирается лучший разумный `sizes[].url`, если URL уже доступен;
-- [ ] при необходимости lookup работает;
-- [ ] download работает;
-- [ ] 1 photo → одиночная Telegram media operation;
-- [ ] 2/5 photo → album;
-- [ ] temp file удаляется после send;
-- [ ] user-facing warning нормальный, без `Фото «без имени»`.
+- [x] сохраняется корректная attachment identity;
+- [x] выбирается лучший разумный `sizes[].url`, если URL уже доступен;
+- [x] при необходимости lookup работает;
+- [x] download работает;
+- [x] 1 photo → одиночная Telegram media operation;
+- [x] 2/5 photo → album;
+- [x] temp file удаляется после send;
+- [x] user-facing warning нормальный, без `Фото «без имени»`.
 
 **Рекомендация:** фото обычно не нуждается в искусственном `filename`. Для warning лучше `Фото не удалось перенести: <короткая причина>.`
 
 ## T4.4 — BUG-009: Document
 
-- [ ] `owner_id/id/access_key`;
-- [ ] title/filename;
-- [ ] size pre-check, если размер известен;
-- [ ] URL;
-- [ ] download;
-- [ ] ≤50 MB отправляется;
-- [ ] >50 MB не скачивается дальше/не отправляется;
-- [ ] warning содержит имя и лимит;
-- [ ] остальные части публикации продолжают отправляться.
+- [x] `owner_id/id/access_key`;
+- [x] title/filename;
+- [x] size pre-check, если размер известен;
+- [x] URL;
+- [x] download;
+- [x] ≤50 MB отправляется;
+- [x] >50 MB не скачивается дальше/не отправляется;
+- [x] warning содержит имя и лимит;
+- [x] остальные части публикации продолжают отправляться.
 
 ## T4.5 — BUG-010: Video
 
-- [ ] `owner_id/id/access_key`;
-- [ ] `video.get` response залогирован структурно;
-- [ ] доступные direct file variants определены;
-- [ ] выбирается подходящий вариант;
-- [ ] если downloadable file нет — это normal partial-success warning;
-- [ ] остальные вложения и текст продолжают отправляться.
+- [x] `owner_id/id/access_key`;
+- [x] `video.get` response залогирован структурно;
+- [x] доступные direct file variants определены;
+- [x] выбирается подходящий вариант;
+- [x] если downloadable file нет — это normal partial-success warning;
+- [x] остальные вложения и текст продолжают отправляться.
 
 **Рекомендация:** не считать любое VK video гарантированно скачиваемым. Продуктовый контракт уже допускает warning вместо видео.
 
+### Принятое решение владельца: best-effort video fallback
+
+**Статус:** `[x]` реализовано и live-проверено владельцем.
+
+Алгоритм для каждого VK video:
+
+1. Если VK предоставляет поддерживаемый прямой `mp4` — скачать и отправить видео в Telegram.
+2. Если прямого файла нет — не считать публикацию fatal: отправить текст с ссылкой `Открыть в VK`. Сначала использовать безопасно полученный `player`, иначе построить каноническую ссылку из `owner_id` и `id` (`https://vk.com/video{owner_id}_{id}`).
+3. Если пригодной ссылки нет — сохранить текущий понятный warning и продолжить публикацию текста/остальных вложений.
+
+Ограничения:
+
+- ссылка ведёт к исходному VK-объекту и не переносит права доступа;
+- пересланное видео не становится новой публичной копией;
+- участник Telegram сможет открыть ссылку только если его VK-аккаунт имеет доступ к исходному видео;
+- scraping, сторонние downloaders и обход приватности не добавляются.
+
+Live retest владельца:
+
+- [x] публичное видео с прямым `mp4` → Telegram video;
+- [x] видео без `mp4`, но с `player` → Telegram link;
+- [x] пересланное/ограниченное видео → проверить фактический доступ по ссылке;
+- [x] auto, manual и wall используют один и тот же fallback;
+- [x] текст и другие attachments продолжают отправляться при недоступном video.
+
 ## T4.6 — Общий media regression
 
-- [ ] 1 photo;
-- [ ] 2 photos;
-- [ ] 5 photos;
-- [ ] doc ≤50 MB;
-- [ ] doc >50 MB;
-- [ ] video;
-- [ ] unsupported audio;
-- [ ] unsupported voice;
-- [ ] unsupported video message;
-- [ ] mixed success/failure;
-- [ ] Telegram partial success сохраняет delivery semantics;
-- [ ] 👍 ставится, если логическая публикация создана несмотря на skipped attachment.
+- [x] 1 photo;
+- [x] 2 photos;
+- [x] 5 photos;
+- [x] doc ≤50 MB;
+- [x] doc >50 MB;
+- [x] video;
+- [x] unsupported audio;
+- [x] unsupported voice;
+- [x] unsupported video message;
+- [x] mixed success/failure;
+- [x] Telegram partial success сохраняет delivery semantics;
+- [x] 👍 ставится, если логическая публикация создана несмотря на skipped attachment.
 
 ## T4.7 — Wall media после починки message media
 
-- [ ] wall photo;
-- [ ] wall several photos;
-- [ ] wall doc;
-- [ ] wall video;
-- [ ] warning behavior;
-- [ ] source link и `#изстенывк` не теряются.
+- [x] wall photo;
+- [x] wall several photos;
+- [x] wall doc;
+- [x] wall video;
+- [x] warning behavior;
+- [x] source link и `#изстенывк` не теряются.
 
 **Рекомендация:** wall и message должны использовать один проверенный media-preparation слой. Не создавать второй downloader только для wall.
 
@@ -693,6 +718,37 @@ General — гл
 - [ ] current destination clearly shown.
 
 **Рекомендация:** callback_data хранит operation + destination identity, а не название топика.
+
+## US-NEW-06 — Связывать отдельный документ с media-сообщением
+
+**Статус:** `[~]` реализовано локально; ожидает live-проверки владельца.
+
+### User story
+
+Как владелец, я хочу, чтобы документ из одной VK-публикации был отдельным Telegram-сообщением,
+но отвечал на предыдущее media-сообщение этой же публикации, чтобы было понятно, к каким фото
+или видео он относится.
+
+### Acceptance criteria
+
+- [ ] `PHOTO`/`VIDEO` продолжают отправляться по действующим правилам album: mixed `PHOTO + VIDEO`
+  допустим, `DOCUMENT` в этот album не добавляется.
+- [ ] `DOCUMENT` отправляется отдельным `send_document` сообщением.
+- [ ] Если в публикации уже отправлено `PHOTO` или `VIDEO`, первый документ отвечает на последнее
+  Telegram-сообщение, созданное предыдущей media-operation этой публикации.
+- [ ] При нескольких документах каждый следующий документ отвечает на непосредственно предыдущее
+  Telegram-сообщение этой же логической публикации.
+- [ ] Reply использует Telegram message id из фактического результата отправки, а не VK id.
+- [ ] Если предыдущая media-operation не создала Telegram-сообщение, документ отправляется без
+  несуществующего reply, а публикация сохраняет partial-success semantics.
+- [ ] Если фото/видео в публикации нет, существующее поведение отдельного документа не меняется.
+- [ ] Поведение одинаково для automatic message, manual forwarding и wall post через общий
+  publication planner/publisher.
+- [ ] Для reply-связи добавлены regression tests, включая один документ, несколько документов,
+  отсутствие предыдущего сообщения и failed previous operation.
+
+**Ограничение Telegram API:** это логическая связь через reply, а не попытка создать один mixed
+album `DOCUMENT + PHOTO/VIDEO`; такой album Bot API не поддерживает.
 
 ## T7.3 — CR-005 / US-NEW-02: proof-send для General
 
@@ -936,13 +992,13 @@ Aiogram polling сам ловит network errors и retry/backoff'ит их. П�
 - [ ] manual by alias;
 - [ ] manual initiator metadata;
 - [ ] auto text;
-- [ ] photo;
-- [ ] media group;
-- [ ] document;
-- [ ] oversize document;
-- [ ] video or correct partial-success warning;
+- [x] photo;
+- [x] media group;
+- [x] document;
+- [x] oversize document;
+- [x] video or correct partial-success warning;
 - [x] wall text;
-- [ ] wall media;
+- [x] wall media;
 - [x] fallback;
 - [ ] diagnostics;
 - [x] duplicate protection;

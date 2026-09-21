@@ -16,6 +16,7 @@ import aiohttp
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.strategy import FSMStrategy
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
+from vkbottle import API
 
 from config import Settings
 from vk_topic_bridge.application.admin.destination_admin import (
@@ -430,7 +431,17 @@ def build_container(
     diagnostics_reader = DiagnosticsReader(uow_factory)
     command_menu = CommandMenuSynchronizer(bot, frozenset(settings.OWNER_IDS))
     owner_notifier = OwnerNotifier(frozenset(settings.OWNER_IDS), publisher)
-    downloader = VkMediaDownloader(vk_api_raw, http_session, settings.VK_MEDIA_DIR)
+    user_api = (
+        API(settings.VK_USER_TOKEN.get_secret_value())
+        if settings.VK_USER_TOKEN is not None
+        else None
+    )
+    downloader = VkMediaDownloader(
+        vk_api_raw,
+        http_session,
+        settings.VK_MEDIA_DIR,
+        user_api=user_api,
+    )
     forward_message = ForwardVkMessage(
         uow_factory=uow_factory,
         plan_publisher=publisher,
