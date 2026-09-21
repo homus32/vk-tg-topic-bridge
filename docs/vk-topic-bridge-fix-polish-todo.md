@@ -146,10 +146,10 @@ operation_kind
 
 - [x] исходный `kind` и безопасный индекс attachment;
 - [x] identity не выводится в raw виде; access key не попадает в лог;
-- [ ] есть ли URL уже в payload/full message;
-- [ ] выполнялся ли дополнительный VK API lookup;
-- [ ] имя VK API метода;
-- [ ] тип токена/adapter path без вывода самого токена;
+- [x] есть ли URL уже в payload/full message;
+- [x] выполнялся ли дополнительный VK API lookup;
+- [x] имя VK API метода;
+- [x] тип токена/adapter path без вывода самого токена;
 - [x] lookup success/failure + VK error code/class;
 - [x] URL resolution success/failure без query-параметров;
 - [x] известный размер и oversize decision;
@@ -535,32 +535,48 @@ Live retest владельца:
 
 ## T5.1 — BUG-001: Back из topic settings
 
-- [ ] `← Назад` очищает вложенный state;
-- [ ] возвращает main owner menu;
-- [ ] не проходит в unknown-command catch-all;
-- [ ] повторный вход работает без `/cancel`.
+- [x] `← Назад` очищает вложенный state;
+- [x] возвращает main owner menu;
+- [x] не проходит в unknown-command catch-all;
+- [x] повторный вход работает без `/cancel`.
 
 ## T5.2 — BUG-002: `/start` из submenu
 
-- [ ] `/start` всегда возвращает root/main state;
-- [ ] не сообщает ложное `Чат зарегистрирован`;
-- [ ] показывает `Главное меню`/актуальный summary;
-- [ ] клавиатура строится из текущего persisted state.
+- [x] `/start` всегда возвращает root/main state;
+- [x] не сообщает ложное `Чат зарегистрирован`;
+- [x] показывает `Главное меню`/актуальный summary;
+- [x] клавиатура строится из текущего persisted state.
 
 ## T5.3 — BUG-006: Alias navigation
 
-- [ ] после add → обновлённый alias root;
-- [ ] после edit → обновлённый alias root;
-- [ ] после delete → обновлённый alias root;
-- [ ] Back alias root → VK main menu;
-- [ ] Help появляется только по явному запросу.
+- [x] после add → обновлённый alias root;
+- [x] после edit → обновлённый alias root;
+- [x] после delete → обновлённый alias root;
+- [x] Back alias root → VK main menu;
+- [x] Help появляется только по явному запросу;
+- [x] Add/Edit объединены одной кнопкой;
+- [x] список топиков показывается перед add/edit/delete;
+- [x] delete выполняется сразу после номера и сохраняет кнопку `Отмена`.
 
 ## T5.4 — BUG-007: manual publication initiator
 
-- [ ] publication различает original author и initiator;
-- [ ] оба профиля кликабельны;
-- [ ] отсутствующий/недоступный profile name имеет безопасный fallback;
-- [ ] manual idempotency semantics не ломаются.
+- [x] publication различает original author и initiator;
+- [x] оба профиля кликабельны;
+- [x] отсутствующий/недоступный profile name имеет безопасный fallback;
+- [x] видимая ссылка инициатора называется `Автор пересылки`;
+- [x] manual idempotency semantics не ломаются.
+
+Статус T5.1–T5.4: исправлено, покрыто regression tests и подтверждено live retest владельца.
+
+## T5.5 — Сообщения от имени VK-сообщества
+
+- [x] negative `from_id` получает профиль через `groups.getById`;
+- [x] сообщение сообщества с `#hashtag` проходит automatic forwarding;
+- [x] сообщение сообщества с `@all` проходит automatic forwarding;
+- [x] `#hashtag` и `@all` создают одну публикацию и одну реакцию;
+- [x] профиль автора-сообщества и initiator ручной пересылки не смешиваются.
+
+Статус T5.5: исправлено, покрыто end-to-end regression tests и подтверждено live retest владельца.
 
 ---
 
@@ -893,12 +909,12 @@ Aiogram polling сам ловит network errors и retry/backoff'ит их. П�
 
 ## T10.3 — Auto filter semantics
 
-- [ ] plain text → no publication;
-- [ ] hashtag → one publication;
-- [ ] @all → one publication;
-- [ ] @all + hashtag → **one**, не две;
-- [ ] service tags корректны;
-- [ ] 👍 после success.
+- [x] plain text → no publication;
+- [x] hashtag → one publication;
+- [x] @all → one publication;
+- [x] @all + hashtag → **one**, не две;
+- [x] service tags корректны;
+- [x] 👍 после success.
 
 ## T10.4 — `is_cropped`
 
@@ -978,20 +994,20 @@ Aiogram polling сам ловит network errors и retry/backoff'ит их. П�
 - [ ] registration missing-rights recovery;
 - [ ] competing owner protection;
 - [ ] group unknown commands silent;
-- [ ] Telegram Back/start FSM;
+- [x] Telegram Back/start FSM;
 - [ ] topic refresh transparent;
 - [x] named + General proof-send (локальные regression tests и live-проверка владельца);
 - [x] stale topic selection → automatic refresh → wizard recovery (локальные regression tests и live-проверка владельца);
 - [x] invalid/stale topic никогда не сохраняется;
 - [x] General fallback уведомляет всех owners (локальный integration regression test и live-проверка владельца);
 - [ ] fallback publication warning, если CR-015 утверждён;
-- [ ] VK alias add/edit/delete;
+- [x] VK alias add/edit/delete;
 - [ ] VK inline/callback UI;
 - [ ] VK formatted text live-tested;
 - [ ] manual by number;
 - [ ] manual by alias;
-- [ ] manual initiator metadata;
-- [ ] auto text;
+- [x] manual initiator metadata;
+- [x] auto text;
 - [x] photo;
 - [x] media group;
 - [x] document;
@@ -1001,7 +1017,7 @@ Aiogram polling сам ловит network errors и retry/backoff'ит их. П�
 - [x] wall media;
 - [x] fallback;
 - [ ] diagnostics;
-- [x] duplicate protection;
+- [ ] duplicate protection;
 - [ ] PM2 restart/reboot;
 - [ ] backup/restore;
 - [ ] no known Critical/Major defect without explicit owner acceptance.

@@ -58,8 +58,9 @@ _REASON_TEXTS = {
 }
 
 
-def _profile_link(author: Author) -> str:
-    return f'<a href="{author.profile_url}">{html.escape(author.display_name)}</a>'
+def _profile_link(author: Author, *, label: str | None = None) -> str:
+    text = author.display_name if label is None else label
+    return f'<a href="{author.profile_url}">{html.escape(text)}</a>'
 
 
 def compose_manual_publication(
@@ -77,7 +78,7 @@ def compose_manual_publication(
     html_text = (
         f"{_profile_link(source.author)}\n\n"
         f"{html.escape(source.text)}\n\n"
-        f"{_profile_link(initiator)}"
+        f"{_profile_link(initiator, label='Автор пересылки')}"
     )
     return Publication(
         chat_id=destination.chat_id,

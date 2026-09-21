@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
+import json
+from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass, field, replace
 from typing import Any, cast
 
@@ -20,16 +21,16 @@ from vk_topic_bridge.application.manual.publish_manual import (
     PublishManualMessage,
 )
 from vk_topic_bridge.application.ports.unit_of_work import UnitOfWork
-from vk_topic_bridge.domain.value_objects import TopicInfo
+from vk_topic_bridge.domain.enums import SourceType
+from vk_topic_bridge.domain.value_objects import Author, SourceMessage, TopicInfo
 from vk_topic_bridge.presentation.vk.handlers import VkUiDispatcher, VkUiMessage
 from vk_topic_bridge.presentation.vk.keyboards import (
-    BTN_ADD,
     BTN_ALIASES,
     BTN_BACK,
     BTN_CANCEL,
     BTN_DELETE,
+    BTN_EDIT,
     BTN_HELP,
-    BTN_YES,
 )
 from vk_topic_bridge.presentation.vk.states import VkSessionStore, VkUiState
 
@@ -125,13 +126,14 @@ class Harness:
     sessions: VkSessionStore
 
 
-def _msg(text: str, *, fwd: int = 0) -> VkUiMessage:
+def _msg(text: str, *, fwd: int = 0, author: Author | None = None) -> VkUiMessage:
     return VkUiMessage(
         from_id=USER_ID,
         peer_id=PEER_ID,
         text=text,
         fwd_count=fwd,
         conversation_message_id=333,
+        author=author,
         raw={"text": text, "conversation_message_id": 333, "peer_id": PEER_ID},
     )
 
@@ -141,6 +143,7 @@ def _harness(
     chat_id: int | None = CHAT_ID,
     topics: Sequence[TopicInfo] = (GENERAL, NEWS),
     publisher: FakeManualPublisher | None = None,
+    source_resolver: Callable[[VkUiMessage], Awaitable[SourceMessage | None]] | None = None,
 ) -> Harness:
     uow = FakeUow()
     if chat_id is not None:
@@ -157,7 +160,7 @@ def _harness(
         manual_forwarding,
         alias_manager,
         cast(PublishManualMessage, real_publisher),
-        source_resolver=cast(Any, make_test_source_resolver()),
+        source_resolver=cast(Any, source_resolver or make_test_source_resolver()),
     )
     return Harness(dispatcher, send, real_publisher, uow, dispatcher._sessions)
 
@@ -207,15 +210,48 @@ async def test_aliases_menu_opens_without_snapshot_topics() -> None:
     assert h.sessions.get(USER_ID).state is VkUiState.ALIAS_MENU
 
 
+async def test_alias_menu_has_one_add_edit_action_without_add_button() -> None:
+    h = _harness()
+    await h.dispatcher.dispatch(_msg(BTN_ALIASES))
+
+    assert h.send.last_keyboard is not None
+    buttons = json.loads(h.send.last_keyboard)["buttons"]
+    labels = [button["action"]["label"] for row in buttons for button in row]
+    assert labels == ["Добавить/Изменить", "Удалить", "← Назад"]
+
+
+async def test_combined_add_edit_prompt_lists_topics() -> None:
+    h = _harness()
+    await h.dispatcher.dispatch(_msg(BTN_ALIASES))
+    await h.dispatcher.dispatch(_msg(BTN_EDIT))
+
+    assert h.sessions.get(USER_ID).state is VkUiState.ALIAS_ADD_WAIT_TOPIC
+    assert "1. General" in h.send.last_text
+    assert "2. Новости" in h.send.last_text
+
+
+async def test_delete_prompt_lists_topics_without_confirmation_keyboard() -> None:
+    h = _harness()
+    await h.dispatcher.dispatch(_msg(BTN_ALIASES))
+    await h.dispatcher.dispatch(_msg(BTN_DELETE))
+
+    assert "1. General" in h.send.last_text
+    assert "2. Новости" in h.send.last_text
+    assert "Да" not in (h.send.last_keyboard or "")
+    assert "Отмена" in (h.send.last_keyboard or "")
+
+
 async def test_alias_add_flow_persists_alias() -> None:
     h = _harness()
     await h.dispatcher.dispatch(_msg(BTN_ALIASES))
-    await h.dispatcher.dispatch(_msg(BTN_ADD))
+    await h.dispatcher.dispatch(_msg(BTN_EDIT))
     assert h.sessions.get(USER_ID).state is VkUiState.ALIAS_ADD_WAIT_TOPIC
     await h.dispatcher.dispatch(_msg("2"))
     assert h.sessions.get(USER_ID).state is VkUiState.ALIAS_ADD_WAIT_VALUE
     await h.dispatcher.dispatch(_msg("важное"))
     assert "назначен" in h.send.last_text
+    assert "Telegram-топики:" in h.send.last_text
+    assert "важное" in h.send.last_text
     assert h.uow.vk_aliases.rows[USER_ID][7] == "важное"
     assert h.sessions.get(USER_ID).state is VkUiState.ALIAS_MENU
 
@@ -223,31 +259,55 @@ async def test_alias_add_flow_persists_alias() -> None:
 async def test_alias_add_rejects_alias_with_space() -> None:
     h = _harness()
     await h.dispatcher.dispatch(_msg(BTN_ALIASES))
-    await h.dispatcher.dispatch(_msg(BTN_ADD))
+    await h.dispatcher.dispatch(_msg(BTN_EDIT))
     await h.dispatcher.dispatch(_msg("1"))
     await h.dispatcher.dispatch(_msg("два слова"))
     assert "не сохранён" in h.send.last_text
     assert h.sessions.get(USER_ID).state is VkUiState.ALIAS_ADD_WAIT_VALUE
 
 
-async def test_alias_delete_requires_confirmation() -> None:
+async def test_alias_delete_returns_updated_alias_root() -> None:
     h = _harness()
     h.uow.vk_aliases.rows[USER_ID] = {7: "важное"}
     await h.dispatcher.dispatch(_msg(BTN_ALIASES))
     await h.dispatcher.dispatch(_msg(BTN_DELETE))
     await h.dispatcher.dispatch(_msg("2"))
-    assert h.sessions.get(USER_ID).state is VkUiState.ALIAS_DELETE_CONFIRM
-    assert "Удалить алиас" in h.send.last_text
-    await h.dispatcher.dispatch(_msg(BTN_YES))
     assert h.uow.vk_aliases.rows[USER_ID] == {}
+    assert h.sessions.get(USER_ID).state is VkUiState.ALIAS_MENU
     assert "удалён" in h.send.last_text
+    assert "Telegram-топики:" in h.send.last_text
+    assert "алиас не задан" in h.send.last_text
 
 
-async def test_alias_back_returns_to_help() -> None:
+async def test_alias_edit_returns_updated_alias_root() -> None:
+    h = _harness()
+    h.uow.vk_aliases.rows[USER_ID] = {7: "старое"}
+
+    await h.dispatcher.dispatch(_msg(BTN_ALIASES))
+    await h.dispatcher.dispatch(_msg(BTN_EDIT))
+    await h.dispatcher.dispatch(_msg("2"))
+    await h.dispatcher.dispatch(_msg("новости"))
+
+    assert h.uow.vk_aliases.rows[USER_ID][7] == "новости"
+    assert h.sessions.get(USER_ID).state is VkUiState.ALIAS_MENU
+    assert "Telegram-топики:" in h.send.last_text
+    assert "новости" in h.send.last_text
+
+
+async def test_alias_back_returns_to_main_menu() -> None:
     h = _harness()
     await h.dispatcher.dispatch(_msg(BTN_ALIASES))
     await h.dispatcher.dispatch(_msg(BTN_BACK))
     assert h.sessions.get(USER_ID).state is VkUiState.IDLE
+    assert h.send.last_text == "Главное меню."
+
+
+async def test_unknown_idle_text_does_not_open_help() -> None:
+    h = _harness()
+
+    await h.dispatcher.dispatch(_msg("неизвестное действие"))
+
+    assert "Как пользоваться ботом" not in h.send.last_text
 
 
 # --- Manual forwarding ------------------------------------------------------
@@ -279,6 +339,33 @@ async def test_ordinal_choice_publishes_without_reaction() -> None:
     assert request.destination.message_thread_id == 7
     assert "отправлено" in h.send.last_text
     assert h.sessions.get(USER_ID).state is VkUiState.IDLE
+
+
+async def test_manual_publication_keeps_original_author_and_uses_current_initiator() -> None:
+    original = Author(user_id=777, first_name="Автор", last_name="VK", screen_name=None)
+    initiator = Author(user_id=USER_ID, first_name="Инициатор", last_name="VK", screen_name=None)
+
+    async def resolve(_message: VkUiMessage) -> SourceMessage:
+        return SourceMessage(
+            source_type=SourceType.VK_MESSAGE,
+            source_key="manual:555:333",
+            group_id=0,
+            peer_id=PEER_ID,
+            conversation_message_id=333,
+            author=original,
+            text="оригинал",
+            has_all=False,
+            has_hashtag=False,
+            attachments=(),
+        )
+
+    h = _harness(source_resolver=resolve)
+    await h.dispatcher.dispatch(_msg("", fwd=1, author=original))
+    await h.dispatcher.dispatch(_msg("2", author=initiator))
+
+    request = h.publisher.calls[0]
+    assert request.source.author == original
+    assert request.initiator == initiator
 
 
 async def test_unknown_alias_shows_error_and_ordinal_list() -> None:

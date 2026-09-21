@@ -58,9 +58,17 @@ def test_manual_has_two_distinct_links() -> None:
     assert publication.html_text.count("<a href=") == 2
     assert "https://vk.com/id11" in publication.html_text
     assert "https://vk.com/id22" in publication.html_text
+    assert ">Автор пересылки</a>" in publication.html_text
     assert publication.html_text.index("https://vk.com/id11") < publication.html_text.index(
         "https://vk.com/id22"
     )
+
+
+def test_manual_uses_visible_initiator_label_when_name_is_unavailable() -> None:
+    initiator = Author(user_id=22, first_name="", last_name="", screen_name=None)
+    publication = compose_manual_publication(_source(), initiator, DESTINATION)
+
+    assert '<a href="https://vk.com/id22">Автор пересылки</a>' in publication.html_text
 
 
 def test_manual_escapes_vk_text_and_names() -> None:

@@ -115,6 +115,24 @@ async def test_start_rerenders_keyboard_from_db() -> None:
     assert btn.MENU_CHANGE_CHAT in labels
 
 
+async def test_start_clears_nested_state_and_keeps_persisted_configuration() -> None:
+    state = _registered()
+    router = build_root_router(lambda: _reader(state))
+    start_handler = next(
+        handler for handler in router.message.handlers if handler.callback.__name__ == "start"
+    )
+    message = FakeMessage()
+    fsm = FakeFSMContext(state="MessagesDestinationWizard:wait_ordinal")
+
+    await start_handler.callback(cast(Message, message), fsm)
+
+    assert fsm.cleared == 1
+    assert await fsm.get_state() is None
+    assert message.answers[0][0].startswith("Главное меню")
+    assert "зарегистрирован" not in message.answers[0][0]
+    assert await _reader(state) == state
+
+
 def test_toggle_labels_describe_action_relative_to_state() -> None:
     enabled = owner_main_keyboard(_registered())
     disabled = owner_main_keyboard(

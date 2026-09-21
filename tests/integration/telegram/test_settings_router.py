@@ -22,6 +22,7 @@ from vk_topic_bridge.presentation.telegram.routers.settings import build_setting
 from vk_topic_bridge.presentation.telegram.states import (
     ChangeChatConfirm,
     DeliveryDiagnosticsView,
+    TopicSettingsView,
 )
 
 CHAT_ID = -1001234567890
@@ -306,7 +307,7 @@ async def test_topics_settings_lists_named_binding_and_unset_role() -> None:
     harness = _harness()
     message = FakeMessage(text=btn.MENU_TOPICS_SETTINGS)
 
-    await _handler(harness.router, "topics_settings")(message)
+    await _handler(harness.router, "topics_settings")(message, FakeFSMContext())
 
     text, markup = message.answers[0]
     assert "Важные" in text
@@ -316,6 +317,25 @@ async def test_topics_settings_lists_named_binding_and_unset_role() -> None:
     assert isinstance(markup, ReplyKeyboardMarkup)
     labels = [button.text for row in markup.keyboard for button in row]
     assert labels == [btn.BTN_REFRESH, btn.BTN_BACK]
+
+
+async def test_topics_settings_back_clears_state_and_returns_to_owner_menu() -> None:
+    harness = _harness()
+    settings_message = FakeMessage(text=btn.MENU_TOPICS_SETTINGS)
+    back_message = FakeMessage(text=btn.BTN_BACK)
+    fsm = FakeFSMContext()
+
+    await _handler(harness.router, "topics_settings")(settings_message, fsm)
+    assert await fsm.get_state() == TopicSettingsView.view.state
+
+    await _handler(harness.router, "topics_back")(back_message, fsm)
+
+    assert await fsm.get_state() is None
+    text, markup = back_message.answers[0]
+    assert text == "Возврат в главное меню."
+    assert isinstance(markup, ReplyKeyboardMarkup)
+    labels = [button.text for row in markup.keyboard for button in row]
+    assert btn.MENU_TOPICS_SETTINGS in labels
 
 
 async def test_topics_settings_shows_general_for_explicit_configuration() -> None:
@@ -329,7 +349,7 @@ async def test_topics_settings_shows_general_for_explicit_configuration() -> Non
     )
     message = FakeMessage(text=btn.MENU_TOPICS_SETTINGS)
 
-    await _handler(harness.router, "topics_settings")(message)
+    await _handler(harness.router, "topics_settings")(message, FakeFSMContext())
 
     text, _ = message.answers[0]
     assert "General" in text

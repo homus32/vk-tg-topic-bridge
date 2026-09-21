@@ -41,7 +41,11 @@ from vk_topic_bridge.presentation.telegram.routers.register import (
     MISSING_CAPABILITY_LABELS,
     _is_registerable_chat,
 )
-from vk_topic_bridge.presentation.telegram.routers.root import ONBOARDING_TEXT, SettingsReader
+from vk_topic_bridge.presentation.telegram.routers.root import (
+    ONBOARDING_TEXT,
+    SettingsReader,
+    render_root_state,
+)
 from vk_topic_bridge.presentation.telegram.states import RegistrationMaster
 
 START_COMMAND = "start"
@@ -94,11 +98,7 @@ def build_registration_router(
         current = await settings_reader()
         if current is not None and current.telegram_chat_id is not None:
             await state.clear()
-            title = current.telegram_chat_title or str(current.telegram_chat_id)
-            await message.answer(
-                f"Чат «{title}» зарегистрирован.",
-                reply_markup=owner_main_keyboard(current),
-            )
+            await render_root_state(message, current)
             logger.debug(
                 "telegram registration start rendered registered state",
                 extra={"owner_id": owner_id, "chat_id": current.telegram_chat_id},

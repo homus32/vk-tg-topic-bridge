@@ -48,7 +48,7 @@ async def render_root_state(message: Message, state: BridgeSettingsState | None)
         return
     title = state.telegram_chat_title or str(state.telegram_chat_id)
     await message.answer(
-        f"Чат «{title}» зарегистрирован.",
+        f"Главное меню.\nЧат: «{title}».",  # noqa: RUF001
         reply_markup=owner_main_keyboard(state),
     )
 

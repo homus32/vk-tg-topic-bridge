@@ -30,6 +30,7 @@ from vk_topic_bridge.presentation.telegram.keyboards import (
 from vk_topic_bridge.presentation.telegram.states import (
     ChangeChatConfirm,
     DeliveryDiagnosticsView,
+    TopicSettingsView,
 )
 
 type SettingsReader = Callable[[], Awaitable[BridgeSettingsState | None]]
@@ -241,15 +242,16 @@ def build_settings_router(
     async def toggle_wall(message: Message) -> None:
         await _toggle(message, ToggleKind.WALL)
 
-    async def topics_settings(message: Message) -> None:
-        state = await _current_registered(message)
-        if state is None:
+    async def topics_settings(message: Message, state: FSMContext) -> None:
+        current = await _current_registered(message)
+        if current is None:
             return
-        chat_id = state.telegram_chat_id
+        chat_id = current.telegram_chat_id
         assert chat_id is not None
+        await state.set_state(TopicSettingsView.view)
         topics = await topics_reader(chat_id)
         await message.answer(
-            _render_bindings(state, topics), reply_markup=topics_settings_keyboard()
+            _render_bindings(current, topics), reply_markup=topics_settings_keyboard()
         )
 
     async def refresh_topics(message: Message) -> None:
@@ -285,6 +287,16 @@ def build_settings_router(
             await message.answer(EMPTY_DIAGNOSTICS_TEXT, reply_markup=back_keyboard())
             return
         await message.answer(_render_diagnostics(entries), reply_markup=back_keyboard())
+
+    async def topics_back(message: Message, state: FSMContext) -> None:
+        if await state.get_state() != TopicSettingsView.view.state:
+            raise SkipHandler
+        await state.clear()
+        current = await settings_reader()
+        if current is None or current.telegram_chat_id is None:
+            await message.answer(UNREGISTERED_TEXT, reply_markup=unregistered_keyboard())
+            return
+        await message.answer("Возврат в главное меню.", reply_markup=owner_main_keyboard(current))
 
     async def diag_pick(message: Message, state: FSMContext) -> None:
         if await state.get_state() != DeliveryDiagnosticsView.list_view.state:
@@ -372,6 +384,7 @@ def build_settings_router(
     router.message.register(change_chat, F.text == btn.MENU_CHANGE_CHAT)
     router.message.register(diag_pick, F.text.regexp(r"^\d+$"))
     router.message.register(diag_mark, F.text == btn.BTN_MARK_REVIEWED)
+    router.message.register(topics_back, F.text == btn.BTN_BACK)
     router.message.register(diag_back, F.text == btn.BTN_BACK)
     router.message.register(confirm_yes, F.text == btn.BTN_YES)
     router.message.register(confirm_cancel, F.text == btn.BTN_CANCEL)

@@ -244,6 +244,29 @@ async def test_get_author_tolerates_missing_screen_name() -> None:
     assert author.profile_url == "https://vk.com/id5"
 
 
+async def test_get_author_for_community_uses_group_profile_lookup() -> None:
+    module = _api_module()
+    fake = FakeVkApi(
+        {
+            "groups.getById": _ok(
+                {"groups": [{"id": 123, "name": "Сообщество", "screen_name": "club123"}]}
+            )
+        }
+    )
+    gateway = module.VkApiGateway(fake, _settings())
+
+    author = await gateway.get_author(-123)
+
+    assert author == Author(
+        user_id=-123,
+        first_name="Сообщество",
+        last_name="",
+        screen_name="club123",
+    )
+    assert author.profile_url == "https://vk.com/club123"
+    assert fake.params_for("groups.getById") == [{"group_ids": [123]}]
+
+
 # --- cropped completion / normalization ---------------------------------------
 
 

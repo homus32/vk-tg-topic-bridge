@@ -148,6 +148,19 @@ async def test_menu_button_text_reaches_feature_router_not_catch_all() -> None:
     assert not any("Неизвестная команда" in text for text in responses)
 
 
+async def test_topic_settings_back_and_reentry_stay_out_of_unknown_handler() -> None:
+    dispatcher = _build_dispatcher()
+
+    await _dispatch_message(dispatcher, _message_update(btn.MENU_TOPICS_SETTINGS))
+    back_responses = await _dispatch_message(dispatcher, _message_update(btn.BTN_BACK))
+    reentry_responses = await _dispatch_message(
+        dispatcher, _message_update(btn.MENU_TOPICS_SETTINGS)
+    )
+
+    assert "Неизвестная команда" not in "\n".join(back_responses)
+    assert "Неизвестная команда" not in "\n".join(reentry_responses)
+
+
 async def test_unknown_group_command_is_silent() -> None:
     dispatcher = _build_dispatcher()
 

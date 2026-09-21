@@ -23,6 +23,8 @@ class Author:
     @property
     def profile_url(self) -> str:
         # screen_name is mutable, so the stable numeric id is the only identity in links.
+        if self.user_id < 0:
+            return f"https://vk.com/club{-self.user_id}"
         return f"https://vk.com/id{self.user_id}"
 
 

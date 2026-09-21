@@ -23,6 +23,10 @@ class WallDestinationWizard(StatesGroup):
     wait_ordinal = State()
 
 
+class TopicSettingsView(StatesGroup):
+    view = State()
+
+
 class DeliveryDiagnosticsView(StatesGroup):
     """Compact 'Диагностика доставки' view with inline details/actions."""
 

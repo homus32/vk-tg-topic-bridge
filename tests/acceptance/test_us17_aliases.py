@@ -13,11 +13,9 @@ from tests.acceptance._fakes import (
     make_vk_ui_message,
 )
 from vk_topic_bridge.presentation.vk.keyboards import (
-    BTN_ADD,
     BTN_ALIASES,
     BTN_DELETE,
     BTN_EDIT,
-    BTN_YES,
 )
 
 NEWS_TITLE = "Новости"
@@ -29,7 +27,7 @@ async def _open_alias_menu(harness: object) -> None:
 
 async def _add_alias(harness: object, ordinal: str, alias: str) -> None:
     await _open_alias_menu(harness)
-    await harness.dispatcher.handle_dm(make_vk_ui_message(BTN_ADD))  # type: ignore[attr-defined]
+    await harness.dispatcher.handle_dm(make_vk_ui_message(BTN_EDIT))  # type: ignore[attr-defined]
     await harness.dispatcher.handle_dm(make_vk_ui_message(ordinal))  # type: ignore[attr-defined]
     await harness.dispatcher.handle_dm(make_vk_ui_message(alias))  # type: ignore[attr-defined]
 
@@ -90,15 +88,11 @@ async def test_us17_edit_alias_replaces_the_value() -> None:
     assert harness.uow.vk_aliases.rows[VK_USER_ID][MESSAGES_TOPIC_ID] == "новое"
 
 
-async def test_us17_delete_alias_removes_it_after_confirmation() -> None:
+async def test_us17_delete_alias_removes_it_after_topic_number() -> None:
     harness = make_vk_ui_harness()
     await _add_alias(harness, "2", "важное")
 
     await harness.dispatcher.handle_dm(make_vk_ui_message(BTN_DELETE))
     await harness.dispatcher.handle_dm(make_vk_ui_message("2"))
-
-    assert MESSAGES_TOPIC_ID in harness.uow.vk_aliases.rows[VK_USER_ID]
-
-    await harness.dispatcher.handle_dm(make_vk_ui_message(BTN_YES))
 
     assert MESSAGES_TOPIC_ID not in harness.uow.vk_aliases.rows[VK_USER_ID]

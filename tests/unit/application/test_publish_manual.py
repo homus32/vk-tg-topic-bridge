@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from types import TracebackType
 from typing import Self
 
@@ -229,6 +230,23 @@ async def test_manual_two_links_present_in_publication() -> None:
     html = plan.plans[0].base.html_text
     assert f"https://vk.com/id{AUTHOR.user_id}" in html
     assert f"https://vk.com/id{INITIATOR.user_id}" in html
+
+
+async def test_manual_same_identity_with_missing_names_keeps_two_numeric_links() -> None:
+    use_case, _, plan = _manual()
+    same_person = Author(user_id=USER_ID, first_name="", last_name="", screen_name=None)
+
+    await use_case.execute(
+        ManualPublicationRequest(
+            source=replace(_source(), author=same_person),
+            initiator=same_person,
+            destination=DESTINATION,
+        )
+    )
+
+    html = plan.plans[0].base.html_text
+    assert html.count(f"https://vk.com/id{USER_ID}") == 2
+    assert "None" not in html
 
 
 async def test_manual_attachment_downloaded_and_planned() -> None:

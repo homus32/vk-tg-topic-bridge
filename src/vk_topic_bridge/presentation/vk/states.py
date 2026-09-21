@@ -18,10 +18,7 @@ class VkUiState(StrEnum):
     ALIAS_MENU = "alias_menu"
     ALIAS_ADD_WAIT_TOPIC = "alias_add_wait_topic"
     ALIAS_ADD_WAIT_VALUE = "alias_add_wait_value"
-    ALIAS_EDIT_WAIT_TOPIC = "alias_edit_wait_topic"
-    ALIAS_EDIT_WAIT_VALUE = "alias_edit_wait_value"
     ALIAS_DELETE_WAIT_TOPIC = "alias_delete_wait_topic"
-    ALIAS_DELETE_CONFIRM = "alias_delete_confirm"
 
 
 @dataclass(slots=True)

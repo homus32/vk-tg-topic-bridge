@@ -43,6 +43,7 @@ SessionFactory = async_sessionmaker[AsyncSession]
 GROUP_ID = 111
 PEER_ID = 2_000_000_222
 FROM_ID = 555
+COMMUNITY_FROM_ID = -888
 CONVERSATION_MESSAGE_ID = 333
 SECOND_CONVERSATION_MESSAGE_ID = 334
 CHAT_ID = -1001234567890
@@ -58,6 +59,7 @@ def _update(
     *,
     conversation_message_id: int = CONVERSATION_MESSAGE_ID,
     text: str = PRIMARY_TEXT,
+    from_id: int = FROM_ID,
 ) -> dict[str, object]:
     """One Long Poll ``message_new`` update with the service fields the consumer requires."""
     return {
@@ -67,7 +69,7 @@ def _update(
         "object": {
             "message": {
                 "peer_id": PEER_ID,
-                "from_id": FROM_ID,
+                "from_id": from_id,
                 "conversation_message_id": conversation_message_id,
                 "text": text,
                 "is_cropped": False,
@@ -267,6 +269,18 @@ async def test_chain_sets_the_vk_reaction_once(harness: ChainHarness) -> None:
 @pytest.mark.parametrize("text", ["#хештег сообщение", "@all важное сообщение"])
 async def test_nested_trigger_publishes_and_reacts(harness: ChainHarness, text: str) -> None:
     await harness.deliver(_update(text=text))
+
+    assert len(harness.publisher.publications) == 1
+    assert harness.raw_api.params_for("messages.sendReaction") == [
+        {"peer_id": PEER_ID, "cmid": CONVERSATION_MESSAGE_ID, "reaction_id": LIKE_REACTION_ID}
+    ]
+
+
+@pytest.mark.parametrize("text", ["#хештег сообщение", "@all важное сообщение"])
+async def test_community_author_trigger_publishes_and_reacts(
+    harness: ChainHarness, text: str
+) -> None:
+    await harness.deliver(_update(text=text, from_id=COMMUNITY_FROM_ID))
 
     assert len(harness.publisher.publications) == 1
     assert harness.raw_api.params_for("messages.sendReaction") == [

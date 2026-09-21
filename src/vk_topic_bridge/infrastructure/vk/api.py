@@ -147,6 +147,8 @@ class VkApiGateway:
         return info
 
     async def get_author(self, user_id: int) -> Author:
+        if user_id < 0:
+            return await self._get_community_author(user_id)
         logger.debug("vk author lookup started", extra={"from_id": user_id})
         response = await self._request("users.get", {"user_ids": [user_id]})
         profiles = response if isinstance(response, list) else []
@@ -161,6 +163,30 @@ class VkApiGateway:
             screen_name=screen_name if isinstance(screen_name, str) and screen_name else None,
         )
         logger.debug("vk author lookup completed", extra={"from_id": user_id})
+        return author
+
+    async def _get_community_author(self, community_id: int) -> Author:
+        group_id = -community_id
+        logger.debug("vk community author lookup started", extra={"community_id": group_id})
+        try:
+            response = await self._request("groups.getById", {"group_ids": [group_id]})
+        except VkError as error:
+            logger.warning(
+                "vk community author lookup failed",
+                extra={"community_id": group_id, "vk_error_code": error.code},
+            )
+            return Author(user_id=community_id, first_name="", last_name="", screen_name=None)
+        groups = response.get("groups") if isinstance(response, Mapping) else None
+        profile = groups[0] if isinstance(groups, list) and groups else None
+        name = profile.get("name") if isinstance(profile, Mapping) else None
+        screen_name = profile.get("screen_name") if isinstance(profile, Mapping) else None
+        author = Author(
+            user_id=community_id,
+            first_name=name if isinstance(name, str) else "",
+            last_name="",
+            screen_name=screen_name if isinstance(screen_name, str) and screen_name else None,
+        )
+        logger.debug("vk community author lookup completed", extra={"community_id": group_id})
         return author
 
     async def get_full_message(self, peer_id: int, conversation_message_id: int) -> SourceMessage:

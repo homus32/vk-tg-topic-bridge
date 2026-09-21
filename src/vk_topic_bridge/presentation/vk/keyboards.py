@@ -14,12 +14,9 @@ BTN_ALIASES = "Алиасы"
 BTN_HELP = "Помощь"
 BTN_CANCEL = "Отмена"
 BTN_BACK = "← Назад"
-BTN_ADD = "Добавить"
-BTN_EDIT = "Изменить"
+BTN_EDIT = "Добавить/Изменить"
 BTN_DELETE = "Удалить"
-BTN_YES = "Да"
 
-_POSITIVE = "positive"
 _NEGATIVE = "negative"
 _DEFAULT = "default"
 
@@ -49,16 +46,11 @@ def alias_menu_keyboard_json() -> str:
     """Rows Добавить/Изменить/Удалить + ← Назад."""
     return _keyboard(
         [
-            [_text_button(BTN_ADD), _text_button(BTN_EDIT)],
+            [_text_button(BTN_EDIT)],
             [_text_button(BTN_DELETE)],
             [_text_button(BTN_BACK)],
         ]
     )
-
-
-def confirm_keyboard_json() -> str:
-    """Да/Отмена (alias delete confirmation)."""
-    return _keyboard([[_text_button(BTN_YES, _POSITIVE), _text_button(BTN_CANCEL, _NEGATIVE)]])
 
 
 def cancel_keyboard_json() -> str:

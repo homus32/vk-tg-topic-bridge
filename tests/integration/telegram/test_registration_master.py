@@ -198,7 +198,7 @@ async def test_private_start_sets_pending_and_shows_onboarding(
     assert "telegram registration FSM transition" in caplog.text
 
 
-async def test_private_start_registered_shows_main_keyboard() -> None:
+async def test_private_start_registered_returns_to_main_without_registration_claim() -> None:
     registered = BridgeSettingsState(
         telegram_chat_id=CHAT_ID,
         telegram_chat_title=CHAT_TITLE,
@@ -217,7 +217,15 @@ async def test_private_start_registered_shows_main_keyboard() -> None:
     assert await fsm.get_state() is None
     text, markup = message.answers[0]
     assert CHAT_TITLE in text
+    assert text.startswith("Главное меню")
+    assert "зарегистрирован" not in text
     assert isinstance(markup, ReplyKeyboardMarkup)
+
+    await _handler(router, "private_start")(message, fsm)
+
+    assert await fsm.get_state() is None
+    assert len(message.answers) == 2
+    assert message.answers[1][0].startswith("Главное меню")
 
 
 async def test_registration_master_is_exclusive_to_one_owner() -> None:

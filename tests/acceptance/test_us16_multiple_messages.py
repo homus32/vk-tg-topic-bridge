@@ -25,8 +25,7 @@ async def test_us16_ac162_fsm_does_not_start() -> None:
     await harness.dispatcher.handle_dm(make_vk_ui_message(fwd_count=2))
     await harness.dispatcher.handle_dm(make_vk_ui_message("1"))
 
-    # A bare ordinal in IDLE falls back to help — the topic FSM never started.
-    assert harness.send.messages[-1][1].startswith("Как пользоваться")
+    assert harness.send.messages[-1][1] == "Выберите действие из меню."
     assert harness.publisher.publications == []
 
 

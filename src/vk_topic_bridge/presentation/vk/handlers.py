@@ -29,17 +29,14 @@ from vk_topic_bridge.application.ports.vk_ex import VkManualUiPort
 from vk_topic_bridge.domain.errors import InvalidAlias
 from vk_topic_bridge.domain.value_objects import Author, Destination, SourceMessage
 from vk_topic_bridge.presentation.vk.keyboards import (
-    BTN_ADD,
     BTN_ALIASES,
     BTN_BACK,
     BTN_CANCEL,
     BTN_DELETE,
     BTN_EDIT,
     BTN_HELP,
-    BTN_YES,
     alias_menu_keyboard_json,
     cancel_keyboard_json,
-    confirm_keyboard_json,
     is_help_trigger,
     main_keyboard_json,
     wait_destination_keyboard_json,
@@ -71,10 +68,10 @@ CONFIG_ERROR_TEXT = (
 NO_TOPICS_TEXT = "Нет доступных топиков для выбора."
 ORDINAL_ONLY_TEXT = "Можно отправить только номер топика из списка."
 TOPIC_NOT_FOUND_TEXT = "Номер не найден."
-ALIAS_ADD_TOPIC_TEXT = "Введите номер топика, для которого хотите добавить алиас."
+MAIN_MENU_TEXT = "Главное меню."
+UNKNOWN_ACTION_TEXT = "Выберите действие из меню."
+ALIAS_ADD_EDIT_TOPIC_TEXT = "Введите номер топика, у которого хотите добавить или изменить алиас."  # noqa: RUF001
 ALIAS_ADD_VALUE_TEXT = "Введите новый алиас."
-ALIAS_EDIT_TOPIC_TEXT = "Введите номер топика, у которого хотите изменить алиас."  # noqa: RUF001
-ALIAS_EDIT_VALUE_TEXT = "Введите новый алиас."
 ALIAS_DELETE_TOPIC_TEXT = "Введите номер топика, у которого хотите удалить алиас."  # noqa: RUF001
 NO_ALIAS_TEXT = "У этого топика нет алиаса."  # noqa: RUF001
 PUBLISH_FAILED_TEXT = "Не удалось отправить сообщение. Попробуйте позже."  # noqa: RUF001
@@ -177,14 +174,11 @@ class VkUiDispatcher:
             await self._handle_alias_menu(message, session)
         elif state in (
             VkUiState.ALIAS_ADD_WAIT_TOPIC,
-            VkUiState.ALIAS_EDIT_WAIT_TOPIC,
             VkUiState.ALIAS_DELETE_WAIT_TOPIC,
         ):
             await self._handle_alias_topic_input(message, session)
-        elif state in (VkUiState.ALIAS_ADD_WAIT_VALUE, VkUiState.ALIAS_EDIT_WAIT_VALUE):
+        elif state is VkUiState.ALIAS_ADD_WAIT_VALUE:
             await self._handle_alias_value_input(message, session)
-        elif state is VkUiState.ALIAS_DELETE_CONFIRM:
-            await self._handle_alias_delete_confirm(message, session)
         else:
             await self._handle_idle(message, session)
         logger.debug(
@@ -230,9 +224,9 @@ class VkUiDispatcher:
             return
         logger.debug(
             "vk UI idle branch selected",
-            extra={"from_id": message.from_id, "outcome": "help_default"},
+            extra={"from_id": message.from_id, "outcome": "unknown_action"},
         )
-        await self._reply(message, HELP_TEXT, main_keyboard_json())
+        await self._reply(message, UNKNOWN_ACTION_TEXT, main_keyboard_json())
 
     async def _handle_forwarded(
         self, message: VkUiMessage, session: VkUserSession, text: str
@@ -340,29 +334,47 @@ class VkUiDispatcher:
         entries = await self._alias_manager.list_with_topics(message.from_id)
         await self._reply(message, _alias_menu_text(entries), alias_menu_keyboard_json())
 
+    async def _start_alias_topic_input(
+        self,
+        message: VkUiMessage,
+        session: VkUserSession,
+        state: VkUiState,
+        prompt: str,
+        keyboard: str | None,
+    ) -> None:
+        listing = await self._manual_forwarding.destination_list(message.from_id)
+        if not listing.chat_registered or not listing.destinations:
+            self._sessions.clear(message.from_id)
+            await self._reply(message, CONFIG_ERROR_TEXT, main_keyboard_json())
+            return
+        session.state = state
+        session.pending_topic_id = None
+        self._sessions.set(message.from_id, session)
+        await self._reply(message, f"{prompt}\n\n{_destinations_text(listing)}", keyboard)
+
     async def _handle_alias_menu(self, message: VkUiMessage, session: VkUserSession) -> None:
         text = message.text.strip()
         if text in (BTN_BACK, BTN_CANCEL):
             self._sessions.clear(message.from_id)
-            await self._reply(message, HELP_TEXT, main_keyboard_json())
-            return
-        if text == BTN_ADD:
-            session.state = VkUiState.ALIAS_ADD_WAIT_TOPIC
-            session.pending_topic_id = None
-            self._sessions.set(message.from_id, session)
-            await self._reply(message, ALIAS_ADD_TOPIC_TEXT, cancel_keyboard_json())
+            await self._reply(message, MAIN_MENU_TEXT, main_keyboard_json())
             return
         if text == BTN_EDIT:
-            session.state = VkUiState.ALIAS_EDIT_WAIT_TOPIC
-            session.pending_topic_id = None
-            self._sessions.set(message.from_id, session)
-            await self._reply(message, ALIAS_EDIT_TOPIC_TEXT, cancel_keyboard_json())
+            await self._start_alias_topic_input(
+                message,
+                session,
+                VkUiState.ALIAS_ADD_WAIT_TOPIC,
+                ALIAS_ADD_EDIT_TOPIC_TEXT,
+                cancel_keyboard_json(),
+            )
             return
         if text == BTN_DELETE:
-            session.state = VkUiState.ALIAS_DELETE_WAIT_TOPIC
-            session.pending_topic_id = None
-            self._sessions.set(message.from_id, session)
-            await self._reply(message, ALIAS_DELETE_TOPIC_TEXT, cancel_keyboard_json())
+            await self._start_alias_topic_input(
+                message,
+                session,
+                VkUiState.ALIAS_DELETE_WAIT_TOPIC,
+                ALIAS_DELETE_TOPIC_TEXT,
+                cancel_keyboard_json(),
+            )
             return
         entries = await self._alias_manager.list_with_topics(message.from_id)
         await self._reply(message, _alias_menu_text(entries), alias_menu_keyboard_json())
@@ -398,25 +410,28 @@ class VkUiDispatcher:
             self._sessions.set(message.from_id, session)
             await self._reply(message, ALIAS_ADD_VALUE_TEXT, cancel_keyboard_json())
             return
-        if state is VkUiState.ALIAS_EDIT_WAIT_TOPIC:
-            session.state = VkUiState.ALIAS_EDIT_WAIT_VALUE
-            self._sessions.set(message.from_id, session)
-            await self._reply(message, ALIAS_EDIT_VALUE_TEXT, cancel_keyboard_json())
-            return
         entries = await self._alias_manager.list_with_topics(message.from_id)
         entry = _find_entry(entries, offer.topic.topic_id)
         if entry is None or entry.alias is None:
             self._sessions.set(message.from_id, session)
-            await self._reply(message, NO_ALIAS_TEXT, cancel_keyboard_json())
+            await self._reply(
+                message,
+                NO_ALIAS_TEXT,
+                cancel_keyboard_json(),
+            )
             return
-        session.context["topic_title"] = entry.topic_title
-        session.state = VkUiState.ALIAS_DELETE_CONFIRM
-        self._sessions.set(message.from_id, session)
-        await self._reply(
-            message,
-            f'Удалить алиас "{entry.alias}" у топика "{entry.topic_title}"?',  # noqa: RUF001
-            confirm_keyboard_json(),
-        )
+        if state is VkUiState.ALIAS_DELETE_WAIT_TOPIC:
+            await self._alias_manager.delete(message.from_id, offer.topic.topic_id)
+            session.state = VkUiState.ALIAS_MENU
+            session.pending_topic_id = None
+            session.context.clear()
+            self._sessions.set(message.from_id, session)
+            entries = await self._alias_manager.list_with_topics(message.from_id)
+            await self._reply(
+                message,
+                f"Алиас удалён.\n\n{_alias_menu_text(entries)}",
+                alias_menu_keyboard_json(),
+            )
 
     # --- Alias FSM: value input ----------------------------------------------
 
@@ -439,24 +454,9 @@ class VkUiDispatcher:
         title = _topic_title(entries, topic_id)
         await self._reply(
             message,
-            f'Алиас "{text}" назначен топику "{title}".',
+            f'Алиас "{text}" назначен топику "{title}".\n\n{_alias_menu_text(entries)}',
             alias_menu_keyboard_json(),
         )
-
-    # --- Alias FSM: delete confirmation --------------------------------------
-
-    async def _handle_alias_delete_confirm(
-        self, message: VkUiMessage, session: VkUserSession
-    ) -> None:
-        if message.text.strip() != BTN_YES:
-            await self._back_to_alias_menu(message, session)
-            return
-        await self._alias_manager.delete(message.from_id, session.pending_topic_id)
-        session.state = VkUiState.ALIAS_MENU
-        session.pending_topic_id = None
-        session.context.clear()
-        self._sessions.set(message.from_id, session)
-        await self._reply(message, "Алиас удалён.", alias_menu_keyboard_json())
 
     # --- Publishing -----------------------------------------------------------
 
@@ -487,8 +487,8 @@ class VkUiDispatcher:
             return
         request = ManualPublicationRequest(
             source=source_message,
-            initiator=source.author
-            or Author(user_id=source.from_id, first_name="", last_name="", screen_name=None),
+            initiator=message.author
+            or Author(user_id=message.from_id, first_name="", last_name="", screen_name=None),
             destination=Destination(chat_id=chat_id, message_thread_id=topic.topic_id),
         )
         try:
