@@ -12,7 +12,7 @@ import pytest
 from vkbottle import VKAPIError
 
 from config import Settings
-from vk_topic_bridge.domain.value_objects import Author
+from vk_topic_bridge.domain.value_objects import Author, SourceWallPost
 
 GROUP_ID = 42
 PEER_ID = 2000000001
@@ -82,6 +82,48 @@ def _full_message_with_photo() -> dict[str, object]:
     return message
 
 
+WALL_POST_ID = 77
+
+
+def _wall_attachment(owner_id: int = -GROUP_ID, post_id: int = WALL_POST_ID) -> dict[str, object]:
+    return {
+        "type": "wall",
+        "wall": {"owner_id": owner_id, "id": post_id, "access_key": "wall-key"},
+    }
+
+
+def _wall_post(owner_id: int = -GROUP_ID, post_id: int = WALL_POST_ID) -> dict[str, object]:
+    return {
+        "owner_id": owner_id,
+        "id": post_id,
+        "from_id": owner_id,
+        "text": "оригинальный пост",
+        "attachments": [
+            {
+                "type": "photo",
+                "photo": {
+                    "owner_id": owner_id,
+                    "id": 12,
+                    "sizes": [{"type": "z", "url": "https://vk.example/wall.jpg"}],
+                },
+            },
+            {
+                "type": "doc",
+                "doc": {
+                    "owner_id": owner_id,
+                    "id": 13,
+                    "title": "report.pdf",
+                    "url": "https://vk.example/report.pdf",
+                },
+            },
+        ],
+    }
+
+
+def _community_groups() -> dict[str, object]:
+    return _ok({"groups": [{"id": GROUP_ID, "name": "Бот", "screen_name": "bot"}]})
+
+
 class FakeVkApi:
     """Minimal stand-in for ``vkbottle.API``: records calls and replays responses."""
 
@@ -89,16 +131,20 @@ class FakeVkApi:
         self,
         responses: Mapping[str, dict[str, object]] | None = None,
         errors: Mapping[str, int] | None = None,
+        transport_errors: Mapping[str, Exception] | None = None,
     ) -> None:
         self.calls: list[tuple[str, dict[str, object]]] = []
         self._responses = dict(responses or {})
         self._errors = dict(errors or {})
+        self._transport_errors = dict(transport_errors or {})
 
     async def request(
         self, method: str, data: dict[str, object], version: str | None = None
     ) -> dict[str, object]:
         _ = version
         self.calls.append((method, dict(data)))
+        if method in self._transport_errors:
+            raise self._transport_errors[method]
         if method in self._errors:
             code = self._errors[method]
             raise VKAPIError[code](error_msg=f"vk error {code}")
@@ -323,6 +369,136 @@ async def test_normalize_event_maps_nested_message_object() -> None:
     assert source.text == "@all полный текст #извк"
 
 
+async def test_normalize_event_resolves_wall_repost_via_user_token() -> None:
+    module = _api_module()
+    user = FakeVkApi({"wall.getById": _ok({"items": [_wall_post()]})})
+    group = FakeVkApi({"groups.getById": _community_groups()})
+    gateway = module.VkApiGateway(group, _settings(), user_api=user)
+    message = _full_message()
+    message["text"] = "@all подпись пользователя"
+    message["attachments"] = [
+        _wall_attachment(),
+        {"type": "photo", "photo": {"owner_id": -GROUP_ID, "id": 99}},
+    ]
+
+    source = await gateway.normalize_event(
+        {"type": "message_new", "group_id": GROUP_ID, "object": message}, _author()
+    )
+
+    assert source.text == "@all подпись пользователя"
+    assert source.has_all is True
+    assert isinstance(source.wall_post, SourceWallPost)
+    assert source.wall_post.text == "оригинальный пост"
+    assert source.wall_post.url == "https://vk.com/wall-42_77"
+    assert source.wall_link is None
+    assert [item.kind.value for item in source.attachments] == ["photo", "photo", "document"]
+    assert user.params_for("wall.getById") == [{"posts": "-42_77"}]
+    assert group.params_for("wall.getById") == []
+
+
+async def test_normalize_event_wall_repost_without_user_token_uses_link_fallback() -> None:
+    module = _api_module()
+    group = FakeVkApi()
+    gateway = module.VkApiGateway(group, _settings())
+    message = _full_message()
+    message["text"] = "#важное"
+    message["attachments"] = [_wall_attachment()]
+
+    source = await gateway.normalize_event(
+        {"type": "message_new", "group_id": GROUP_ID, "object": message}, _author()
+    )
+
+    assert source.wall_post is None
+    assert source.wall_link == "https://vk.com/wall-42_77"
+    assert source.attachments == ()
+    assert group.calls == []
+
+
+async def test_normalize_event_wall_repost_vk_error_uses_link_fallback() -> None:
+    module = _api_module()
+    user = FakeVkApi(errors={"wall.getById": 27})
+    group = FakeVkApi()
+    gateway = module.VkApiGateway(group, _settings(), user_api=user)
+    message = _full_message()
+    message["attachments"] = [_wall_attachment()]
+
+    source = await gateway.normalize_event(
+        {"type": "message_new", "group_id": GROUP_ID, "object": message}, _author()
+    )
+
+    assert source.wall_post is None
+    assert source.wall_link == "https://vk.com/wall-42_77"
+    assert user.params_for("wall.getById") == [{"posts": "-42_77"}]
+
+
+async def test_normalize_event_wall_repost_transport_error_uses_link_fallback() -> None:
+    module = _api_module()
+    user = FakeVkApi(transport_errors={"wall.getById": ConnectionError("network down")})
+    group = FakeVkApi()
+    gateway = module.VkApiGateway(group, _settings(), user_api=user)
+    message = _full_message()
+    message["attachments"] = [_wall_attachment()]
+
+    source = await gateway.normalize_event(
+        {"type": "message_new", "group_id": GROUP_ID, "object": message}, _author()
+    )
+
+    assert source.wall_post is None
+    assert source.wall_link == "https://vk.com/wall-42_77"
+
+
+async def test_normalize_event_does_not_expand_wall_inside_forwarded_message() -> None:
+    module = _api_module()
+    fake = FakeVkApi()
+    gateway = module.VkApiGateway(fake, _settings())
+    message = _full_message()
+    message["text"] = "@all только сообщение пользователя"
+    message["fwd_messages"] = [
+        {"text": "пост внутри обычной пересылки", "attachments": [{"type": "wall"}]}
+    ]
+
+    source = await gateway.normalize_event(
+        {"type": "message_new", "group_id": GROUP_ID, "object": message}, _author()
+    )
+
+    assert source.wall_post is None
+    assert source.text == "@all только сообщение пользователя"
+    assert fake.calls == []
+
+
+async def test_normalize_event_foreign_wall_repost_uses_link_fallback_without_fetch() -> None:
+    module = _api_module()
+    user = FakeVkApi()
+    group = FakeVkApi()
+    gateway = module.VkApiGateway(group, _settings(), user_api=user)
+    message = _full_message()
+    message["attachments"] = [_wall_attachment(owner_id=-999)]
+
+    source = await gateway.normalize_event(
+        {"type": "message_new", "group_id": GROUP_ID, "object": message}, _author()
+    )
+
+    assert source.wall_post is None
+    assert source.wall_link == "https://vk.com/wall-999_77"
+    assert user.calls == []
+
+
+async def test_normalize_event_unavailable_wall_post_uses_link_fallback() -> None:
+    module = _api_module()
+    user = FakeVkApi({"wall.getById": _ok({"items": []})})
+    group = FakeVkApi()
+    gateway = module.VkApiGateway(group, _settings(), user_api=user)
+    message = _full_message()
+    message["attachments"] = [_wall_attachment()]
+
+    source = await gateway.normalize_event(
+        {"type": "message_new", "group_id": GROUP_ID, "object": message}, _author()
+    )
+
+    assert source.wall_post is None
+    assert source.wall_link == "https://vk.com/wall-42_77"
+
+
 async def test_cropped_event_triggers_full_message_fetch() -> None:
     module = _api_module()
     fake = FakeVkApi(
@@ -351,6 +527,32 @@ async def test_cropped_event_triggers_full_message_fetch() -> None:
     ]
     # source_key is derived from conversation_message_id, never from message.id/ts.
     assert "456" not in source.source_key
+
+
+async def test_cropped_wall_repost_is_resolved_after_full_message_fetch() -> None:
+    module = _api_module()
+    full = _full_message()
+    full["attachments"] = [_wall_attachment()]
+    user = FakeVkApi({"wall.getById": _ok({"items": [_wall_post()]})})
+    group = FakeVkApi(
+        {
+            "groups.getById": _community_groups(),
+            "messages.getByConversationMessageId": _ok({"items": [full]}),
+            "users.get": _ok(
+                [{"id": 123, "first_name": "Иван", "last_name": "Иванов", "screen_name": "ivan"}]
+            ),
+        }
+    )
+    gateway = module.VkApiGateway(group, _settings(), user_api=user)
+
+    source = await gateway.normalize_event(
+        {"type": "message_new", "group_id": GROUP_ID, "object": _cropped_object()}, _author()
+    )
+
+    assert source.wall_post is not None
+    assert source.wall_post.text == "оригинальный пост"
+    assert source.wall_link is None
+    assert user.params_for("wall.getById") == [{"posts": "-42_77"}]
 
 
 async def test_get_full_message_maps_by_conversation_message_id() -> None:

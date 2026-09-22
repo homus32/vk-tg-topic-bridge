@@ -213,6 +213,43 @@ def test_attachments_are_classified(caplog: pytest.LogCaptureFixture) -> None:
     assert any(getattr(record, "access_key_present", False) for record in caplog.records)
 
 
+def test_wall_attachment_is_dropped_from_message_attachments() -> None:
+    mapper = _mapper()
+    message = _message(
+        attachments=[
+            {"type": "wall", "wall": {"owner_id": -1, "id": 77, "access_key": "key"}},
+            {
+                "type": "photo",
+                "photo": {"owner_id": -1, "id": 11, "access_key": "photo-key"},
+            },
+        ]
+    )
+    source = mapper.map_message(group_id=GROUP_ID, message=message, author=_author())
+
+    assert [attachment.kind for attachment in source.attachments] == [AttachmentKind.PHOTO]
+    assert source.wall_link is None
+    assert source.wall_post is None
+
+
+def test_wall_reference_is_extracted_from_outer_attachment() -> None:
+    mapper = _mapper()
+    message = _message(
+        attachments=[{"type": "wall", "wall": {"owner_id": -1, "id": 77, "access_key": "k"}}]
+    )
+
+    assert mapper.extract_wall_reference(message) == (-1, 77)
+    assert mapper.extract_wall_reference(_message()) is None
+
+
+def test_wall_reference_ignores_forwarded_wall_attachments() -> None:
+    mapper = _mapper()
+    message = _message(
+        fwd_messages=[{"text": "forward", "attachments": [{"type": "wall", "wall": {}}]}]
+    )
+
+    assert mapper.extract_wall_reference(message) is None
+
+
 def test_non_list_attachments_are_ignored() -> None:
     mapper = _mapper()
     source = mapper.map_message(

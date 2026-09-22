@@ -8,6 +8,7 @@ from vk_topic_bridge.domain.value_objects import (
     Destination,
     Publication,
     SourceMessage,
+    SourceWallPost,
 )
 
 
@@ -18,6 +19,8 @@ def _source(
     has_hashtag: bool = False,
     author: Author | None = None,
     attachments: tuple[Attachment, ...] = (),
+    wall_post: SourceWallPost | None = None,
+    wall_link: str | None = None,
 ) -> SourceMessage:
     return SourceMessage(
         source_type=SourceType.VK_MESSAGE,
@@ -31,6 +34,8 @@ def _source(
         has_all=has_all,
         has_hashtag=has_hashtag,
         attachments=attachments,
+        wall_post=wall_post,
+        wall_link=wall_link,
     )
 
 
@@ -161,3 +166,42 @@ def test_compose_leaves_attachments_untouched() -> None:
         Destination(chat_id=100, message_thread_id=None),
     )
     assert publication.source.attachments == (attachment,)
+
+
+def test_compose_keeps_repost_message_and_wall_post_context() -> None:
+    wall_post = SourceWallPost(
+        source_type=SourceType.VK_WALL,
+        source_key="wall:1:2",
+        group_id=1,
+        owner_id=-1,
+        post_id=2,
+        author=Author(user_id=-1, first_name="Группа", last_name="", screen_name="group"),
+        text="текст оригинального поста",
+        url="https://vk.com/wall-1_2",
+        attachments=(),
+    )
+    publication = forwarding_policy.compose_publication(
+        _source(text="@all комментарий пользователя", has_all=True, wall_post=wall_post),
+        Destination(chat_id=100, message_thread_id=55),
+    )
+
+    assert "@all комментарий пользователя" in publication.html_text
+    assert "текст оригинального поста" in publication.html_text
+    assert 'href="https://vk.com/wall-1_2"' in publication.html_text
+    assert "#извк #извкважно" in publication.html_text
+
+
+def test_compose_adds_wall_link_when_post_content_is_unavailable() -> None:
+    publication = forwarding_policy.compose_publication(
+        _source(
+            text="#важное",
+            has_hashtag=True,
+            wall_link="https://vk.com/wall-1_2",
+        ),
+        Destination(chat_id=100, message_thread_id=55),
+    )
+
+    assert "#важное" in publication.html_text
+    assert 'href="https://vk.com/wall-1_2"' in publication.html_text
+    assert "Оригинал поста" in publication.html_text
+    assert "#извк" in publication.html_text

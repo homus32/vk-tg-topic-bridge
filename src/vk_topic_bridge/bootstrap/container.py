@@ -426,7 +426,12 @@ def build_container(
     bot = create_bot(settings)
     dispatcher = build_dispatcher()
     telethon_adapter = TelethonAdapter(telethon_client)
-    vk_gateway = VkApiGateway(vk_api_raw, settings)
+    user_api = (
+        API(settings.VK_USER_TOKEN.get_secret_value())
+        if settings.VK_USER_TOKEN is not None
+        else None
+    )
+    vk_gateway = VkApiGateway(vk_api_raw, settings, user_api=user_api)
     publisher = BotApiPublisher(bot)
     admin_port = BotApiAdminPort(bot)
     readiness = InMemoryReadinessGate()
@@ -441,11 +446,6 @@ def build_container(
     diagnostics_reader = DiagnosticsReader(uow_factory)
     command_menu = CommandMenuSynchronizer(bot, frozenset(settings.OWNER_IDS))
     owner_notifier = OwnerNotifier(frozenset(settings.OWNER_IDS), publisher)
-    user_api = (
-        API(settings.VK_USER_TOKEN.get_secret_value())
-        if settings.VK_USER_TOKEN is not None
-        else None
-    )
     downloader = VkMediaDownloader(
         vk_api_raw,
         http_session,

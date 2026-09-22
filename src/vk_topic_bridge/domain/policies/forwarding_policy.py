@@ -39,7 +39,19 @@ def compose_publication(source: SourceMessage, destination: Destination) -> Publ
     author = source.author
     tags = f"{IZVK_TAG} {IZVK_IMPORTANT_TAG}" if source.has_all else IZVK_TAG
     author_link = f'<a href="{author.profile_url}">{html.escape(author.display_name)}</a>'
-    html_text = f"{author_link}\n\n{html.escape(source.text)}\n\n{tags}"
+    html_text = f"{author_link}\n\n{html.escape(source.text)}"
+    if source.wall_post is not None:
+        wall_author = source.wall_post.author
+        wall_author_link = (
+            f'<a href="{wall_author.profile_url}">{html.escape(wall_author.display_name)}</a>'
+        )
+        wall_link = f'<a href="{source.wall_post.url}">Оригинал поста</a>'
+        html_text += (
+            f"\n\n{wall_author_link}\n\n{html.escape(source.wall_post.text)}\n\n{wall_link}"
+        )
+    elif source.wall_link is not None:
+        html_text += f'\n\n<a href="{source.wall_link}">Оригинал поста</a>'
+    html_text += f"\n\n{tags}"
     return Publication(
         chat_id=destination.chat_id,
         message_thread_id=destination.message_thread_id,

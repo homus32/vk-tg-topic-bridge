@@ -1,5 +1,7 @@
 """Immutable, SDK-neutral domain value objects."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 
 from vk_topic_bridge.domain.enums import AttachmentKind, SourceType
@@ -68,6 +70,8 @@ class SourceMessage:
     has_all: bool
     has_hashtag: bool
     attachments: tuple[Attachment, ...]
+    wall_post: SourceWallPost | None = None
+    wall_link: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

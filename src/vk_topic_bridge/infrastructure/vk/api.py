@@ -8,6 +8,7 @@ import json
 import logging
 import random
 from collections.abc import Mapping
+from dataclasses import replace
 from typing import Protocol
 
 from vkbottle import VKAPIError
@@ -17,6 +18,7 @@ from config import Settings
 from vk_topic_bridge.application.dto.infrastructure import LongPollInfo
 from vk_topic_bridge.domain.errors import RecoverableInfraError
 from vk_topic_bridge.domain.value_objects import Author, SourceMessage, SourceWallPost
+from vk_topic_bridge.domain.wall_post import wall_post_url
 from vk_topic_bridge.infrastructure.vk import mapper
 
 logger = logging.getLogger(__name__)
@@ -62,10 +64,18 @@ def _classify(code: int) -> VkError:
 class VkApiGateway:
     """``VkGateway`` implementation writing through a VKBottle-style raw API."""
 
-    def __init__(self, api: RawVkApi, settings: Settings, *, token_type: str = "group") -> None:
+    def __init__(
+        self,
+        api: RawVkApi,
+        settings: Settings,
+        *,
+        token_type: str = "group",
+        user_api: RawVkApi | None = None,
+    ) -> None:
         self._api = api
         self._settings = settings
         self._token_type = token_type
+        self._user_api = user_api
 
     async def _request(self, method: str, params: dict[str, object]) -> object:
         logger.debug(
@@ -215,6 +225,7 @@ class VkApiGateway:
         source = mapper.map_message(
             group_id=await self.get_community_id(), message=full, author=author
         )
+        source = await self._resolve_wall_repost(source.group_id, full, source)
         logger.debug(
             "vk full message lookup completed",
             extra={
@@ -227,6 +238,89 @@ class VkApiGateway:
             },
         )
         return source
+
+    # Wall-post reposting from group messages is not documented in docs/ yet; add it.
+    async def get_wall_post(
+        self, group_id: int, owner_id: int, post_id: int
+    ) -> SourceWallPost | None:
+        """Best-effort read of one wall post: user token only; any failure is None.
+
+        VK rejects ``wall.getById`` for community tokens (error 27), so only the user
+        token can return post content; the caller degrades to a plain post link.
+        """
+        if self._user_api is None or owner_id != -group_id:
+            return None
+        try:
+            response = await self._user_api.request(
+                "wall.getById", {"posts": f"{owner_id}_{post_id}"}
+            )
+        except VKAPIError as exc:
+            logger.warning(
+                "vk wall post lookup failed",
+                extra={
+                    "reason": "vk_error",
+                    "vk_error_code": exc.code,
+                    "vk_error_class": type(exc).__name__,
+                    "token_type": "user",
+                },
+            )
+            return None
+        except Exception as exc:
+            logger.warning(
+                "vk wall post lookup failed",
+                extra={
+                    "reason": "transport_error",
+                    "vk_error_class": type(exc).__name__,
+                    "token_type": "user",
+                },
+            )
+            return None
+        payload = response.get("response") if isinstance(response, Mapping) else None
+        items = payload.get("items") if isinstance(payload, Mapping) else None
+        if not isinstance(items, list) or not items or not isinstance(items[0], Mapping):
+            return None
+        post = items[0]
+        if post.get("owner_id") != owner_id or post.get("id") != post_id:
+            return None
+        from_id = post.get("from_id")
+        author = await self.get_author(from_id if isinstance(from_id, int) else owner_id)
+        return mapper.map_wall_post(group_id=group_id, payload=post, author=author)
+
+    async def _resolve_wall_repost(
+        self, group_id: int, message: Mapping[str, object], source: SourceMessage
+    ) -> SourceMessage:
+        wall_reference = mapper.extract_wall_reference(message)
+        if wall_reference is None:
+            return source
+        owner_id, post_id = wall_reference
+        fallback_link = wall_post_url(owner_id, post_id)
+        if owner_id != -group_id:
+            logger.debug(
+                "vk wall repost link fallback",
+                extra={"owner_id": owner_id, "post_id": post_id, "reason": "foreign_post"},
+            )
+            return replace(source, wall_link=fallback_link)
+        if self._user_api is None:
+            logger.debug(
+                "vk wall repost link fallback",
+                extra={"owner_id": owner_id, "post_id": post_id, "reason": "user_token_absent"},
+            )
+            return replace(source, wall_link=fallback_link)
+        try:
+            wall_post = await self.get_wall_post(group_id, owner_id, post_id)
+        except VkError, ValueError:
+            logger.warning(
+                "vk wall repost lookup failed",
+                extra={"owner_id": owner_id, "post_id": post_id, "reason": "unavailable_post"},
+            )
+            wall_post = None
+        if wall_post is None:
+            return replace(source, wall_link=fallback_link)
+        return replace(
+            source,
+            attachments=source.attachments + wall_post.attachments,
+            wall_post=wall_post,
+        )
 
     async def set_reaction(self, peer_id: int, conversation_message_id: int) -> None:
         logger.debug(
@@ -332,6 +426,7 @@ class VkApiGateway:
                 raise ValueError(msg)
             return await self.get_full_message(peer_id, cmid)
         source = mapper.map_message(group_id=group_id, message=obj, author=author)
+        source = await self._resolve_wall_repost(group_id, obj, source)
         logger.debug(
             "vk message normalized",
             extra={

@@ -178,15 +178,40 @@ def _map_attachment(raw: object) -> Attachment | None:
     )
 
 
-def _map_attachments(raw: object) -> tuple[Attachment, ...]:
+def _map_attachments(raw: object, *, skip_wall: bool = False) -> tuple[Attachment, ...]:
     if not isinstance(raw, list):
         return ()
     attachments: list[Attachment] = []
     for item in raw:
+        if skip_wall and isinstance(item, Mapping) and item.get("type") == "wall":
+            continue
         mapped = _map_attachment(item)
         if mapped is not None:
             attachments.append(mapped)
     return tuple(attachments)
+
+
+def extract_wall_reference(message: Mapping[str, object]) -> tuple[int, int] | None:
+    attachments = message.get("attachments")
+    if not isinstance(attachments, list):
+        return None
+    for raw in attachments:
+        if not isinstance(raw, Mapping) or raw.get("type") != "wall":
+            continue
+        payload = raw.get("wall")
+        if not isinstance(payload, Mapping):
+            return None
+        owner_id = payload.get("owner_id")
+        post_id = payload.get("id")
+        if (
+            isinstance(owner_id, bool)
+            or not isinstance(owner_id, int)
+            or isinstance(post_id, bool)
+            or not isinstance(post_id, int)
+        ):
+            return None
+        return owner_id, post_id
+    return None
 
 
 def map_message(
@@ -215,7 +240,7 @@ def map_message(
         text=text,
         has_all=decision.matched_all,
         has_hashtag=decision.matched_hashtag,
-        attachments=_map_attachments(message.get("attachments")),
+        attachments=_map_attachments(message.get("attachments"), skip_wall=True),
     )
 
 
