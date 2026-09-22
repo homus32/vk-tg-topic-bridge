@@ -135,7 +135,7 @@ def attention_notification_text(*, status: str, delivery_id: int) -> str:
     label = _STATUS_LABELS.get(status, status)
     return (
         f"Проблема с доставкой (запись #{delivery_id}): {label}.\n"  # noqa: RUF001
-        "Подробности — в разделе «Диагностика доставки»."
+        "Подробности — в разделе «Проблемы доставки»."
     )
 
 

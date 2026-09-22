@@ -9,6 +9,7 @@ pre-escaped HTML.
 from __future__ import annotations
 
 import html
+import re
 from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
@@ -23,6 +24,8 @@ from vk_topic_bridge.domain.value_objects import (
 from vk_topic_bridge.domain.wall_post import SourceWallPost
 
 WALL_TAG = "#изстенывк"
+MANUAL_TAG = "#извк"
+_SERVICE_TAG_RE = re.compile(r"(?<!\w)#извк(?!\w)", re.IGNORECASE)
 
 _KIND_LABELS = {
     AttachmentKind.PHOTO: "Фото",
@@ -51,10 +54,10 @@ class MediaFailureReason(StrEnum):
 
 
 _REASON_TEXTS = {
-    MediaFailureReason.UNAVAILABLE: "недоступно для скачивания и пропущено",
-    MediaFailureReason.DOWNLOAD_FAILED: "не удалось скачать и пропущено",
-    MediaFailureReason.TOO_LARGE: "превышает лимит 50 МБ и пропущено",
-    MediaFailureReason.UNSUPPORTED: "не поддерживается и пропущено",
+    MediaFailureReason.UNAVAILABLE: "недоступно. Остальная публикация отправлена",
+    MediaFailureReason.DOWNLOAD_FAILED: "не удалось перенести. Остальная публикация отправлена",
+    MediaFailureReason.TOO_LARGE: "превышает лимит 50 МБ. Остальная публикация отправлена",
+    MediaFailureReason.UNSUPPORTED: "не поддерживается. Остальная публикация отправлена",
 }
 
 
@@ -68,16 +71,17 @@ def compose_manual_publication(
     initiator: Author,
     destination: Destination,
 ) -> Publication:
-    """Manual publication: original author link, text, separate initiator link.
+    """Manual publication: original author link, text, service tag, initiator link.
 
     Both profile links are distinct clickable ``<a>`` links built from the stable
     numeric id; the VK text is escaped; no reply context and no nested forward
-    expansion (the source is already a single message object); no automatic ``#извк``
-    tags on manual posts.
+    expansion (the source is already a single message object). The manual service tag is
+    separate from the source text and is not expanded to ``#извкважно``.
     """
+    manual_tag = "" if _SERVICE_TAG_RE.search(source.text) else MANUAL_TAG
     html_text = (
         f"{_profile_link(source.author)}\n\n"
-        f"{html.escape(source.text)}\n\n"
+        f"{html.escape(source.text)}\n\n{manual_tag}\n\n"
         f"{_profile_link(initiator, label='Автор пересылки')}"
     )
     return Publication(
@@ -126,6 +130,14 @@ def append_media_warnings(html_text: str, warnings: Sequence[MediaWarning]) -> s
     return f"{html_text}\n{escaped}"
 
 
+def prepend_general_fallback_warning(html_text: str, *, topic_label: str) -> str:
+    return (
+        f"⚠️ Топик «{html.escape(topic_label)}» недоступен.\n"
+        "Публикация отправлена в General.\n\n"
+        f"{html_text}"
+    )
+
+
 def _render_media_warning(warning: MediaWarning) -> str:
     if isinstance(warning, MediaLinkWarning):
         return (
@@ -148,14 +160,14 @@ def media_failure_warning(
     """
     label = _KIND_LABELS.get(kind, _FALLBACK_KIND_LABEL)
     if file_name:
-        return f"{label} «{file_name}» {_REASON_TEXTS[reason]}."
-    return f"{label} {_REASON_TEXTS[reason]}."
+        return f"⚠️ {label} «{file_name}» {_REASON_TEXTS[reason]}."
+    return f"⚠️ {label} {_REASON_TEXTS[reason]}."
 
 
 def media_link_warning(file_name: str | None, link_url: str) -> MediaLinkWarning:
     if file_name:
-        return MediaLinkWarning(f"Видео «{file_name}» не удалось скачать.", link_url)
-    return MediaLinkWarning("Видео не удалось скачать.", link_url)
+        return MediaLinkWarning(f"🎬 Видео «{file_name}» доступно по ссылке:", link_url)
+    return MediaLinkWarning("🎬 Видео доступно по ссылке:", link_url)
 
 
 def _unsafe_boundaries(text: str, length: int) -> bytearray:

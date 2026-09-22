@@ -307,6 +307,7 @@ async def test_wall_missing_topic_falls_back_to_general_and_notifies() -> None:
 
     assert outcome.published is True
     assert publisher.plans[0].base.message_thread_id is None
+    assert publisher.plans[0].base.html_text.startswith("⚠️ Топик «#12» недоступен.")
     assert len(notifier.all_texts) == 1
     assert "General" in notifier.all_texts[0]
 
@@ -333,6 +334,7 @@ async def test_wall_runtime_stale_topic_falls_back_to_general_and_notifies() -> 
 
     assert outcome.published is True
     assert [plan.base.message_thread_id for plan in publisher.plans] == [WALL_TOPIC_ID, None]
+    assert publisher.plans[1].base.html_text.startswith("⚠️ Топик «Стена» недоступен.")
     assert len(notifier.all_texts) == 1
     assert "General" in notifier.all_texts[0]
     records = _records(uow)

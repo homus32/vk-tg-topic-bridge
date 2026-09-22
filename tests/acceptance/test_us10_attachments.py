@@ -41,7 +41,7 @@ async def test_us10_ac102_one_failed_attachment_does_not_cancel_the_rest() -> No
 
     assert outcome.published is True
     html = harness.publisher.plans[0].base.html_text
-    assert "не удалось скачать" in html
+    assert "не удалось перенести" in html
     assert harness.downloader.downloaded == ["-1_10", "-1_12"]
 
 
@@ -59,4 +59,4 @@ async def test_us10_ac103_each_failed_attachment_gets_its_own_line() -> None:
     html = harness.publisher.plans[0].base.html_text
     assert "a.jpg" in html
     assert "b.pdf" in html
-    assert html.count("не удалось скачать") == 2
+    assert html.count("не удалось перенести") == 2

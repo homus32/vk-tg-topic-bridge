@@ -39,7 +39,12 @@ logger = logging.getLogger(__name__)
 UNKNOWN_TEXT_HINT = "Неизвестная команда. Воспользуйтесь кнопками меню."
 
 
-async def render_root_state(message: Message, state: BridgeSettingsState | None) -> None:
+async def render_root_state(
+    message: Message,
+    state: BridgeSettingsState | None,
+    *,
+    styles_enabled: bool = False,
+) -> None:
     """Reply consistent with the persisted root state (shared by /start and /cancel)."""
     from vk_topic_bridge.presentation.telegram.keyboards import owner_main_keyboard
 
@@ -49,7 +54,7 @@ async def render_root_state(message: Message, state: BridgeSettingsState | None)
     title = state.telegram_chat_title or str(state.telegram_chat_id)
     await message.answer(
         f"Главное меню.\nЧат: «{title}».",  # noqa: RUF001
-        reply_markup=owner_main_keyboard(state),
+        reply_markup=owner_main_keyboard(state, styles_enabled=styles_enabled),
     )
 
 
@@ -58,6 +63,7 @@ def build_root_router(
     *,
     registration: RegistrationCoordinator | None = None,
     menu_sync: object | None = None,
+    styles_enabled: bool = False,
 ) -> Router:
     """/start and /cancel handlers; menu-button dispatch lives in settings/destinations.
 
@@ -74,7 +80,11 @@ def build_root_router(
             extra={"owner_id": getattr(getattr(message, "from_user", None), "id", None)},
         )
         await state.clear()
-        await render_root_state(message, await settings_reader())
+        await render_root_state(
+            message,
+            await settings_reader(),
+            styles_enabled=styles_enabled,
+        )
 
     async def cancel(message: Message, state: FSMContext) -> None:
         owner_id = getattr(getattr(message, "from_user", None), "id", None)
@@ -103,12 +113,15 @@ def build_root_router(
                     REGISTRATION_CANCELLED_TEXT, reply_markup=unregistered_keyboard()
                 )
                 return
-            await render_root_state(message, current)
+            await render_root_state(message, current, styles_enabled=styles_enabled)
             return
         from vk_topic_bridge.presentation.telegram.keyboards import owner_main_keyboard
 
         text = REGISTRATION_CANCELLED_TEXT if registration_cancelled else CANCELLED_TEXT
-        await message.answer(text, reply_markup=owner_main_keyboard(current))
+        await message.answer(
+            text,
+            reply_markup=owner_main_keyboard(current, styles_enabled=styles_enabled),
+        )
 
     async def unknown(message: Message, state: FSMContext) -> None:
         if await state.get_state() is not None:

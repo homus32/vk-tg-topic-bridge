@@ -73,6 +73,7 @@ def build_registration_router(
     *,
     menu_sync: object | None = None,
     registration: RegistrationCoordinator | None = None,
+    styles_enabled: bool = False,
 ) -> Router:
     """Wire the registration master; ``menu_sync`` is the optional CommandMenuSynchronizer."""
     router = Router(name="registration")
@@ -98,7 +99,7 @@ def build_registration_router(
         current = await settings_reader()
         if current is not None and current.telegram_chat_id is not None:
             await state.clear()
-            await render_root_state(message, current)
+            await render_root_state(message, current, styles_enabled=styles_enabled)
             logger.debug(
                 "telegram registration start rendered registered state",
                 extra={"owner_id": owner_id, "chat_id": current.telegram_chat_id},
@@ -285,7 +286,13 @@ def build_registration_router(
         await _clear_group_scope(menu_sync, chat_id, owner_id)
         coordinator.release(owner_id)
         await state.clear()
-        await _send_owner_private(bot, owner_id, result, settings_reader)
+        await _send_owner_private(
+            bot,
+            owner_id,
+            result,
+            settings_reader,
+            styles_enabled=styles_enabled,
+        )
         logger.info(
             "telegram registration succeeded",
             extra={
@@ -323,6 +330,8 @@ async def _send_owner_private(
     owner_id: int,
     result: RegisterChatResult,
     settings_reader: SettingsReader,
+    *,
+    styles_enabled: bool,
 ) -> None:
     """DM the owner the fresh main keyboard after a successful registration."""
     if not result.ready:
@@ -334,7 +343,7 @@ async def _send_owner_private(
         await bot.send_message(
             chat_id=owner_id,
             text="Чат зарегистрирован. Клавиатура управления обновлена.",
-            reply_markup=owner_main_keyboard(fresh),
+            reply_markup=owner_main_keyboard(fresh, styles_enabled=styles_enabled),
         )
         logger.debug(
             "telegram registration feedback sent",

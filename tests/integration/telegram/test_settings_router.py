@@ -409,7 +409,7 @@ async def test_refresh_failure_keeps_previous_view_and_reports_error() -> None:
     await _handler(harness.router, "refresh_topics")(message)
 
     text, _ = message.answers[0]
-    assert "telethon down" in text
+    assert "⚠️ Не удалось обновить список топиков." in text  # noqa: RUF001
     assert "Важные" in text
 
 
@@ -426,7 +426,8 @@ async def test_diagnostics_lists_entries_and_sets_state() -> None:
 
     assert await fsm.get_state() == DeliveryDiagnosticsView.list_view.state
     text, markup = message.answers[0]
-    assert "ambiguous" in text
+    assert "Неясный результат" in text
+    assert "ambiguous" not in text
     assert "ручной проверки" in text
     assert "дубль" in text
     assert str(entry.delivery_id) in text
@@ -440,7 +441,7 @@ async def test_diagnostics_empty_shows_placeholder() -> None:
     await _handler(harness.router, "diagnostics")(message, FakeFSMContext())
 
     text, _ = message.answers[0]
-    assert "Записей нет" in text
+    assert "Проблемных доставок нет" in text
 
 
 async def test_diagnostics_ordinal_opens_detail_with_retry_warning() -> None:

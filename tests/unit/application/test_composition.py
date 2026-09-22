@@ -78,10 +78,14 @@ def test_manual_escapes_vk_text_and_names() -> None:
     assert html.escape("привет <script>") in publication.html_text
 
 
-def test_manual_has_no_automatic_tags() -> None:
-    publication = compose_manual_publication(_source(), INITIATOR, DESTINATION)
+def test_manual_has_service_tag_without_automatic_important_tag() -> None:
+    source = _source("@all исходный текст")
+    publication = compose_manual_publication(source, INITIATOR, DESTINATION)
 
-    assert "#извк" not in publication.html_text
+    assert publication.html_text.count("#извк") == 1
+    assert "#извкважно" not in publication.html_text
+    assert "@all исходный текст" in publication.html_text
+    assert publication.html_text.index("#извк") < publication.html_text.index("Автор пересылки")
 
 
 def test_manual_carries_destination() -> None:
@@ -135,7 +139,7 @@ def test_append_media_warnings_renders_video_link_as_safe_anchor() -> None:
     result = append_media_warnings("текст", [warning])
 
     assert (
-        "Видео «clip» не удалось скачать. "
+        "🎬 Видео «clip» доступно по ссылке: "
         '<a href="https://vk.com/video-1_22?param=&quot;quoted&quot;&amp;view=full">'
         "Открыть видео в VK</a>"
     ) in result
@@ -158,7 +162,7 @@ def test_media_failure_warning_without_name() -> None:
 
     assert "без имени" not in warning
     assert "Документ" in warning
-    assert "не удалось скачать" in warning
+    assert "не удалось перенести" in warning
 
 
 def test_media_failure_warning_oversize_reason() -> None:

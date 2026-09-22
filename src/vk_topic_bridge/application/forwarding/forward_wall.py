@@ -18,6 +18,7 @@ from vk_topic_bridge.application.errors import TELEGRAM_TOPIC_NOT_FOUND_CODE
 from vk_topic_bridge.application.forwarding.composition import (
     append_media_warnings,
     compose_wall_publication,
+    prepend_general_fallback_warning,
 )
 from vk_topic_bridge.application.forwarding.media_prep import prepare_media
 from vk_topic_bridge.application.forwarding.plan_execution import (
@@ -116,6 +117,15 @@ class ForwardWallPost:
             ready = derive_feature_readiness(state, availability).wall_auto_ready
             fallback_topic_id: int | None = None
             fallback_reason: str | None = None
+            configured_topic_label = (
+                next(
+                    (topic.title for topic in topics if topic.topic_id == configured_topic_id),
+                    f"#{configured_topic_id}",
+                )
+                if configured_topic_id is not None
+                else None
+            )
+            fallback_topic_label: str | None = None
             if kind is DestinationKind.GENERAL:
                 thread_id: int | None = None
             elif ready:
@@ -127,6 +137,7 @@ class ForwardWallPost:
                     if fallback_topic_id is not None
                     else "missing"
                 )
+                fallback_topic_label = configured_topic_label
                 thread_id = None
             chat_id = state.telegram_chat_id
             destination = Destination(chat_id=chat_id, message_thread_id=thread_id)
@@ -147,6 +158,14 @@ class ForwardWallPost:
         publication = replace(
             publication, html_text=append_media_warnings(publication.html_text, warnings)
         )
+        if fallback_topic_id is not None:
+            publication = replace(
+                publication,
+                html_text=prepend_general_fallback_warning(
+                    publication.html_text,
+                    topic_label=fallback_topic_label or f"#{fallback_topic_id}",
+                ),
+            )
         plan = plan_publication(publication, media)
         logger.debug(
             "automatic wall forwarding plan prepared",
@@ -252,7 +271,10 @@ class ForwardWallPost:
                 },
             )
             fallback_delivery_id, fallback_outcome = await self._publish_runtime_general_fallback(
-                wall_post, publication, configured_topic_id
+                wall_post,
+                publication,
+                configured_topic_id,
+                configured_topic_label or f"#{configured_topic_id}",
             )
             if fallback_outcome.claim_lost:
                 logger.error(
@@ -336,8 +358,16 @@ class ForwardWallPost:
         wall_post: SourceWallPost,
         publication: Publication,
         stale_topic_id: int,
+        topic_label: str,
     ) -> tuple[int, PlanOutcome]:
-        fallback_publication = replace(publication, message_thread_id=None)
+        fallback_publication = replace(
+            publication,
+            message_thread_id=None,
+            html_text=prepend_general_fallback_warning(
+                publication.html_text,
+                topic_label=topic_label,
+            ),
+        )
         fallback_plan = plan_publication(fallback_publication, ())
         fallback_source_key = f"{wall_post.source_key}:general-fallback"
         fallback_delivery_id = await reserve_delivery(

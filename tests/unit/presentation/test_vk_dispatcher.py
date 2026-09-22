@@ -206,14 +206,17 @@ async def test_help_triggers_all_open_same_help() -> None:
         await h.dispatcher.dispatch(_msg(trigger))
     texts = {text for _, text, _ in h.send.messages}
     assert len(texts) == 1
-    assert "переслать" in h.send.last_text
+    assert "одно сообщение" in h.send.last_text
+    assert "ничего не писать" in h.send.last_text
+    assert "@all" in h.send.last_text
+    assert "#изстенывк" in h.send.last_text
     assert h.send.last_keyboard is not None
 
 
 async def test_help_button_text_opens_help() -> None:
     h = _harness()
     await h.dispatcher.dispatch(_msg(BTN_HELP))
-    assert "переслать" in h.send.last_text
+    assert "Перешли боту ровно одно сообщение" in h.send.last_text
 
 
 # --- Alias menu ------------------------------------------------------------
@@ -237,7 +240,16 @@ async def test_alias_root_uses_text_buttons() -> None:
     assert keyboard["inline"] is False
     actions = [button["action"] for row in keyboard["buttons"] for button in row]
     assert [action["type"] for action in actions] == ["text", "text", "text"]
-    assert [action["label"] for action in actions] == ["Добавить/Изменить", "Удалить", "← Назад"]
+    assert [action["label"] for action in actions] == [
+        "➕ Добавить / изменить",  # noqa: RUF001
+        "🗑 Удалить",
+        "⬅️ Назад",
+    ]
+    assert [button["color"] for row in keyboard["buttons"] for button in row] == [
+        "positive",
+        "negative",
+        "secondary",
+    ]
 
 
 async def test_main_menu_uses_text_buttons() -> None:
@@ -282,7 +294,7 @@ async def test_alias_menu_has_one_add_edit_action_without_add_button() -> None:
     assert h.send.last_keyboard is not None
     buttons = json.loads(h.send.last_keyboard)["buttons"]
     labels = [button["action"]["label"] for row in buttons for button in row]
-    assert labels == ["Добавить/Изменить", "Удалить", "← Назад"]
+    assert labels == ["➕ Добавить / изменить", "🗑 Удалить", "⬅️ Назад"]  # noqa: RUF001
 
 
 async def test_combined_add_edit_prompt_lists_topics() -> None:
@@ -480,7 +492,7 @@ async def test_delete_prompt_lists_topics_without_confirmation_keyboard() -> Non
     ]
     assert "Да" not in labels
     assert labels == ["Новости", BTN_CANCEL]
-    assert "Отмена" in labels
+    assert BTN_CANCEL in labels
 
 
 async def test_delete_prompt_without_aliases_has_no_inline_keyboard() -> None:
@@ -656,7 +668,8 @@ async def test_manual_topic_selection_preserves_alias_value_fsm() -> None:
     assert h.sessions.get(USER_ID).state is VkUiState.ALIAS_ADD_WAIT_VALUE
     assert h.sessions.get(USER_ID).manual_pending_message is None
     assert len(h.send.messages) == message_count
-    assert h.send.edited_messages[-1][2] == 'Выбран топик "Новости"'
+    assert "✅ Сообщение отправлено" in h.send.edited_messages[-1][2]
+    assert "Telegram → топик «Новости»." in h.send.edited_messages[-1][2]
     assert json.loads(h.send.edited_messages[-1][3])["inline"] is False
 
     await h.dispatcher.dispatch(_msg("новый"))
@@ -744,7 +757,11 @@ async def test_forwarded_alias_text_publishes_without_replacing_fsm() -> None:
     assert h.publisher.calls[0].destination.message_thread_id == 7
     assert h.sessions.get(USER_ID).state is VkUiState.IDLE
     assert h.sessions.get(USER_ID).manual_pending_message is None
-    assert h.send.messages == []
+    assert len(h.send.messages) == 1
+    assert "Сообщение отправлено" in h.send.last_text
+    assert "Telegram" in h.send.last_text
+    assert "Новости" in h.send.last_text
+    assert json.loads(h.send.last_keyboard or "{}")["inline"] is False
 
 
 async def test_forwarded_alias_shortcut_preserves_active_alias_fsm() -> None:
@@ -835,7 +852,12 @@ async def test_manual_publication_result_failure_keeps_destination_fsm() -> None
     assert h.sessions.get(USER_ID).manual_pending_message is not None
     assert "топик" in h.send.edited_messages[-1][2].lower()
     assert "не отправлено" in h.send.edited_messages[-1][2].lower()
-    assert json.loads(h.send.edited_messages[-1][3])["inline"] is True
+    retry_keyboard = json.loads(h.send.edited_messages[-1][3])
+    assert retry_keyboard["inline"] is True
+    retry_labels = [
+        button["action"]["label"] for row in retry_keyboard["buttons"] for button in row
+    ]
+    assert retry_labels == ["General", BTN_CANCEL]
 
     publisher.result = ManualPublicationResult(
         published=True,
@@ -849,7 +871,8 @@ async def test_manual_publication_result_failure_keeps_destination_fsm() -> None
     assert h.sessions.get(USER_ID).state is VkUiState.IDLE
     assert len(publisher.calls) == 2
     assert publisher.calls[1].destination.message_thread_id is None
-    assert h.send.edited_messages[-1][2] == 'Выбран топик "General"'
+    assert "✅ Сообщение отправлено" in h.send.edited_messages[-1][2]
+    assert "Telegram → топик «General»." in h.send.edited_messages[-1][2]
 
 
 # --- session isolation -------------------------------------------------------
@@ -885,7 +908,7 @@ async def test_handle_dm_normalizes_plain_object_payload() -> None:
         _update({"peer_id": USER_ID, "from_id": USER_ID, "text": "Помощь"})
     )
     assert consumed is True
-    assert "переслать" in h.send.last_text
+    assert "Перешли боту ровно одно сообщение" in h.send.last_text
 
 
 async def test_handle_dm_supports_nested_message_payload() -> None:

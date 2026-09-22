@@ -357,6 +357,7 @@ def _register_routers(
     select_destination: SelectDestinationV2,
 ) -> None:
     owner_ids = frozenset(settings.OWNER_IDS)
+    styles_enabled = getattr(settings, "TELEGRAM_BOT_API_BUTTON_STYLES_ENABLED", False)
     registration = RegistrationCoordinator()
     dispatcher.message.outer_middleware(OwnerOnlyMiddleware(owner_ids))
     dispatcher.include_router(
@@ -366,6 +367,7 @@ def _register_routers(
             bot,
             menu_sync=command_menu,
             registration=registration,
+            styles_enabled=styles_enabled,
         )
     )
     dispatcher.include_router(
@@ -376,6 +378,7 @@ def _register_routers(
             run_id_factory=default_run_id,
             refresh_use_case=refresh_topics_v2,
             owner_ids=owner_ids,
+            styles_enabled=styles_enabled,
         )
     )
     dispatcher.include_router(
@@ -388,11 +391,17 @@ def _register_routers(
             topics_reader=topics_reader,
             bot=bot,
             owner_ids=owner_ids,
+            styles_enabled=styles_enabled,
         )
     )
     # Root last: its catch-all hint must only see text no feature router claimed.
     dispatcher.include_router(
-        build_root_router(reader, registration=registration, menu_sync=command_menu)
+        build_root_router(
+            reader,
+            registration=registration,
+            menu_sync=command_menu,
+            styles_enabled=styles_enabled,
+        )
     )
     logger.info("telegram routers registered", extra={"owner_count": len(owner_ids)})
 

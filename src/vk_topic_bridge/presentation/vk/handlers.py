@@ -58,15 +58,41 @@ def _format_notice(title: str, body: str = "") -> Formatter:
     return Formatter("{title}\n\n{body}").format(title=bold(title), body=body)
 
 
-HELP_TEXT = _format_notice(
-    "Как пользоваться ботом",
-    "1. Чтобы переслать одно сообщение, перешлите его боту.\n"  # noqa: RUF001
-    "2. Выберите направление кнопкой нужного топика.\n"
-    "3. Можно указать имя алиаса в сопровождающем тексте пересылки.\n"
-    "4. Алиасы настраиваются кнопкой «Алиасы»: добавить, изменить, удалить.\n"
-    "5. Отменить текущую операцию можно кнопкой «Отмена».\n"
-    "6. Автоматически пересылаются сообщения с @all и/или хештегом, "  # noqa: RUF001
-    "если эти функции включены.",
+HELP_TEXT = Formatter(
+    "{title}\n\n"
+    "{manual_heading}\n"
+    "1. Перешли боту ровно одно сообщение из VK.\n"
+    "2. В подписи к пересылке можно ничего не писать или написать алиас — "  # noqa: RUF001
+    "тогда сообщение сразу уйдёт в его топик.\n"  # noqa: RUF001
+    "3. Если алиас не написан, бот предложит выбрать топик кнопкой.\n\n"
+    "{alias_heading}\n"
+    "Алиас — короткое имя, которое вы даёте топику Telegram.\n"
+    "Вместо выбора кнопкой просто напишите алиас в подписи к пересылке.\n"
+    "Пример: пишете «новости» — сообщение уйдёт в топик «Новости».\n"
+    "Управление алиасами — кнопка «🏷 Алиасы» в главном меню.\n\n"
+    "{auto_heading}\n"
+    "Если включены настройки, бот пересылает сообщения из VK сам:\n"
+    "• сообщения с @all;\n"  # noqa: RUF001
+    "• сообщения с любым #хештегом.\n\n"  # noqa: RUF001
+    "{wall_heading}\n"
+    "Посты стены VK пересылаются автоматически, если включена пересылка стены.\n"
+    "В таких постах есть ссылка на оригинал и метка #изстенывк.\n\n"  # noqa: RUF001
+    "{tags_heading}\n"
+    "Бот добавляет метки сам, писать их не нужно.\n"
+    "#извк — у каждой пересылки сообщений VK.\n"  # noqa: RUF001
+    "#извкважно — у автоматических публикаций с @all.\n"  # noqa: RUF001
+    "У ручных пересылок метка только #извк, даже если в сообщении есть @all.\n\n"  # noqa: RUF001
+    "{important_heading}\n"
+    "⚠️ За одну ручную операцию пересылается только одно сообщение.\n"  # noqa: RUF001
+    "⬅️ Для отмены текущего действия используй кнопку «✖ Отмена».",
+).format(
+    title=bold("🤖 Как пользоваться ботом"),
+    manual_heading=bold("📨 Ручная пересылка"),
+    alias_heading=bold("🏷 Алиасы"),
+    auto_heading=bold("🔄 Автоматическая пересылка"),
+    wall_heading=bold("🧱 Стена VK"),
+    tags_heading=bold("📌 Метки публикаций"),
+    important_heading=bold("⚠️ Важно"),
 )
 
 UNKNOWN_ALIAS_TEXT = "Алиас неизвестен."
@@ -634,7 +660,13 @@ class VkUiDispatcher:
         if callback_message is not None:
             await self._edit_event_message(
                 callback_message,
-                f'Выбран топик "{topic.title}"',
+                _manual_success_text(topic.title),
+                _reply_keyboard_json(session.state),
+            )
+        else:
+            await self._reply(
+                message,
+                _manual_success_text(topic.title),
                 _reply_keyboard_json(session.state),
             )
 
@@ -976,3 +1008,10 @@ def _manual_result_error_text(error_code: str | None) -> str:
     if error_code == "publication_ambiguous":
         return "Telegram не подтвердил отправку. Сообщение не отправлено. Попробуйте позже."
     return PUBLISH_FAILED_TEXT
+
+
+def _manual_success_text(topic_title: str) -> Formatter:
+    return _format_notice(
+        "✅ Сообщение отправлено",
+        f"Telegram → топик «{topic_title}».",
+    )

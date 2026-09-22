@@ -148,6 +148,7 @@ def build_destinations_router(
     run_id_factory: Callable[[], str],
     refresh_use_case: RefreshUseCase,
     owner_ids: frozenset[int] | None = None,
+    styles_enabled: bool = False,
 ) -> Router:
     """Wire both destination wizards; General is selectable, unavailable topics are not."""
     router = Router(name="destinations")
@@ -173,6 +174,7 @@ def build_destinations_router(
                 cast("Literal['messages', 'wall']", kind),
                 version,
                 _current_topic_id(current, kind),
+                styles_enabled=styles_enabled,
             ),
         )
 
@@ -276,7 +278,11 @@ def build_destinations_router(
                 )
                 return
             fresh = await settings_reader()
-            markup = owner_main_keyboard(fresh) if fresh is not None else ordinal_choice_keyboard()
+            markup = (
+                owner_main_keyboard(fresh, styles_enabled=styles_enabled)
+                if fresh is not None
+                else ordinal_choice_keyboard()
+            )
             await message.answer(confirmation, reply_markup=markup)
 
     async def _callback_pick(
@@ -335,8 +341,8 @@ def build_destinations_router(
             )
             cached_topics = await topics_reader(chat_id)
             await message.answer(
-                f"Топик «{topic.title}» больше недоступен, но список не удалось "
-                "обновить. Повторите попытку и выберите destination снова.\n\n"
+                f"⚠️ Топик «{topic.title}» больше недоступен, но список не удалось "
+                "обновить. Повторите попытку и выберите топик снова.\n\n"
                 f"{_render_destination_list(_destination_rows(cached_topics))}",
                 reply_markup=ordinal_choice_keyboard(),
             )
@@ -350,7 +356,7 @@ def build_destinations_router(
             },
         )
         await message.answer(
-            f"Топик «{topic.title}» больше недоступен. Список destinations обновлён.\n\n"
+            f"⚠️ Топик «{topic.title}» больше недоступен. Список топиков обновлён.\n\n"
             f"{_render_destination_list(_destination_rows(topics))}",
             reply_markup=ordinal_choice_keyboard(),
         )
@@ -373,7 +379,10 @@ def build_destinations_router(
         if current is None or current.telegram_chat_id is None:
             await message.answer(UNREGISTERED_TEXT, reply_markup=unregistered_keyboard())
             return
-        await message.answer("Действие отменено.", reply_markup=owner_main_keyboard(current))
+        await message.answer(
+            "Действие отменено.",
+            reply_markup=owner_main_keyboard(current, styles_enabled=styles_enabled),
+        )
 
     async def wizard_cancel(message: Message, state: FSMContext) -> None:
         fsm_state = await state.get_state()

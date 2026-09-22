@@ -28,7 +28,9 @@ class DestinationCallback(CallbackData, prefix="dest"):
     version: int
 
 
-def owner_main_keyboard(state: BridgeSettingsState) -> ReplyKeyboardMarkup:
+def owner_main_keyboard(
+    state: BridgeSettingsState, *, styles_enabled: bool = False
+) -> ReplyKeyboardMarkup:
     """Permanent owner keyboard with state-dependent toggle labels (AC-20.1/20.2)."""
     toggle_all = btn.TOGGLE_ALL_DISABLE if state.auto_forward_all else btn.TOGGLE_ALL_ENABLE
     toggle_hashtags = (
@@ -36,16 +38,58 @@ def owner_main_keyboard(state: BridgeSettingsState) -> ReplyKeyboardMarkup:
     )
     toggle_wall = btn.TOGGLE_WALL_DISABLE if state.auto_forward_wall else btn.TOGGLE_WALL_ENABLE
     rows = [
-        [KeyboardButton(text=toggle_all)],
-        [KeyboardButton(text=toggle_hashtags)],
-        [KeyboardButton(text=toggle_wall)],
         [
-            KeyboardButton(text=btn.MENU_MESSAGES_DESTINATION),
-            KeyboardButton(text=btn.MENU_WALL_DESTINATION),
+            KeyboardButton(
+                text=toggle_all,
+                style=("danger" if state.auto_forward_all else "success")
+                if styles_enabled
+                else None,
+            )
         ],
-        [KeyboardButton(text=btn.MENU_TOPICS_SETTINGS)],
-        [KeyboardButton(text=btn.MENU_DELIVERY_DIAGNOSTICS)],
-        [KeyboardButton(text=btn.MENU_CHANGE_CHAT)],
+        [
+            KeyboardButton(
+                text=toggle_hashtags,
+                style=("danger" if state.auto_forward_hashtags else "success")
+                if styles_enabled
+                else None,
+            )
+        ],
+        [
+            KeyboardButton(
+                text=toggle_wall,
+                style=("danger" if state.auto_forward_wall else "success")
+                if styles_enabled
+                else None,
+            )
+        ],
+        [
+            KeyboardButton(
+                text=btn.MENU_MESSAGES_DESTINATION,
+                style="primary" if styles_enabled else None,
+            ),
+            KeyboardButton(
+                text=btn.MENU_WALL_DESTINATION,
+                style="primary" if styles_enabled else None,
+            ),
+        ],
+        [
+            KeyboardButton(
+                text=btn.MENU_TOPICS_SETTINGS,
+                style="primary" if styles_enabled else None,
+            )
+        ],
+        [
+            KeyboardButton(
+                text=btn.MENU_DELIVERY_DIAGNOSTICS,
+                style="danger" if styles_enabled else None,
+            )
+        ],
+        [
+            KeyboardButton(
+                text=btn.MENU_CHANGE_CHAT,
+                style="danger" if styles_enabled else None,
+            )
+        ],
     ]
     return ReplyKeyboardMarkup(
         keyboard=rows,
@@ -69,6 +113,8 @@ def destination_keyboard(
     kind: Literal["messages", "wall"],
     version: int,
     current_topic_id: int | None,
+    *,
+    styles_enabled: bool = False,
 ) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     for topic_id, title, available in topics:
@@ -84,23 +130,32 @@ def destination_keyboard(
                 topic_id=normalized_id,
                 version=version,
             ),
+            style="success" if styles_enabled else None,
         )
     builder.adjust(1)
     return builder.as_markup()
 
 
-def topics_settings_keyboard() -> ReplyKeyboardMarkup:
+def topics_settings_keyboard(*, styles_enabled: bool = False) -> ReplyKeyboardMarkup:
     """Refresh/back row for the topics settings list."""
     return ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text=btn.BTN_REFRESH)], [KeyboardButton(text=btn.BTN_BACK)]],
+        keyboard=[
+            [KeyboardButton(text=btn.BTN_REFRESH, style="primary" if styles_enabled else None)],
+            [KeyboardButton(text=btn.BTN_BACK)],
+        ],
         resize_keyboard=True,
     )
 
 
-def confirm_keyboard() -> ReplyKeyboardMarkup:
+def confirm_keyboard(*, styles_enabled: bool = False) -> ReplyKeyboardMarkup:
     """Yes/cancel row for the change-chat confirmation."""
     return ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text=btn.BTN_YES), KeyboardButton(text=btn.BTN_CANCEL)]],
+        keyboard=[
+            [
+                KeyboardButton(text=btn.BTN_YES, style="success" if styles_enabled else None),
+                KeyboardButton(text=btn.BTN_CANCEL),
+            ]
+        ],
         resize_keyboard=True,
     )
 

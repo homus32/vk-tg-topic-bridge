@@ -53,7 +53,7 @@ async def test_unavailable_video_becomes_vk_link_warning() -> None:
 
     assert planned == ()
     assert warnings == [
-        MediaLinkWarning("Видео «clip» не удалось скачать.", "https://vk.com/video-1_22")
+        MediaLinkWarning("🎬 Видео «clip» доступно по ссылке:", "https://vk.com/video-1_22")
     ]
 
 
@@ -61,7 +61,7 @@ async def test_unavailable_video_without_link_keeps_warning() -> None:
     planned, warnings = await prepare_media((_video(link_url=None),), UnavailableDownloader())
 
     assert planned == ()
-    assert warnings == ["Видео «clip» недоступно для скачивания и пропущено."]
+    assert warnings == ["⚠️ Видео «clip» недоступно. Остальная публикация отправлена."]
 
 
 async def test_unavailable_video_uses_player_link_from_lookup() -> None:
@@ -72,7 +72,7 @@ async def test_unavailable_video_uses_player_link_from_lookup() -> None:
 
     assert planned == ()
     assert warnings == [
-        MediaLinkWarning("Видео «clip» не удалось скачать.", "https://vk.example/player")
+        MediaLinkWarning("🎬 Видео «clip» доступно по ссылке:", "https://vk.example/player")
     ]
 
 
@@ -84,7 +84,7 @@ async def test_failed_video_uses_canonical_link() -> None:
 
     assert planned == ()
     assert warnings == [
-        MediaLinkWarning("Видео «clip» не удалось скачать.", "https://vk.com/video-1_22")
+        MediaLinkWarning("🎬 Видео «clip» доступно по ссылке:", "https://vk.com/video-1_22")
     ]
 
 
@@ -101,5 +101,5 @@ async def test_oversize_video_uses_canonical_link() -> None:
 
     assert planned == ()
     assert warnings == [
-        MediaLinkWarning("Видео «clip» не удалось скачать.", "https://vk.com/video-1_22")
+        MediaLinkWarning("🎬 Видео «clip» доступно по ссылке:", "https://vk.com/video-1_22")
     ]

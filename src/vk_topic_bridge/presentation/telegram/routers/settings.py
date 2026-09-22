@@ -64,21 +64,30 @@ RESET_DONE_TEXT = (
     "Telegram-чат отвязан. Все настройки Telegram-интеграции сброшены.\n\n"  # noqa: RUF001
     + UNREGISTERED_TEXT
 )
-EMPTY_DIAGNOSTICS_TEXT = "Записей нет: проблемные доставки не найдены."
-DIAGNOSTICS_HEADER = "Проблемы доставки (последние записи):"
+EMPTY_DIAGNOSTICS_TEXT = "ℹ️ Проблемных доставок нет."  # noqa: RUF001
+DIAGNOSTICS_HEADER = "⚠️ Проблемы доставки (последние записи):"
 DIAGNOSTICS_PICK_HINT = "Отправьте номер записи для подробностей."
 DIAGNOSTICS_EXPLANATION = (
     "Здесь показаны доставки, которые требуют ручной проверки. "
     "Неоднозначные отправки не повторяются автоматически, чтобы не создать дубль."
 )
 REVIEW_FORBIDDEN_TEXT = "Запись не требует отметки: она не в состоянии ambiguous."
-REVIEW_KEYBOARD = ReplyKeyboardMarkup(
-    keyboard=[
-        [KeyboardButton(text=btn.BTN_MARK_REVIEWED)],
-        [KeyboardButton(text=btn.BTN_BACK)],
-    ],
-    resize_keyboard=True,
-)
+
+
+def _review_keyboard(*, styles_enabled: bool) -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(
+                    text=btn.BTN_MARK_REVIEWED,
+                    style="success" if styles_enabled else None,
+                )
+            ],
+            [KeyboardButton(text=btn.BTN_BACK)],
+        ],
+        resize_keyboard=True,
+    )
+
 
 _MESSAGES_ROLE = "Сообщения VK-чата"
 _WALL_ROLE = "Посты стены VK"
@@ -100,7 +109,7 @@ def _render_bindings(state: BridgeSettingsState, topics: list[TopicInfo]) -> str
     titles = {topic.topic_id: topic.title for topic in topics}
     return "\n\n".join(
         [
-            "Настройки топиков:",
+            "⚙️ Настройки топиков:",
             _binding_block(
                 _MESSAGES_ROLE,
                 state.messages_destination_kind(),
@@ -139,16 +148,16 @@ def _render_topics_refresh(before: list[TopicInfo], after: list[TopicInfo]) -> s
         before_by_id[topic_id].title for topic_id in before_by_id.keys() - after_by_id.keys()
     ]
     unavailable = [topic.title for topic in after if not _topic_available(topic)]
-    lines = ["Актуальные cached topics:"]
+    lines = ["🔄 Список топиков обновлён:"]
     lines.extend(f"- {topic.title}" for topic in after)
     if added:
-        lines.append("Добавлены: " + ", ".join(sorted(added)))
+        lines.append("➕ Добавлены: " + ", ".join(sorted(added)))  # noqa: RUF001
     if removed:
-        lines.append("Удалены: " + ", ".join(sorted(removed)))
+        lines.append("🗑 Удалены: " + ", ".join(sorted(removed)))
     if unavailable:
-        lines.append("Недоступны: " + ", ".join(sorted(unavailable)))
+        lines.append("⚠️ Недоступны: " + ", ".join(sorted(unavailable)))
     if not added and not removed and not unavailable:
-        lines.append("Изменений нет.")
+        lines.append("✅ Изменений нет.")
     return "\n".join(lines)
 
 
@@ -160,8 +169,8 @@ def _render_diagnostics(entries: list[DeliveryReviewEntry]) -> str:
     lines = [DIAGNOSTICS_HEADER, DIAGNOSTICS_EXPLANATION]
     for index, entry in enumerate(entries, start=1):
         lines.append(
-            f"{index}. #{entry.delivery_id} — {entry.status} "
-            f"({entry.source_type} {entry.source_key})"
+            f"{index}. #{entry.delivery_id} — {_status_label(entry.status)} "
+            f"({_source_label(entry.source_type)})"
         )
     lines.append("")
     lines.append(DIAGNOSTICS_PICK_HINT)
@@ -169,15 +178,18 @@ def _render_diagnostics(entries: list[DeliveryReviewEntry]) -> str:
 
 
 def _render_entry_detail(entry: DeliveryReviewEntry) -> str:
+    destination = (
+        "General" if entry.destination_topic_id is None else f"топик #{entry.destination_topic_id}"
+    )
     lines = [
         f"Запись #{entry.delivery_id}",
-        f"Статус: {entry.status}",
-        f"Источник: {entry.source_type} {entry.source_key}",
-        f"Назначение: чат {entry.destination_chat_id}, топик {entry.destination_topic_id}",
+        f"Статус: {_status_label(entry.status)}",
+        f"Источник: {_source_label(entry.source_type)}",
+        f"Назначение: {destination}",
         f"Попыток: {entry.attempts}",
     ]
     if entry.telegram_message_ids:
-        lines.append(f"Message ids: {', '.join(str(i) for i in entry.telegram_message_ids)}")
+        lines.append(f"Сообщения: {', '.join(str(i) for i in entry.telegram_message_ids)}")
     if entry.ambiguous_at:
         lines.append(f"Время ambiguous: {entry.ambiguous_at}")
     if entry.status == "failed_permanent":
@@ -188,6 +200,24 @@ def _render_entry_detail(entry: DeliveryReviewEntry) -> str:
     lines.append("Автоматический повтор запрещён: публикация могла быть принята Telegram.")
     lines.append(f"Нажмите «{btn.BTN_MARK_REVIEWED}», если проверка выполнена вручную.")
     return "\n".join(lines)
+
+
+_STATUS_LABELS = {
+    "ambiguous": "Неясный результат",
+    "failed_permanent": "Ошибка доставки",
+}
+_SOURCE_LABELS = {
+    "vk_message": "сообщение VK",
+    "vk_wall": "пост стены VK",
+}
+
+
+def _status_label(status: str) -> str:
+    return _STATUS_LABELS.get(status, status)
+
+
+def _source_label(source_type: str) -> str:
+    return _SOURCE_LABELS.get(source_type, "публикация VK")
 
 
 def _parse_ordinal(text: str | None, count: int) -> int | None:
@@ -224,6 +254,7 @@ def build_settings_router(
     topics_reader: TopicsReader,
     bot: Bot,
     owner_ids: frozenset[int],
+    styles_enabled: bool = False,
 ) -> Router:
     """Wire the settings surface (toggles, topics, diagnostics, change-chat)."""
     router = Router(name="settings")
@@ -240,7 +271,12 @@ def build_settings_router(
         for owner_id in sorted(owner_ids):
             if owner_id == sender:
                 continue
-            await _send_owner(bot, owner_id, text, owner_main_keyboard(state))
+            await _send_owner(
+                bot,
+                owner_id,
+                text,
+                owner_main_keyboard(state, styles_enabled=styles_enabled),
+            )
 
     async def _toggle(message: Message, kind: ToggleKind) -> None:
         state = await _current_registered(message)
@@ -255,10 +291,10 @@ def build_settings_router(
         new_state = await _execute_toggle(toggle_use_case, kind, value)
         label = _toggle_label(kind, value)
         await message.answer(
-            f"Автопересылка {label}.",
-            reply_markup=owner_main_keyboard(new_state),
+            f"✅ Автопересылка {label}.",
+            reply_markup=owner_main_keyboard(new_state, styles_enabled=styles_enabled),
         )
-        await _broadcast(message, f"Автопересылка {label}.", new_state)
+        await _broadcast(message, f"✅ Автопересылка {label}.", new_state)
 
     async def toggle_all(message: Message) -> None:
         await _toggle(message, ToggleKind.ALL)
@@ -278,7 +314,8 @@ def build_settings_router(
         await state.set_state(TopicSettingsView.view)
         topics = await topics_reader(chat_id)
         await message.answer(
-            _render_bindings(current, topics), reply_markup=topics_settings_keyboard()
+            _render_bindings(current, topics),
+            reply_markup=topics_settings_keyboard(styles_enabled=styles_enabled),
         )
 
     async def refresh_topics(message: Message) -> None:
@@ -290,12 +327,12 @@ def build_settings_router(
         cached = await topics_reader(chat_id)
         try:
             topics = await _execute_refresh(refresh_use_case, chat_id)
-        except ProvisioningError as error:
+        except ProvisioningError:
             stored = await topics_reader(chat_id)
             await message.answer(
-                f"Не удалось обновить список: {error}\n\n"  # noqa: RUF001
+                "⚠️ Не удалось обновить список топиков. Повторите попытку.\n\n"  # noqa: RUF001
                 f"{_render_bindings(current, stored)}",
-                reply_markup=topics_settings_keyboard(),
+                reply_markup=topics_settings_keyboard(styles_enabled=styles_enabled),
             )
             return
         fresh = await settings_reader()
@@ -304,7 +341,10 @@ def build_settings_router(
         warnings = _destinations_missing_after_refresh(current, topics)
         if warnings:
             body = body + "\n\n" + "\n".join(warnings)
-        await message.answer(body, reply_markup=topics_settings_keyboard())
+        await message.answer(
+            body,
+            reply_markup=topics_settings_keyboard(styles_enabled=styles_enabled),
+        )
 
     async def diagnostics(message: Message, state: FSMContext) -> None:
         current = await _current_registered(message)
@@ -313,9 +353,15 @@ def build_settings_router(
         await state.set_state(DeliveryDiagnosticsView.list_view)
         entries = await _list_diagnostics(diagnostics_reader)
         if not entries:
-            await message.answer(EMPTY_DIAGNOSTICS_TEXT, reply_markup=back_keyboard())
+            await message.answer(
+                EMPTY_DIAGNOSTICS_TEXT,
+                reply_markup=back_keyboard(),
+            )
             return
-        await message.answer(_render_diagnostics(entries), reply_markup=back_keyboard())
+        await message.answer(
+            _render_diagnostics(entries),
+            reply_markup=back_keyboard(),
+        )
 
     async def topics_back(message: Message, state: FSMContext) -> None:
         if await state.get_state() != TopicSettingsView.view.state:
@@ -325,7 +371,10 @@ def build_settings_router(
         if current is None or current.telegram_chat_id is None:
             await message.answer(UNREGISTERED_TEXT, reply_markup=unregistered_keyboard())
             return
-        await message.answer("Возврат в главное меню.", reply_markup=owner_main_keyboard(current))
+        await message.answer(
+            "Возврат в главное меню.",
+            reply_markup=owner_main_keyboard(current, styles_enabled=styles_enabled),
+        )
 
     async def diag_pick(message: Message, state: FSMContext) -> None:
         if await state.get_state() != DeliveryDiagnosticsView.list_view.state:
@@ -341,7 +390,10 @@ def build_settings_router(
         entry = entries[ordinal - 1]
         await state.update_data(delivery_id=entry.delivery_id)
         await state.set_state(DeliveryDiagnosticsView.entry_detail)
-        await message.answer(_render_entry_detail(entry), reply_markup=REVIEW_KEYBOARD)
+        await message.answer(
+            _render_entry_detail(entry),
+            reply_markup=_review_keyboard(styles_enabled=styles_enabled),
+        )
 
     async def diag_mark(message: Message, state: FSMContext) -> None:
         if await state.get_state() != DeliveryDiagnosticsView.entry_detail.state:
@@ -353,7 +405,10 @@ def build_settings_router(
             return
         marked = await _mark_reviewed(diagnostics_reader, delivery_id)
         if not marked:
-            await message.answer(REVIEW_FORBIDDEN_TEXT, reply_markup=REVIEW_KEYBOARD)
+            await message.answer(
+                REVIEW_FORBIDDEN_TEXT,
+                reply_markup=_review_keyboard(styles_enabled=styles_enabled),
+            )
             return
         await state.set_state(DeliveryDiagnosticsView.list_view)
         entries = await _list_diagnostics(diagnostics_reader)
@@ -374,14 +429,20 @@ def build_settings_router(
         if current is None or current.telegram_chat_id is None:
             await message.answer(UNREGISTERED_TEXT, reply_markup=unregistered_keyboard())
             return
-        await message.answer("Возврат в главное меню.", reply_markup=owner_main_keyboard(current))
+        await message.answer(
+            "Возврат в главное меню.",
+            reply_markup=owner_main_keyboard(current, styles_enabled=styles_enabled),
+        )
 
     async def change_chat(message: Message, state: FSMContext) -> None:
         current = await _current_registered(message)
         if current is None:
             return
         await state.set_state(ChangeChatConfirm.confirm)
-        await message.answer(CHANGE_CHAT_PROMPT, reply_markup=confirm_keyboard())
+        await message.answer(
+            CHANGE_CHAT_PROMPT,
+            reply_markup=confirm_keyboard(styles_enabled=styles_enabled),
+        )
 
     async def confirm_yes(message: Message, state: FSMContext) -> None:
         if await state.get_state() != ChangeChatConfirm.confirm.state:
@@ -398,7 +459,10 @@ def build_settings_router(
         if current is None or current.telegram_chat_id is None:
             await message.answer(UNREGISTERED_TEXT, reply_markup=unregistered_keyboard())
             return
-        await message.answer("Действие отменено.", reply_markup=owner_main_keyboard(current))
+        await message.answer(
+            "Действие отменено.",
+            reply_markup=owner_main_keyboard(current, styles_enabled=styles_enabled),
+        )
 
     router.message.register(toggle_all, F.text.in_({btn.TOGGLE_ALL_DISABLE, btn.TOGGLE_ALL_ENABLE}))
     router.message.register(

@@ -114,6 +114,22 @@ P3  сетевой шум, deployment, полный regression
 
 **Источник истины:** этот файл — единственный актуальный чек-лист цикла. Отдельный `docs/vk-topic-bridge-cycle-6-7-report.md` удалён по решению владельца; `docs/tmp/` устарел и не должен использоваться. Итог Cycle 6/7 зафиксирован в этом разделе и в соответствующих WAVE-секциях ниже.
 
+## FINAL PRODUCT POLISH — текущий цикл
+
+Локальная реализация и regression-тесты завершены; live retest владельцем остаётся отдельным gate перед Final Regression.
+
+- [x] VK/Telegram labels сокращены без изменения callback/FSM identity.
+- [x] VK использует native `KeyboardButtonColor` для primary/positive/negative/secondary действий.
+- [x] Telegram использует native `style` только при явном capability flag `TELEGRAM_BOT_API_BUTTON_STYLES_ENABLED`; default оставлен безопасным.
+- [x] manual publication получает отдельный `#извк` без автоматического `#извкважно`.
+- [x] automatic message и wall General fallback получают warning-блок над исходным контентом.
+- [x] media/video warnings переведены на пользовательские формулировки и semantic markers.
+- [x] delivery diagnostics показывает `Неясный результат` и `Ошибка доставки` вместо internal enum names.
+- [x] VK Help объясняет только доступные пользователю manual forwarding и aliases; admin-only automatic settings не упоминаются.
+- [x] alias-based manual forwarding возвращает VK success response с Telegram destination и topic title.
+- [x] manual retry после недоступного topic оставляет только доступные inline destinations и Cancel.
+- [ ] owner live retest product-polish checklist.
+
 Framework-native статус цикла:
 
 - VKBottle-native primitives: `Keyboard(inline=True/False)`, `Text`, `Callback`, `MessageEvent`/`MessageEventObject`, `GroupEventType.MESSAGE_EVENT`, `sendMessageEventAnswer` (snackbar), `messages.edit` (редактирование callback-сообщения), `Formatter`/`bold`.
@@ -366,17 +382,17 @@ ForwardVkMessage
 
 ## T2.3 — CR-015: warning внутри самой fallback-публикации
 
-**Статус:** product decision / не смешивать с BUG-013.
+**Статус:** реализовано; локальные regression-тесты зелёные, owner live retest остаётся в Final Regression.
 
 Если CR утверждён:
 
-- [ ] warning является отдельным служебным блоком композиции;
-- [ ] исходный VK-текст остаётся неизменным;
-- [ ] warning сообщает имя/идентификатор недоступного destination;
-- [ ] явно сообщает использование General;
-- [ ] определить положение блока: сверху или снизу;
-- [ ] отдельно решить, применяется ли тот же UX для wall fallback;
-- [ ] шаблон покрыт snapshot/unit test.
+- [x] warning является отдельным служебным блоком композиции;
+- [x] исходный VK-текст остаётся неизменным;
+- [x] warning сообщает имя или fallback identifier недоступного топика;
+- [x] явно сообщает использование General;
+- [x] блок находится сверху исходного контента;
+- [x] тот же UX применяется для automatic wall fallback;
+- [x] шаблон покрыт unit/acceptance regression tests.
 
 **Рекомендация:** служебный warning ставить **над исходным контентом**, визуально отделять пустой строкой и не смешивать с пользовательским текстом.
 
@@ -389,7 +405,7 @@ ForwardVkMessage
 <неизменённый исходный контент>
 ```
 
-**OWNER DECISION:** CR-015 не считать реализуемым автоматически только потому, что BUG-013 исправляется рядом.
+**OWNER DECISION:** CR-015 реализован отдельно от BUG-013; live acceptance остаётся открытой.
 
 ---
 
@@ -893,14 +909,14 @@ Cancel:
 - [x] не разворачивать nested forwards;
 - [x] manual никогда не ставит 👍.
 
-**Примечание:** «служебные метки» для manual — это две ссылки профилей (`Автор` / `Автор пересылки`); `#извк` намеренно не добавляется (см. T8.3).
+**Примечание:** «служебные метки» для manual — ссылки профилей (`Автор` / `Автор пересылки`) и отдельный service tag `#извк`.
 
 ## T8.3 — CR-011: `#извк` для manual
 
-**Статус:** не реализовано и не входило в scope Cycle 6/7. Текущее shipped-поведение manual — без автоматических тегов (`compose_manual_publication` намеренно не добавляет `#извк`; проверено `test_manual_has_no_automatic_tags`); владелец в этой сессии live-проверял manual flow и подтвердил текущее поведение. Intent в TODO считается утверждённым (см. §11), но реализация — отдельная задача: не смешивать с current overlay/inline правилами.
+**Статус:** реализовано и покрыто локальным regression; owner live retest остаётся открытым. `compose_manual_publication` добавляет отдельный `#извк` и не наследует `#извкважно` из `@all`.
 
-- [ ] добавить `#извк`;
-- [ ] не добавлять `#извкважно` автоматически только потому, что исходный forward содержит `@all`, если это отдельно не оговорено;
+- [x] добавить `#извк`;
+- [x] не добавлять `#извкважно` автоматически только потому, что исходный forward содержит `@all`;
 - [x] regression auto flow не ломается.
 
 **Предположение этого TODO:** новый intent `#извк` для manual считается утверждённым.
@@ -915,6 +931,8 @@ Cancel:
 - [x] отдельное generic-сообщение `Сообщение отправлено.` не отправляется;
 - [x] после manual callback можно продолжить исходный alias/FSM flow;
 - [x] известный alias в сопровождающем тексте пересылки остаётся рабочим shortcut.
+- [x] alias shortcut после успешной manual publication получает отдельный VK success response с destination/topic.
+- [x] manual `telegram_topic_not_found` показывает retry destinations без недоступного topic.
 
 ---
 

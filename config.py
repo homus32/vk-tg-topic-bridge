@@ -64,6 +64,7 @@ class Settings(BaseSettings):
     TELEGRAM_BOT_TOKEN: SecretStr = Field(min_length=1)
     OWNER_IDS: Annotated[frozenset[int], NoDecode]
     TELEGRAM_BOT_API_URL: str | None = None
+    TELEGRAM_BOT_API_BUTTON_STYLES_ENABLED: bool = False
     TELEGRAM_API_ID: int = Field(gt=0)
     TELEGRAM_API_HASH: SecretStr = Field(min_length=1)
     TELEGRAM_SESSION_PATH: str = DEFAULT_SESSION_PATH

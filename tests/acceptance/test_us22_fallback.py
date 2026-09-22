@@ -39,6 +39,9 @@ async def test_us22_ac221_missing_configured_topic_falls_back_to_general() -> No
     assert outcome.published is True
     publication = harness.publisher.publications[0]
     assert publication.message_thread_id is None
+    assert publication.html_text.startswith("⚠️ Топик «#99» недоступен.")
+    assert "Публикация отправлена в General." in publication.html_text
+    assert "@all новость" in publication.html_text
     record = harness.ledger.record_for(make_source("@all новость").source_key)
     assert record.destination_topic_id is None
 
@@ -61,6 +64,7 @@ async def test_us22_ac221_closed_configured_topic_falls_back_to_general() -> Non
 
     assert outcome.published is True
     assert harness.publisher.publications[0].message_thread_id is None
+    assert harness.publisher.publications[0].html_text.startswith("⚠️ Топик «Старое» недоступен.")
 
 
 async def test_us22_ac222_owners_are_told_which_topic_failed_and_that_general_was_used() -> None:

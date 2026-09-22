@@ -915,6 +915,7 @@ async def test_missing_topic_falls_back_to_general_with_notification() -> None:
 
     assert outcome.published is True
     assert harness.publisher.plans[0].base.message_thread_id is None
+    assert harness.publisher.plans[0].base.html_text.startswith("⚠️ Топик «#5» недоступен.")
     assert _stored(harness.ledger).destination_topic_id is None
     assert len(harness.notifier.all_texts) == 1
     assert "General" in harness.notifier.all_texts[0]
@@ -951,6 +952,7 @@ async def test_runtime_stale_topic_falls_back_to_general_and_notifies_owner(
 
     assert outcome.published is True
     assert [plan.base.message_thread_id for plan in publisher.plans] == [_TOPIC_ID, None]
+    assert publisher.plans[1].base.html_text.startswith("⚠️ Топик «Новости» недоступен.")
     assert len(harness.notifier.all_texts) == 1
     assert "удалён или закрыт" in harness.notifier.all_texts[0]
     assert harness.vk.reaction_calls == [(_PEER_ID, _CONVERSATION_MESSAGE_ID)]
@@ -992,7 +994,7 @@ async def test_ambiguous_outcome_notifies_owners() -> None:
 
     assert outcome.reason == "ambiguous"
     assert len(harness.notifier.all_texts) == 1
-    assert "Диагностика доставки" in harness.notifier.all_texts[0]
+    assert "Проблемы доставки" in harness.notifier.all_texts[0]
 
 
 async def test_rejected_outcome_notifies_owners() -> None:
