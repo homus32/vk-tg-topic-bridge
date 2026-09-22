@@ -1,13 +1,9 @@
-"""VK persistent keyboard + Help triggers (data and factories only).
-
-Keys are VK ``messages.send`` keyboard JSON (string form): the main keyboard is
-persistent and button-based; FSM-step keyboards keep only cancel/back/confirm rows.
-No inline keyboards and no one_time_keyboards are used anywhere (frozen UI contract).
-"""
-
 from __future__ import annotations
 
-import json
+from collections.abc import Sequence
+
+from vkbottle.tools.keyboard import Keyboard
+from vkbottle.tools.keyboard.action import Callback, Text
 
 HELP_TRIGGERS: frozenset[str] = frozenset({"начать", "помощь", "помоги", "help"})
 BTN_ALIASES = "Алиасы"
@@ -17,45 +13,58 @@ BTN_BACK = "← Назад"
 BTN_EDIT = "Добавить/Изменить"
 BTN_DELETE = "Удалить"
 
-_NEGATIVE = "negative"
-_DEFAULT = "default"
+
+def _callback_button(label: str, action: str, topic_id: int | None = None) -> Callback:
+    payload: dict[str, object] = {"action": action}
+    if action == "topic":
+        payload["topic_id"] = topic_id
+    return Callback(label, payload)
 
 
-def _text_button(label: str, color: str | None = None) -> dict[str, object]:
-    return {"action": {"type": "text", "label": label}, "color": color or _DEFAULT}
+def _keyboard(rows: Sequence[Sequence[Callback]]) -> str:
+    keyboard = Keyboard(inline=True)
+    for row in rows:
+        for action in row:
+            keyboard.add(action)
+        keyboard.row()
+    return keyboard.get_json()
 
 
-def _keyboard(rows: list[list[dict[str, object]]]) -> str:
-    return json.dumps(
-        {"one_time": False, "inline": False, "buttons": rows},
-        ensure_ascii=False,
-    )
+def _text_keyboard(rows: Sequence[Sequence[Text]]) -> str:
+    keyboard = Keyboard(inline=False)
+    for row in rows:
+        for action in row:
+            keyboard.add(action)
+        keyboard.row()
+    return keyboard.get_json()
 
 
 def main_keyboard_json() -> str:
-    """Persistent ``Алиасы``/``Помощь`` keyboard (VK JSON, non-inline, non-one_time)."""
-    return _keyboard([[_text_button(BTN_ALIASES), _text_button(BTN_HELP)]])
+    return _text_keyboard([[Text(BTN_ALIASES), Text(BTN_HELP)]])
 
 
 def wait_destination_keyboard_json() -> str:
-    """Keyboard with only ``Отмена`` for WAIT_DESTINATION."""
-    return _keyboard([[_text_button(BTN_CANCEL, _NEGATIVE)]])
+    return _text_keyboard([[Text(BTN_CANCEL)]])
 
 
 def alias_menu_keyboard_json() -> str:
-    """Rows Добавить/Изменить/Удалить + ← Назад."""
-    return _keyboard(
+    return _text_keyboard(
         [
-            [_text_button(BTN_EDIT)],
-            [_text_button(BTN_DELETE)],
-            [_text_button(BTN_BACK)],
+            [Text(BTN_EDIT)],
+            [Text(BTN_DELETE)],
+            [Text(BTN_BACK)],
         ]
     )
 
 
 def cancel_keyboard_json() -> str:
-    """Single Отмена row (topic-ordinal waits)."""
-    return _keyboard([[_text_button(BTN_CANCEL, _NEGATIVE)]])
+    return wait_destination_keyboard_json()
+
+
+def topic_selection_keyboard(topics: Sequence[tuple[int | None, str]]) -> str:
+    rows = [[_callback_button(title, "topic", topic_id)] for topic_id, title in topics]
+    rows.append([_callback_button(BTN_CANCEL, "cancel")])
+    return _keyboard(rows)
 
 
 def is_help_trigger(text: str) -> bool:

@@ -87,7 +87,7 @@ class FakeGateway:
         return _author(user_id)
 
     async def normalize_event(
-        self, raw_event: Mapping[str, object], author: Author
+        self, raw_event: Mapping[str, object], _author: Author
     ) -> SourceMessage:
         obj = raw_event["object"]
         assert isinstance(obj, Mapping)
@@ -132,9 +132,14 @@ class FakeForward:
 class FakeUiRouter:
     def __init__(self) -> None:
         self.handle_calls: list[Mapping[str, object]] = []
+        self.message_event_calls: list[Mapping[str, object]] = []
 
     async def handle_dm(self, update: Mapping[str, object]) -> bool:
         self.handle_calls.append(update)
+        return True
+
+    async def handle_message_event(self, update: Mapping[str, object]) -> bool:
+        self.message_event_calls.append(update)
         return True
 
 
@@ -195,6 +200,26 @@ async def test_two_independent_dms_both_reach_ui_router() -> None:
     assert forward.calls == []
 
 
+async def test_message_event_reaches_ui_router_without_forwarding() -> None:
+    callback_update = {
+        "type": "message_event",
+        "group_id": ALLOWED_GROUP,
+        "object": {
+            "user_id": DM_USER_A,
+            "peer_id": DM_USER_A,
+            "event_id": "callback-1",
+            "payload": {"action": "help"},
+        },
+    }
+    consumer, _, forward, router = _consumer([_event(callback_update)])
+
+    await consumer.run()
+
+    assert isinstance(router, FakeUiRouter)
+    assert router.message_event_calls == [callback_update]
+    assert forward.calls == []
+
+
 async def test_dm_does_not_bind_conversation_guard() -> None:
     consumer, _, forward, _ = _consumer(
         [
@@ -248,7 +273,7 @@ class _SendRecorder:
     def __init__(self) -> None:
         self.messages: list[tuple[int, str]] = []
 
-    async def send_user_message(self, user_id: int, text: str, keyboard_json: str | None) -> int:
+    async def send_user_message(self, user_id: int, text: str, _keyboard_json: str | None) -> int:
         self.messages.append((user_id, text))
         return len(self.messages)
 

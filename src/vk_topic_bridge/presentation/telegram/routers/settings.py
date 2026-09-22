@@ -65,8 +65,12 @@ RESET_DONE_TEXT = (
     + UNREGISTERED_TEXT
 )
 EMPTY_DIAGNOSTICS_TEXT = "Записей нет: проблемные доставки не найдены."
-DIAGNOSTICS_HEADER = "Диагностика доставки (последние записи):"
+DIAGNOSTICS_HEADER = "Проблемы доставки (последние записи):"
 DIAGNOSTICS_PICK_HINT = "Отправьте номер записи для подробностей."
+DIAGNOSTICS_EXPLANATION = (
+    "Здесь показаны доставки, которые требуют ручной проверки. "
+    "Неоднозначные отправки не повторяются автоматически, чтобы не создать дубль."
+)
 REVIEW_FORBIDDEN_TEXT = "Запись не требует отметки: она не в состоянии ambiguous."
 REVIEW_KEYBOARD = ReplyKeyboardMarkup(
     keyboard=[
@@ -127,12 +131,33 @@ def _destinations_missing_after_refresh(
     return warnings
 
 
+def _render_topics_refresh(before: list[TopicInfo], after: list[TopicInfo]) -> str:
+    before_by_id = {topic.topic_id: topic for topic in before}
+    after_by_id = {topic.topic_id: topic for topic in after}
+    added = [after_by_id[topic_id].title for topic_id in after_by_id.keys() - before_by_id.keys()]
+    removed = [
+        before_by_id[topic_id].title for topic_id in before_by_id.keys() - after_by_id.keys()
+    ]
+    unavailable = [topic.title for topic in after if not _topic_available(topic)]
+    lines = ["Актуальные cached topics:"]
+    lines.extend(f"- {topic.title}" for topic in after)
+    if added:
+        lines.append("Добавлены: " + ", ".join(sorted(added)))
+    if removed:
+        lines.append("Удалены: " + ", ".join(sorted(removed)))
+    if unavailable:
+        lines.append("Недоступны: " + ", ".join(sorted(unavailable)))
+    if not added and not removed and not unavailable:
+        lines.append("Изменений нет.")
+    return "\n".join(lines)
+
+
 def _topic_available(topic: TopicInfo) -> bool:
     return not topic.is_closed and not topic.is_hidden
 
 
 def _render_diagnostics(entries: list[DeliveryReviewEntry]) -> str:
-    lines = [DIAGNOSTICS_HEADER]
+    lines = [DIAGNOSTICS_HEADER, DIAGNOSTICS_EXPLANATION]
     for index, entry in enumerate(entries, start=1):
         lines.append(
             f"{index}. #{entry.delivery_id} — {entry.status} "
@@ -155,6 +180,8 @@ def _render_entry_detail(entry: DeliveryReviewEntry) -> str:
         lines.append(f"Message ids: {', '.join(str(i) for i in entry.telegram_message_ids)}")
     if entry.ambiguous_at:
         lines.append(f"Время ambiguous: {entry.ambiguous_at}")
+    if entry.status == "failed_permanent":
+        lines.append("Доставка окончательно не выполнена и требует проверки причины ошибки.")
     if entry.last_error_code or entry.last_error:
         lines.append(f"Ошибка: {entry.last_error_code or ''} {entry.last_error or ''}".strip())
     lines.append("")
@@ -260,6 +287,7 @@ def build_settings_router(
             return
         chat_id = current.telegram_chat_id
         assert chat_id is not None
+        cached = await topics_reader(chat_id)
         try:
             topics = await _execute_refresh(refresh_use_case, chat_id)
         except ProvisioningError as error:
@@ -272,6 +300,7 @@ def build_settings_router(
             return
         fresh = await settings_reader()
         body = _render_bindings(fresh if fresh is not None else current, topics)
+        body = body + "\n\n" + _render_topics_refresh(cached, topics)
         warnings = _destinations_missing_after_refresh(current, topics)
         if warnings:
             body = body + "\n\n" + "\n".join(warnings)
@@ -340,7 +369,7 @@ def build_settings_router(
             DeliveryDiagnosticsView.entry_detail.state,
         ):
             raise SkipHandler
-        await state.set_state(None)
+        await state.clear()
         current = await settings_reader()
         if current is None or current.telegram_chat_id is None:
             await message.answer(UNREGISTERED_TEXT, reply_markup=unregistered_keyboard())

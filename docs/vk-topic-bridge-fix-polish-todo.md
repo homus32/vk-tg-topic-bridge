@@ -97,6 +97,37 @@ P3  сетевой шум, deployment, полный regression
 
 ---
 
+# CYCLE 6/7 — итог сессии (VK + Telegram UX redesign)
+
+**Статус:** `[x]` Wave 6 и Wave 7 закрыты. Все задачи этой сессии реализованы, дополнительно улучшены в ходе живой проверки и подтверждены владельцем: всё проверено, протестировано и работает как требовалось.
+
+Что сделано в этой сессии:
+
+- VK: главное меню и alias root используют обычные text-кнопки; inline `Callback` — только для выбора топика.
+- VK: выбор топика редактирует исходное сообщение и полностью убирает inline-клавиатуру.
+- VK: inline topic picker не переводит пользователя в text-wait; `← Назад` возвращает в main, ввод номеров игнорируется.
+- VK: `Отмена` редактирует сообщение в «Отмена» и сохраняет reply-клавиатуру текущего flow (alias menu или main).
+- VK: Delete показывает только топики с алиасами; stale/удалённый callback редактирует исходное сообщение с ошибкой и убирает inline.
+- VK: ручная пересылка — overlay поверх любого FSM: inline-only выбор топика, FSM не очищается, generic success не отправляется, alias shortcut сохранён (см. T8.4).
+- Telegram: refresh экрана `Топики` показывает diff; inline destination selection редактирует исходное сообщение и убирает кнопки; Cancel-кнопка удалена; диагностика переименована в «Проблемы доставки».
+- US-NEW-06 переведён в `[x]` без изменения реализации (фича уже была live-проверена владельцем).
+
+**Источник истины:** этот файл — единственный актуальный чек-лист цикла. Отдельный `docs/vk-topic-bridge-cycle-6-7-report.md` удалён по решению владельца; `docs/tmp/` устарел и не должен использоваться. Итог Cycle 6/7 зафиксирован в этом разделе и в соответствующих WAVE-секциях ниже.
+
+Framework-native статус цикла:
+
+- VKBottle-native primitives: `Keyboard(inline=True/False)`, `Text`, `Callback`, `MessageEvent`/`MessageEventObject`, `GroupEventType.MESSAGE_EVENT`, `sendMessageEventAnswer` (snackbar), `messages.edit` (редактирование callback-сообщения), `Formatter`/`bold`.
+- aiogram-native primitives: `Router.callback_query`, `CallbackData`/`CallbackData.filter`, `InlineKeyboardBuilder`, `CallbackQuery.answer()`, `Message.edit_text()`, `FSMContext.clear()`.
+- Новые framework-over-framework abstractions не вводились; единая UI abstraction между VKBottle и aiogram не создавалась.
+
+Осталось на будущий Framework Refactor (вне scope этого цикла):
+
+- VK: `VkUiDispatcher` + in-memory `VkSessionStore` дублируют идеи `labeler`/`StateDispenser`, но runtime потребляет raw Long Poll поток и не создаёт `BotLabeler`; удаление требует отдельной runtime-миграции и анализа гонок/персистентности.
+- VK: ordinal text fallback для destination оставлен как shipped-совместимость.
+- Telegram: `RegistrationCoordinator` (owner lock) оставлен — `FSMContext` не моделирует межчатовый lock; text ordinal fallback в destinations также оставлен.
+
+---
+
 # WAVE 0 — P0 Observability first
 
 **Статус первого цикла:** `[x]` registration/FSM, VK routing, forwarding, media и Telegram publication trace реализованы и покрыты targeted tests; live retest остаётся за владельцем.
@@ -582,19 +613,22 @@ Live retest владельца:
 
 # WAVE 6 — P2 VK UX redesign
 
-## T6.1 — Перевести VK menu actions на inline callback keyboard
+**Статус:** `[x]` закрыто; итог и дополнительные улучшения сессии — в разделе CYCLE 6/7 выше.
+
+## T6.1 — Разделить VK text menus и inline topic selection
 
 **Связано:** CR-008, INV-004, US-UPDATE-17.
 
-- [ ] включить/проверить VK Long Poll event `message_event`;
-- [ ] добавить обработку `GroupEventType.MESSAGE_EVENT`;
-- [ ] использовать `Keyboard(inline=True)`;
-- [ ] использовать `Callback` для действий, где не нужно отправлять текст пользователя в чат;
-- [ ] payload содержит стабильный `action` и минимально необходимый id;
-- [ ] callback проверяет `from_id/peer_id` и актуальность состояния;
-- [ ] после callback всегда завершать event response (`show_snackbar`, edit/send и т.п.), чтобы кнопка не «крутилась»;
-- [ ] stale callback даёт понятный snackbar/новый экран;
-- [ ] double click идемпотентен.
+- [x] включить/проверить VK Long Poll event `message_event`;
+- [x] добавить обработку `GroupEventType.MESSAGE_EVENT`;
+- [x] использовать обычные `Text` actions для главного меню и alias root;
+- [x] использовать `Keyboard(inline=True)` и `Callback` только для выбора topic;
+- [x] payload содержит стабильный `action` и минимально необходимый id;
+- [x] callback проверяет `from_id/peer_id` и актуальность состояния;
+- [x] после callback всегда завершать event response (`show_snackbar`, edit/send и т.п.), чтобы кнопка не «крутилась»;
+- [x] cancel topic selection убирает inline keyboard и сохраняет reply-клавиатуру текущего flow;
+- [x] stale callback даёт понятный snackbar/новый экран;
+- [x] double click идемпотентен.
 
 ### Подтверждено исследованием
 
@@ -610,7 +644,7 @@ event.message_edit(...)
 event.message_send(...)
 ```
 
-То есть для alias/topic UI **не нужно эмулировать inline через обычные text-кнопки**.
+Главное меню и alias root сохраняют text-button UX; inline используется только для выбора topic.
 
 ### Консервативный дизайн
 
@@ -637,21 +671,25 @@ General — гл
 [ ← Назад ]
 ```
 
-- [ ] `Добавить` callback;
-- [ ] `Изменить` callback;
-- [ ] `Удалить` callback;
-- [ ] `Назад` callback;
-- [ ] действия не засоряют диалог сообщениями `Добавить`, `2`, `Назад`;
-- [ ] после mutation экран обновляется сразу.
+- [x] `Добавить/Изменить` text button;
+- [x] `Удалить` text button;
+- [x] `Назад` text button;
+- [x] topic selection после действия использует callback buttons;
+- [x] inline topic picker сохраняет `ALIAS_MENU` и не переводит пользователя в ordinal/text wait state;
+- [x] `← Назад` во время inline topic picker обрабатывается как alias-menu navigation;
+- [x] Delete inline picker показывает только доступные topics с существующими aliases;
+- [x] stale/removed Delete callback редактирует исходное сообщение с ошибкой и полностью убирает inline keyboard;
+- [x] обычные menu actions сохраняют исходный text-button UX;
+- [x] после mutation экран обновляется сразу.
 
 ## T6.3 — Topic selection в VK через callback buttons
 
-- [ ] General;
-- [ ] named topics;
-- [ ] unavailable исключены/помечены;
-- [ ] stale topic callback безопасно отклоняется;
-- [ ] длинный список имеет paging/несколько экранов;
-- [ ] при выборе сохраняется именно internal topic id из payload, а не label.
+- [x] General;
+- [x] named topics;
+- [x] unavailable исключены/помечены;
+- [x] stale topic callback безопасно отклоняется;
+- [x] большой список: paging не потребовался — текущие списки топиков помещаются на экран; решение пересматривается только при реальном росте списка;
+- [x] при выборе сохраняется именно internal topic id из payload, а не label.
 
 ## T6.4 — Rich text VK через встроенный VKBottle Formatter
 
@@ -669,25 +707,27 @@ General — гл
 - `format_data`;
 - отправка formatted object напрямую через `message.answer(...)`.
 
-- [ ] сделать маленький live spike в тестовом DM;
-- [ ] проверить desktop;
-- [ ] проверить mobile;
-- [ ] проверить кириллицу + emoji;
-- [ ] проверить ссылки;
-- [ ] после этого оформить общий helper/templates.
+- [x] сделать маленький live spike в тестовом DM;
+- [x] проверить desktop;
+- [x] проверить mobile;
+- [x] проверить кириллицу + emoji;
+- [x] проверить ссылки;
+- [x] после этого использовать `Formatter` в VK selection/alias templates без собственного parser.
+
+Форматирование подтверждено владельцем в рамках финальной live-проверки цикла: всё работает как требуется.
 
 **Рекомендация:** не писать свой Markdown parser. Сначала использовать `vkbottle.tools.formatting`.
 
 ## T6.5 — Единые VK message templates
 
-- [ ] success;
-- [ ] warning;
-- [ ] error;
-- [ ] main menu;
-- [ ] alias menu;
-- [ ] selection;
-- [ ] help;
-- [ ] manual forwarding success.
+- [x] success;
+- [x] warning;
+- [x] error;
+- [x] main menu;
+- [x] alias menu;
+- [x] selection;
+- [x] help;
+- [x] manual forwarding success.
 
 Правила:
 
@@ -702,19 +742,21 @@ General — гл
 
 # WAVE 7 — P2 Telegram UX changes
 
+**Статус:** `[x]` закрыто; итог и дополнительные улучшения сессии — в разделе CYCLE 6/7 выше.
+
 ## T7.1 — CR-003: переработать topic management
 
 **Рекомендованное решение:** объединить «список» и refresh вокруг одного экрана `Топики`.
 
 После refresh показывать:
 
-- [ ] актуальные cached topics;
-- [ ] added;
-- [ ] removed;
-- [ ] unavailable;
-- [ ] текущий messages destination;
-- [ ] текущий wall destination;
-- [ ] `Изменений нет`, если diff пуст.
+- [x] актуальные cached topics;
+- [x] added;
+- [x] removed;
+- [x] unavailable;
+- [x] текущий messages destination;
+- [x] текущий wall destination;
+- [x] `Изменений нет`, если diff пуст.
 
 Не заставлять owner гадать, сработал refresh или нет.
 
@@ -722,22 +764,24 @@ General — гл
 
 Это **осознанное изменение старого требования ReplyKeyboard-only**.
 
-- [ ] General callback;
-- [ ] named topic callbacks;
-- [ ] unavailable safe reject;
-- [ ] stale callback;
-- [ ] callback другого owner;
-- [ ] старое сообщение;
-- [ ] double click;
-- [ ] Back;
-- [ ] Cancel;
-- [ ] current destination clearly shown.
+- [x] General callback;
+- [x] named topic callbacks;
+- [x] unavailable safe reject;
+- [x] stale callback;
+- [x] callback другого owner;
+- [x] старое сообщение;
+- [x] double click;
+- [x] Back;
+- [x] Cancel;
+- [x] current destination clearly shown.
 
 **Рекомендация:** callback_data хранит operation + destination identity, а не название топика.
 
+**OWNER DECISION (Cycle 6/7):** inline-кнопка «Отмена» удалена из destination selection как ненужная; успешный выбор топика редактирует исходное сообщение и полностью убирает inline-клавиатуру, текст сообщения сообщает выбранный топик.
+
 ## US-NEW-06 — Связывать отдельный документ с media-сообщением
 
-**Статус:** `[~]` реализовано локально; ожидает live-проверки владельца.
+**Статус:** `[x]` реализовано и live-проверено владельцем.
 
 ### User story
 
@@ -747,20 +791,20 @@ General — гл
 
 ### Acceptance criteria
 
-- [ ] `PHOTO`/`VIDEO` продолжают отправляться по действующим правилам album: mixed `PHOTO + VIDEO`
+- [x] `PHOTO`/`VIDEO` продолжают отправляться по действующим правилам album: mixed `PHOTO + VIDEO`
   допустим, `DOCUMENT` в этот album не добавляется.
-- [ ] `DOCUMENT` отправляется отдельным `send_document` сообщением.
-- [ ] Если в публикации уже отправлено `PHOTO` или `VIDEO`, первый документ отвечает на последнее
+- [x] `DOCUMENT` отправляется отдельным `send_document` сообщением.
+- [x] Если в публикации уже отправлено `PHOTO` или `VIDEO`, первый документ отвечает на последнее
   Telegram-сообщение, созданное предыдущей media-operation этой публикации.
-- [ ] При нескольких документах каждый следующий документ отвечает на непосредственно предыдущее
+- [x] При нескольких документах каждый следующий документ отвечает на непосредственно предыдущее
   Telegram-сообщение этой же логической публикации.
-- [ ] Reply использует Telegram message id из фактического результата отправки, а не VK id.
-- [ ] Если предыдущая media-operation не создала Telegram-сообщение, документ отправляется без
+- [x] Reply использует Telegram message id из фактического результата отправки, а не VK id.
+- [x] Если предыдущая media-operation не создала Telegram-сообщение, документ отправляется без
   несуществующего reply, а публикация сохраняет partial-success semantics.
-- [ ] Если фото/видео в публикации нет, существующее поведение отдельного документа не меняется.
-- [ ] Поведение одинаково для automatic message, manual forwarding и wall post через общий
+- [x] Если фото/видео в публикации нет, существующее поведение отдельного документа не меняется.
+- [x] Поведение одинаково для automatic message, manual forwarding и wall post через общий
   publication planner/publisher.
-- [ ] Для reply-связи добавлены regression tests, включая один документ, несколько документов,
+- [x] Для reply-связи добавлены regression tests, включая один документ, несколько документов,
   отсутствие предыдущего сообщения и failed previous operation.
 
 **Ограничение Telegram API:** это логическая связь через reply, а не попытка создать один mixed
@@ -779,10 +823,10 @@ album `DOCUMENT + PHOTO/VIDEO`; такой album Bot API не поддержив
 
 ## T7.4 — CR-006: единый cancel feedback
 
-- [ ] registration: `Регистрация Telegram-чата отменена.`;
-- [ ] destination selection;
-- [ ] change-chat;
-- [ ] другие mutable FSM.
+- [x] registration: `Регистрация Telegram-чата отменена.`;
+- [x] destination selection;
+- [x] change-chat;
+- [x] другие mutable FSM.
 
 Cancel:
 
@@ -807,10 +851,10 @@ Cancel:
 Автоматический повтор неоднозначных отправок не выполняется, чтобы не создать дубль.
 ```
 
-- [ ] понятный empty state;
-- [ ] ambiguous explanation;
-- [ ] failed_permanent explanation;
-- [ ] mark reviewed только где допустимо.
+- [x] понятный empty state;
+- [x] ambiguous explanation;
+- [x] failed_permanent explanation;
+- [x] mark reviewed только где допустимо.
 
 **OWNER DECISION:** если владелец всё-таки хочет убрать кнопку из main menu, сам use case/историю лучше сохранить.
 
@@ -820,11 +864,15 @@ Cancel:
 
 ## T8.1 — CR-009: success сообщает destination
 
-- [ ] например: `✅ Сообщение отправлено в топик «General».`
-- [ ] named topic аналогично;
-- [ ] destination берётся из фактического outcome, не из старого UI state.
+**OWNER DECISION (Cycle 6/7, live-проверено):** отдельное success-сообщение `Сообщение отправлено.` не отправляется (оно ломало активный FSM). После выбора топика кнопкой исходное сообщение редактируется в `Выбран топик "<имя>"`; при ручной пересылке через alias shortcut дополнительных сообщений не отправляется вовсе.
+
+- [x] destination сообщается через редактирование исходного сообщения (`Выбран топик "<имя>"`), а не отдельным success-сообщением;
+- [x] General и named topic показываются одинаково — именем выбранного топика;
+- [x] имя топика берётся из фактически выбранного destination, не из старого UI state.
 
 ## T8.2 — CR-010: новый manual publication template
+
+**Статус:** `[x]` реализовано и live-проверено владельцем. Текущий формат: ссылка на original author → исходный текст → ссылка-подпись `Автор пересылки` на initiator. Реализация: `application/forwarding/composition.py::compose_manual_publication`; покрыто `tests/unit/application/test_composition.py`.
 
 Минимальный смысл:
 
@@ -835,23 +883,38 @@ Cancel:
 <исходный текст>
 ```
 
-- [ ] original author;
-- [ ] initiator;
-- [ ] исходный текст;
-- [ ] attachments;
-- [ ] warnings;
-- [ ] служебные метки;
-- [ ] не переносить reply context;
-- [ ] не разворачивать nested forwards;
-- [ ] manual никогда не ставит 👍.
+- [x] original author;
+- [x] initiator;
+- [x] исходный текст;
+- [x] attachments;
+- [x] warnings;
+- [x] служебные метки;
+- [x] не переносить reply context;
+- [x] не разворачивать nested forwards;
+- [x] manual никогда не ставит 👍.
+
+**Примечание:** «служебные метки» для manual — это две ссылки профилей (`Автор` / `Автор пересылки`); `#извк` намеренно не добавляется (см. T8.3).
 
 ## T8.3 — CR-011: `#извк` для manual
 
+**Статус:** не реализовано и не входило в scope Cycle 6/7. Текущее shipped-поведение manual — без автоматических тегов (`compose_manual_publication` намеренно не добавляет `#извк`; проверено `test_manual_has_no_automatic_tags`); владелец в этой сессии live-проверял manual flow и подтвердил текущее поведение. Intent в TODO считается утверждённым (см. §11), но реализация — отдельная задача: не смешивать с current overlay/inline правилами.
+
 - [ ] добавить `#извк`;
 - [ ] не добавлять `#извкважно` автоматически только потому, что исходный forward содержит `@all`, если это отдельно не оговорено;
-- [ ] regression auto flow не ломается.
+- [x] regression auto flow не ломается.
 
 **Предположение этого TODO:** новый intent `#извк` для manual считается утверждённым.
+
+## T8.4 — CR-012: manual forwarding overlay и inline-only destination
+
+- [x] ровно одно forwarded message перехватывается поверх любого текущего VK FSM;
+- [x] текущий FSM не очищается и не заменяется состоянием manual forwarding;
+- [x] destination после обычной пересылки выбирается только inline callback-кнопкой;
+- [x] текстовый номер topic во время manual picker игнорируется без ответа и публикации;
+- [x] после callback исходное сообщение редактируется в `Выбран топик "<имя>"`;
+- [x] отдельное generic-сообщение `Сообщение отправлено.` не отправляется;
+- [x] после manual callback можно продолжить исходный alias/FSM flow;
+- [x] известный alias в сопровождающем тексте пересылки остаётся рабочим shortcut.
 
 ---
 
@@ -995,17 +1058,18 @@ Aiogram polling сам ловит network errors и retry/backoff'ит их. П�
 - [ ] competing owner protection;
 - [ ] group unknown commands silent;
 - [x] Telegram Back/start FSM;
-- [ ] topic refresh transparent;
+- [x] topic refresh transparent (owner live-проверка Cycle 6/7);
 - [x] named + General proof-send (локальные regression tests и live-проверка владельца);
 - [x] stale topic selection → automatic refresh → wizard recovery (локальные regression tests и live-проверка владельца);
 - [x] invalid/stale topic никогда не сохраняется;
 - [x] General fallback уведомляет всех owners (локальный integration regression test и live-проверка владельца);
 - [ ] fallback publication warning, если CR-015 утверждён;
 - [x] VK alias add/edit/delete;
-- [ ] VK inline/callback UI;
-- [ ] VK formatted text live-tested;
-- [ ] manual by number;
-- [ ] manual by alias;
+- [x] VK inline/callback UI;
+- [x] VK formatted text live-tested;
+- [x] manual inline destination callback;
+- [x] manual by alias shortcut;
+- [x] manual overlay preserves the active VK FSM;
 - [x] manual initiator metadata;
 - [x] auto text;
 - [x] photo;
@@ -1035,7 +1099,7 @@ Aiogram polling сам ловит network errors и retry/backoff'ит их. П�
 3. **Telegram inline destination selection** — считается утверждённым новым требованием, несмотря на старый ReplyKeyboard-only контракт.
 4. **VK inline/callback UI** — считается утверждённым.
 5. **VK rich formatting** — считается утверждённым как UX-polish. Использовать встроенный VKBottle formatting, а не самописную разметку.
-6. **«Диагностика доставки»** — открытое UX-решение: оставить в main menu, переименовать/спрятать глубже или убрать только кнопку. Рекомендация: оставить capability и переименовать в `Проблемы доставки`.
+6. **«Диагностика доставки»** — РЕШЕНО в Cycle 6/7: capability сохранена в main menu и переименована в `Проблемы доставки`, добавлены объяснения ambiguous/failed_permanent (см. T7.5).
 7. **CR-015 — warning внутри General fallback publication** — пока считать отдельным owner decision. Рекомендация: отдельный служебный блок **над** неизменённым исходным текстом; тот же принцип разумно применить и к wall fallback, если owner это подтвердит.
 
 ---

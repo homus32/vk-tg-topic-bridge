@@ -9,6 +9,7 @@ from __future__ import annotations
 from tests.acceptance._fakes import (
     MESSAGES_TOPIC_ID,
     VK_USER_ID,
+    make_vk_message_event,
     make_vk_ui_harness,
     make_vk_ui_message,
 )
@@ -28,7 +29,10 @@ async def _open_alias_menu(harness: object) -> None:
 async def _add_alias(harness: object, ordinal: str, alias: str) -> None:
     await _open_alias_menu(harness)
     await harness.dispatcher.handle_dm(make_vk_ui_message(BTN_EDIT))  # type: ignore[attr-defined]
-    await harness.dispatcher.handle_dm(make_vk_ui_message(ordinal))  # type: ignore[attr-defined]
+    topic_id = MESSAGES_TOPIC_ID if ordinal == "2" else None
+    await harness.dispatcher.handle_message_event(  # type: ignore[attr-defined]
+        make_vk_message_event({"action": "topic", "topic_id": topic_id}, event_id="alias-topic")
+    )
     await harness.dispatcher.handle_dm(make_vk_ui_message(alias))  # type: ignore[attr-defined]
 
 
@@ -82,7 +86,11 @@ async def test_us17_edit_alias_replaces_the_value() -> None:
     await _add_alias(harness, "2", "старое")
 
     await harness.dispatcher.handle_dm(make_vk_ui_message(BTN_EDIT))
-    await harness.dispatcher.handle_dm(make_vk_ui_message("2"))
+    await harness.dispatcher.handle_message_event(
+        make_vk_message_event(
+            {"action": "topic", "topic_id": MESSAGES_TOPIC_ID}, event_id="edit-topic"
+        )
+    )
     await harness.dispatcher.handle_dm(make_vk_ui_message("новое"))
 
     assert harness.uow.vk_aliases.rows[VK_USER_ID][MESSAGES_TOPIC_ID] == "новое"
@@ -93,6 +101,10 @@ async def test_us17_delete_alias_removes_it_after_topic_number() -> None:
     await _add_alias(harness, "2", "важное")
 
     await harness.dispatcher.handle_dm(make_vk_ui_message(BTN_DELETE))
-    await harness.dispatcher.handle_dm(make_vk_ui_message("2"))
+    await harness.dispatcher.handle_message_event(
+        make_vk_message_event(
+            {"action": "topic", "topic_id": MESSAGES_TOPIC_ID}, event_id="delete-topic"
+        )
+    )
 
     assert MESSAGES_TOPIC_ID not in harness.uow.vk_aliases.rows[VK_USER_ID]

@@ -11,6 +11,12 @@ from __future__ import annotations
 import logging
 from collections.abc import Awaitable, Callable, Mapping, Sequence
 from dataclasses import dataclass
+from typing import cast
+
+from vkbottle.tools.formatting import Formatter, bold
+from vkbottle.tools.keyboard import EMPTY_KEYBOARD
+from vkbottle_types.events.bot_events import MessageEvent
+from vkbottle_types.events.objects.group_event_objects import MessageEventObject
 
 from vk_topic_bridge.application.errors import TELEGRAM_TOPIC_NOT_FOUND_CODE, DomainError
 from vk_topic_bridge.application.manual.aliasing import (
@@ -39,21 +45,28 @@ from vk_topic_bridge.presentation.vk.keyboards import (
     cancel_keyboard_json,
     is_help_trigger,
     main_keyboard_json,
-    wait_destination_keyboard_json,
+    topic_selection_keyboard,
 )
 from vk_topic_bridge.presentation.vk.states import VkSessionStore, VkUiState, VkUserSession
 
 logger = logging.getLogger(__name__)
 
-HELP_TEXT = (
-    "Как пользоваться ботом:\n\n"
-    "1. Чтобы переслать одно сообщение, перешлите его боту и выберите номер топика.\n"  # noqa: RUF001
-    "2. Отправьте номер топика из списка, чтобы выбрать направление.\n"
-    "3. Можно ввести алиас топика вместо номера.\n"
+
+def _format_notice(title: str, body: str = "") -> Formatter:
+    if not body:
+        return Formatter("{title}").format(title=bold(title))
+    return Formatter("{title}\n\n{body}").format(title=bold(title), body=body)
+
+
+HELP_TEXT = _format_notice(
+    "Как пользоваться ботом",
+    "1. Чтобы переслать одно сообщение, перешлите его боту.\n"  # noqa: RUF001
+    "2. Выберите направление кнопкой нужного топика.\n"
+    "3. Можно указать имя алиаса в сопровождающем тексте пересылки.\n"
     "4. Алиасы настраиваются кнопкой «Алиасы»: добавить, изменить, удалить.\n"
     "5. Отменить текущую операцию можно кнопкой «Отмена».\n"
     "6. Автоматически пересылаются сообщения с @all и/или хештегом, "  # noqa: RUF001
-    "если эти функции включены."
+    "если эти функции включены.",
 )
 
 UNKNOWN_ALIAS_TEXT = "Алиас неизвестен."
@@ -61,22 +74,20 @@ MULTI_MESSAGE_TEXT = (
     "Можно переслать только одно сообщение за одну операцию.\nОтправьте одно сообщение отдельно."  # noqa: RUF001
 )
 STALE_ALIAS_TEXT = "Топик выбранного алиаса больше недоступен."
-CONFIG_ERROR_TEXT = (
-    "Ручная пересылка пока недоступна: Telegram-чат не зарегистрирован "
-    "или в нём нет доступных топиков."
+CONFIG_ERROR_TEXT = _format_notice(
+    "Ручная пересылка пока недоступна",
+    "Telegram-чат не зарегистрирован или в нём нет доступных топиков.",
 )
 NO_TOPICS_TEXT = "Нет доступных топиков для выбора."
-ORDINAL_ONLY_TEXT = "Можно отправить только номер топика из списка."
 TOPIC_NOT_FOUND_TEXT = "Номер не найден."
-MAIN_MENU_TEXT = "Главное меню."
+MAIN_MENU_TEXT = _format_notice("Главное меню.")
 UNKNOWN_ACTION_TEXT = "Выберите действие из меню."
-ALIAS_ADD_EDIT_TOPIC_TEXT = "Введите номер топика, у которого хотите добавить или изменить алиас."  # noqa: RUF001
+ALIAS_ADD_EDIT_TOPIC_TEXT = "Выберите топик для добавления/изменения"
 ALIAS_ADD_VALUE_TEXT = "Введите новый алиас."
-ALIAS_DELETE_TOPIC_TEXT = "Введите номер топика, у которого хотите удалить алиас."  # noqa: RUF001
+ALIAS_DELETE_TOPIC_TEXT = "Выберите топик для удаления"
 NO_ALIAS_TEXT = "У этого топика нет алиаса."  # noqa: RUF001
-PUBLISH_FAILED_TEXT = "Не удалось отправить сообщение. Попробуйте позже."  # noqa: RUF001
-SENT_TEXT = "Сообщение отправлено."
-CANCELLED_TEXT = "Отправка отменена."
+NO_ALIAS_TOPICS_TEXT = "Нет топиков с алиасами для удаления."  # noqa: RUF001
+PUBLISH_FAILED_TEXT = _format_notice("Не удалось отправить сообщение.", "Попробуйте позже.")  # noqa: RUF001
 STALE_TOPIC_TEXT = "Выбранный топик больше недоступен. Выберите другой топик."
 
 SourceResolver = Callable[["VkUiMessage"], Awaitable[SourceMessage | None]]
@@ -114,6 +125,7 @@ class VkUiDispatcher:
         self._alias_manager = alias_manager
         self._manual_publisher = manual_publisher
         self._source_resolver = source_resolver
+        self._handled_event_ids: set[str] = set()
 
     async def handle_dm(self, update: Mapping[str, object]) -> bool:
         """``VkUiRouter`` entry point; returns True when the DM was consumed by the UI."""
@@ -132,6 +144,123 @@ class VkUiDispatcher:
         )
         await self.dispatch(message)
         logger.debug("vk UI message completed", extra={"from_id": message.from_id})
+        return True
+
+    async def handle_message_event(self, update: Mapping[str, object]) -> bool:
+        raw_object = update.get("object")
+        if not isinstance(raw_object, Mapping):
+            return False
+        raw_user_id = raw_object.get("user_id")
+        raw_peer_id = raw_object.get("peer_id")
+        raw_event_id = raw_object.get("event_id")
+        raw_payload = raw_object.get("payload")
+        raw_cmid = raw_object.get("conversation_message_id")
+        if (
+            not isinstance(raw_user_id, int)
+            or isinstance(raw_user_id, bool)
+            or not isinstance(raw_peer_id, int)
+            or isinstance(raw_peer_id, bool)
+            or not isinstance(raw_event_id, str)
+            or (raw_payload is not None and not isinstance(raw_payload, dict))
+            or (raw_cmid is not None and not isinstance(raw_cmid, int))
+        ):
+            return False
+        user_id = cast(int, raw_user_id)
+        peer_id = cast(int, raw_peer_id)
+        event_id = cast(str, raw_event_id)
+        payload = cast("dict[str, object] | None", raw_payload)
+        conversation_message_id = cast("int | None", raw_cmid)
+        try:
+            event_object = MessageEventObject(
+                user_id=user_id,
+                peer_id=peer_id,
+                event_id=event_id,
+                payload=payload,
+                conversation_message_id=conversation_message_id,
+            )
+            MessageEvent(object=event_object)
+        except TypeError, ValueError:
+            return False
+        if peer_id != user_id:
+            return False
+        if event_id in self._handled_event_ids:
+            return True
+        self._handled_event_ids.add(event_id)
+        if payload is None or not isinstance(payload.get("action"), str):
+            await self._answer_event(user_id, event_id, "Кнопка устарела.")
+            return True
+        message = VkUiMessage(
+            from_id=user_id,
+            peer_id=peer_id,
+            text="",
+            fwd_count=0,
+            conversation_message_id=conversation_message_id,
+            raw={"message_event": payload},
+        )
+        session = self._sessions.peek(message.from_id)
+        if session is None:
+            return False
+        action = cast(str, payload["action"])
+        if action == "cancel" and session.manual_pending_message is not None:
+            await self._answer_event(message.from_id, event_id, "Отмена")
+            session.manual_pending_message = None
+            self._sessions.set(message.from_id, session)
+            await self._edit_event_message(
+                message,
+                "Отмена",
+                _reply_keyboard_json(session.state),
+            )
+            return True
+        if action == "help" and session.state is VkUiState.IDLE:
+            await self._answer_event(message.from_id, event_id, "Помощь.")
+            await self._reply(message, HELP_TEXT, main_keyboard_json())
+            return True
+        if action == "alias_menu" and session.state is VkUiState.IDLE:
+            await self._answer_event(message.from_id, event_id, "Алиасы.")
+            await self._open_alias_menu(message, session)
+            return True
+        if action == "alias_back" and session.state is VkUiState.ALIAS_MENU:
+            await self._answer_event(message.from_id, event_id, "Главное меню.")
+            self._sessions.clear(message.from_id)
+            await self._reply(message, MAIN_MENU_TEXT, main_keyboard_json())
+            return True
+        if action in {"alias_edit", "alias_delete"} and session.state is VkUiState.ALIAS_MENU:
+            prompt = (
+                ALIAS_ADD_EDIT_TOPIC_TEXT if action == "alias_edit" else ALIAS_DELETE_TOPIC_TEXT
+            )
+            await self._answer_event(message.from_id, event_id, "Выберите топик для алиаса.")
+            await self._start_alias_topic_input(message, session, action, prompt)
+            return True
+        if action == "cancel" and session.state is not VkUiState.IDLE:
+            await self._answer_event(message.from_id, event_id, "Отмена")
+            if session.pending_alias_action is not None or session.state in (
+                VkUiState.ALIAS_ADD_WAIT_TOPIC,
+                VkUiState.ALIAS_DELETE_WAIT_TOPIC,
+            ):
+                session.state = VkUiState.ALIAS_MENU
+                session.pending_alias_action = None
+                session.pending_topic_id = None
+                session.context.clear()
+                self._sessions.set(message.from_id, session)
+                keyboard_json = alias_menu_keyboard_json()
+            else:
+                self._sessions.clear(message.from_id)
+                keyboard_json = main_keyboard_json()
+            await self._edit_event_message(message, "Отмена", keyboard_json)
+            return True
+        if action == "topic" and "topic_id" in payload:
+            topic_id = payload["topic_id"]
+            if topic_id is not None and (
+                not isinstance(topic_id, int) or isinstance(topic_id, bool)
+            ):
+                await self._answer_event(message.from_id, event_id, "Кнопка устарела.")
+                return True
+            if session.manual_pending_message is not None:
+                await self._handle_manual_topic_callback(message, session, topic_id, event_id)
+            else:
+                await self._handle_topic_callback(message, session, topic_id, event_id)
+            return True
+        await self._answer_event(message.from_id, event_id, "Кнопка устарела.")
         return True
 
     def normalize(self, update: Mapping[str, object]) -> VkUiMessage | None:
@@ -168,7 +297,11 @@ class VkUiDispatcher:
             "vk UI FSM dispatch started",
             extra={"from_id": message.from_id, "state_before": state.value},
         )
-        if state is VkUiState.WAIT_DESTINATION:
+        if message.fwd_count == 1:
+            await self._handle_forwarded(message, session, message.text.strip())
+        elif session.manual_pending_message is not None:
+            pass
+        elif state is VkUiState.WAIT_DESTINATION:
             await self._handle_wait_destination(message, session)
         elif state is VkUiState.ALIAS_MENU:
             await self._handle_alias_menu(message, session)
@@ -200,13 +333,6 @@ class VkUiDispatcher:
                 extra={"from_id": message.from_id, "outcome": "multiple_forwards"},
             )
             await self._reply(message, MULTI_MESSAGE_TEXT)
-            return
-        if message.fwd_count == 1:
-            logger.debug(
-                "vk UI idle branch selected",
-                extra={"from_id": message.from_id, "outcome": "forwarded_message"},
-            )
-            await self._handle_forwarded(message, session, text)
             return
         if is_help_trigger(text) or text == BTN_HELP:
             logger.debug(
@@ -241,8 +367,12 @@ class VkUiDispatcher:
             },
         )
         if not listing.chat_registered or not listing.destinations:
+            session.manual_pending_message = None
+            self._sessions.set(message.from_id, session)
             await self._reply(message, CONFIG_ERROR_TEXT)
             return
+        session.manual_pending_message = None
+        self._sessions.set(message.from_id, session)
         if text:
             resolution = await self._manual_forwarding.resolve_alias(message.from_id, text)
             if resolution.status is AliasResolution.Status.FOUND:
@@ -251,76 +381,26 @@ class VkUiDispatcher:
             if resolution.status is AliasResolution.Status.STALE:
                 notice = (
                     f"{STALE_ALIAS_TEXT}\n\n{_destinations_text(listing)}\n"
-                    "Выберите другой топик по номеру или настройте алиасы заново."
+                    "Выберите другой топик кнопкой или настройте алиасы заново."
                 )
             else:
-                notice = (
-                    f"{UNKNOWN_ALIAS_TEXT}\n\n{_destinations_text(listing)}\n\n{ORDINAL_ONLY_TEXT}"
-                )
+                notice = f"{UNKNOWN_ALIAS_TEXT}\n\n{_destinations_text(listing)}"
         else:
-            notice = (
-                f"Куда отправить сообщение?\n\n{_destinations_text(listing)}\n\n{ORDINAL_ONLY_TEXT}"
-            )
-        await self._reply(message, notice, wait_destination_keyboard_json())
-        session.state = VkUiState.WAIT_DESTINATION
-        session.pending_message = message
-        self._sessions.set(message.from_id, session)
-        logger.debug(
-            "vk UI FSM transition",
-            extra={
-                "from_id": message.from_id,
-                "state_before": VkUiState.IDLE.value,
-                "state_after": VkUiState.WAIT_DESTINATION.value,
-            },
+            notice = f"Куда отправить сообщение?\n\n{_destinations_text(listing)}"
+        session.manual_pending_message = message
+        await self._reply(
+            message,
+            notice,
+            topic_selection_keyboard(_available_topic_rows(listing)),
         )
+        self._sessions.set(message.from_id, session)
 
     # --- WAIT_DESTINATION ---------------------------------------------------
 
-    async def _handle_wait_destination(self, message: VkUiMessage, session: VkUserSession) -> None:
-        text = message.text.strip()
-        if text == BTN_CANCEL:
-            logger.info("vk manual forwarding cancelled", extra={"from_id": message.from_id})
-            self._sessions.clear(message.from_id)
-            await self._reply(message, CANCELLED_TEXT, main_keyboard_json())
-            return
-        listing = await self._manual_forwarding.destination_list(message.from_id)
-        if not listing.chat_registered or not listing.destinations:
-            self._sessions.clear(message.from_id)
-            await self._reply(message, CONFIG_ERROR_TEXT)
-            return
-        ordinal = _parse_ordinal(text)
-        if ordinal is None or not 1 <= ordinal <= len(listing.destinations):
-            logger.debug(
-                "vk manual destination rejected",
-                extra={"from_id": message.from_id, "reason": "invalid_ordinal"},
-            )
-            await self._reply(
-                message,
-                f"{TOPIC_NOT_FOUND_TEXT}\n\n{_destinations_text(listing)}\n\n{ORDINAL_ONLY_TEXT}",
-                wait_destination_keyboard_json(),
-            )
-            return
-        offer = listing.destinations[ordinal - 1]
-        if not offer.available:
-            logger.debug(
-                "vk manual destination rejected",
-                extra={"from_id": message.from_id, "reason": "stale_topic"},
-            )
-            await self._reply(
-                message,
-                f"{STALE_TOPIC_TEXT}\n\n{_destinations_text(listing)}",
-                wait_destination_keyboard_json(),
-            )
-            return
-        pending = session.pending_message
-        if not isinstance(pending, VkUiMessage):
-            self._sessions.clear(message.from_id)
-            await self._reply(message, PUBLISH_FAILED_TEXT, main_keyboard_json())
-            return
-        resolution = AliasResolution(
-            status=AliasResolution.Status.FOUND, topic=offer.topic, chat_id=listing.chat_id
-        )
-        await self._publish_manual(message, session, resolution, source=pending)
+    async def _handle_wait_destination(
+        self, _message: VkUiMessage, _session: VkUserSession
+    ) -> None:
+        return
 
     # --- Alias menu ----------------------------------------------------------
 
@@ -330,6 +410,7 @@ class VkUiDispatcher:
             await self._reply(message, CONFIG_ERROR_TEXT)
             return
         session.state = VkUiState.ALIAS_MENU
+        session.pending_alias_action = None
         self._sessions.set(message.from_id, session)
         entries = await self._alias_manager.list_with_topics(message.from_id)
         await self._reply(message, _alias_menu_text(entries), alias_menu_keyboard_json())
@@ -338,42 +419,61 @@ class VkUiDispatcher:
         self,
         message: VkUiMessage,
         session: VkUserSession,
-        state: VkUiState,
+        action: str,
         prompt: str,
-        keyboard: str | None,
     ) -> None:
         listing = await self._manual_forwarding.destination_list(message.from_id)
         if not listing.chat_registered or not listing.destinations:
             self._sessions.clear(message.from_id)
             await self._reply(message, CONFIG_ERROR_TEXT, main_keyboard_json())
             return
-        session.state = state
+        topic_rows = _available_topic_rows(listing)
+        if action == "alias_delete":
+            entries = await self._alias_manager.list_with_topics(message.from_id)
+            topic_rows = _available_alias_topic_rows(listing, entries)
+            if not topic_rows:
+                session.state = VkUiState.ALIAS_MENU
+                session.pending_alias_action = None
+                session.pending_topic_id = None
+                session.context.clear()
+                self._sessions.set(message.from_id, session)
+                await self._reply(message, NO_ALIAS_TOPICS_TEXT, alias_menu_keyboard_json())
+                return
+        session.state = VkUiState.ALIAS_MENU
+        session.pending_alias_action = action
         session.pending_topic_id = None
         self._sessions.set(message.from_id, session)
-        await self._reply(message, f"{prompt}\n\n{_destinations_text(listing)}", keyboard)
+        await self._reply(
+            message,
+            prompt,
+            topic_selection_keyboard(topic_rows),
+        )
 
     async def _handle_alias_menu(self, message: VkUiMessage, session: VkUserSession) -> None:
         text = message.text.strip()
         if text in (BTN_BACK, BTN_CANCEL):
+            session.pending_alias_action = None
+            session.pending_topic_id = None
+            session.context.clear()
             self._sessions.clear(message.from_id)
             await self._reply(message, MAIN_MENU_TEXT, main_keyboard_json())
+            return
+        if session.pending_alias_action is not None:
             return
         if text == BTN_EDIT:
             await self._start_alias_topic_input(
                 message,
                 session,
-                VkUiState.ALIAS_ADD_WAIT_TOPIC,
+                "alias_edit",
                 ALIAS_ADD_EDIT_TOPIC_TEXT,
-                cancel_keyboard_json(),
             )
             return
         if text == BTN_DELETE:
             await self._start_alias_topic_input(
                 message,
                 session,
-                VkUiState.ALIAS_DELETE_WAIT_TOPIC,
+                "alias_delete",
                 ALIAS_DELETE_TOPIC_TEXT,
-                cancel_keyboard_json(),
             )
             return
         entries = await self._alias_manager.list_with_topics(message.from_id)
@@ -392,7 +492,7 @@ class VkUiDispatcher:
             await self._reply(
                 message,
                 f"{TOPIC_NOT_FOUND_TEXT}\n\n{_destinations_text(listing)}",
-                cancel_keyboard_json(),
+                topic_selection_keyboard(_available_topic_rows(listing)),
             )
             return
         offer = listing.destinations[ordinal - 1]
@@ -400,7 +500,7 @@ class VkUiDispatcher:
             await self._reply(
                 message,
                 f"{STALE_TOPIC_TEXT}\n\n{_destinations_text(listing)}",
-                cancel_keyboard_json(),
+                topic_selection_keyboard(_available_topic_rows(listing)),
             )
             return
         session.pending_topic_id = offer.topic.topic_id
@@ -467,6 +567,7 @@ class VkUiDispatcher:
         resolution: AliasResolution,
         *,
         source: VkUiMessage,
+        callback_message: VkUiMessage | None = None,
     ) -> None:
         logger.debug(
             "vk manual publication started",
@@ -478,12 +579,15 @@ class VkUiDispatcher:
         chat_id = resolution.chat_id
         topic = resolution.topic
         if chat_id is None or topic is None:
-            await self._reply(message, CONFIG_ERROR_TEXT)
+            await self._manual_failure(
+                message, session, CONFIG_ERROR_TEXT, callback_message=callback_message
+            )
             return
         source_message = await self._resolve_source(source)
         if source_message is None:
-            self._sessions.clear(message.from_id)
-            await self._reply(message, PUBLISH_FAILED_TEXT, main_keyboard_json())
+            await self._manual_failure(
+                message, session, PUBLISH_FAILED_TEXT, callback_message=callback_message
+            )
             return
         request = ManualPublicationRequest(
             source=source_message,
@@ -495,8 +599,12 @@ class VkUiDispatcher:
             result = await self._manual_publisher.execute(request)
         except DomainError as error:
             logger.warning("manual publication failed for user %s: %s", message.from_id, error)
-            self._sessions.clear(message.from_id)
-            await self._reply(message, _publication_error_text(error), main_keyboard_json())
+            await self._manual_failure(
+                message,
+                session,
+                _publication_error_text(error),
+                callback_message=callback_message,
+            )
             return
         if not result.published:
             logger.warning(
@@ -505,17 +613,30 @@ class VkUiDispatcher:
             )
             if result.error == TELEGRAM_TOPIC_NOT_FOUND_CODE:
                 await self._keep_manual_destination_open(
-                    message, session, source, topic.topic_id, result.error
+                    message,
+                    session,
+                    source,
+                    topic.topic_id,
+                    result.error,
+                    callback_message=callback_message,
                 )
                 return
-            self._sessions.clear(message.from_id)
-            await self._reply(
-                message, _manual_result_error_text(result.error), main_keyboard_json()
+            await self._manual_failure(
+                message,
+                session,
+                _manual_result_error_text(result.error),
+                callback_message=callback_message,
             )
             return
-        self._sessions.clear(message.from_id)
+        session.manual_pending_message = None
+        self._sessions.set(message.from_id, session)
         logger.info("vk manual publication completed", extra={"from_id": message.from_id})
-        await self._reply(message, SENT_TEXT, main_keyboard_json())
+        if callback_message is not None:
+            await self._edit_event_message(
+                callback_message,
+                f'Выбран топик "{topic.title}"',
+                _reply_keyboard_json(session.state),
+            )
 
     async def _keep_manual_destination_open(
         self,
@@ -524,11 +645,14 @@ class VkUiDispatcher:
         source: VkUiMessage,
         failed_topic_id: int | None,
         error_code: str,
+        *,
+        callback_message: VkUiMessage | None = None,
     ) -> None:
         listing = await self._manual_forwarding.destination_list(message.from_id)
         if not listing.chat_registered or not listing.destinations:
-            self._sessions.clear(message.from_id)
-            await self._reply(message, CONFIG_ERROR_TEXT)
+            await self._manual_failure(
+                message, session, CONFIG_ERROR_TEXT, callback_message=callback_message
+            )
             return
         destinations = tuple(
             ManualDestinationOffer(
@@ -537,8 +661,7 @@ class VkUiDispatcher:
             )
             for offer in listing.destinations
         )
-        session.state = VkUiState.WAIT_DESTINATION
-        session.pending_message = source
+        session.manual_pending_message = source
         self._sessions.set(message.from_id, session)
         retry_listing = ManualDestinationList(
             chat_registered=listing.chat_registered,
@@ -549,18 +672,19 @@ class VkUiDispatcher:
             "vk manual destination retry offered",
             extra={
                 "from_id": message.from_id,
-                "state_after": VkUiState.WAIT_DESTINATION.value,
+                "state_after": session.state.value,
                 "reason": error_code,
                 "message_count": len(destinations),
             },
         )
-        await self._reply(
-            message,
-            f"{_manual_result_error_text(error_code)}\n\n"
-            f"{_destinations_text(retry_listing)}"
-            f"\n\n{ORDINAL_ONLY_TEXT}",
-            wait_destination_keyboard_json(),
+        retry_text = (
+            f"{_manual_result_error_text(error_code)}\n\n{_destinations_text(retry_listing)}"
         )
+        retry_keyboard = topic_selection_keyboard(_available_topic_rows(retry_listing))
+        if callback_message is not None:
+            await self._edit_event_message(callback_message, retry_text, retry_keyboard)
+        else:
+            await self._reply(message, retry_text, retry_keyboard)
 
     async def _resolve_source(self, message: VkUiMessage) -> SourceMessage | None:
         return await self._source_resolver(message)
@@ -569,6 +693,7 @@ class VkUiDispatcher:
 
     async def _back_to_alias_menu(self, message: VkUiMessage, session: VkUserSession) -> None:
         session.state = VkUiState.ALIAS_MENU
+        session.pending_alias_action = None
         session.pending_topic_id = None
         session.context.clear()
         self._sessions.set(message.from_id, session)
@@ -581,6 +706,196 @@ class VkUiDispatcher:
             "vk UI reply sent",
             extra={"from_id": message.from_id, "text_length": len(text)},
         )
+
+    async def _answer_event(self, user_id: int, event_id: str, text: str) -> None:
+        await self._send.answer_message_event(user_id, event_id, text)
+
+    async def _edit_event_message(
+        self, message: VkUiMessage, text: str, keyboard_json: str
+    ) -> bool:
+        conversation_message_id = message.conversation_message_id
+        if conversation_message_id is None:
+            return False
+        await self._send.edit_user_message(
+            message.peer_id,
+            conversation_message_id,
+            text,
+            keyboard_json,
+        )
+        return True
+
+    async def _manual_failure(
+        self,
+        message: VkUiMessage,
+        session: VkUserSession,
+        text: str,
+        *,
+        callback_message: VkUiMessage | None = None,
+    ) -> None:
+        session.manual_pending_message = None
+        self._sessions.set(message.from_id, session)
+        keyboard_json = _reply_keyboard_json(session.state)
+        if callback_message is not None and await self._edit_event_message(
+            callback_message, text, keyboard_json
+        ):
+            return
+        await self._reply(message, text, keyboard_json)
+
+    async def _handle_manual_topic_callback(
+        self,
+        message: VkUiMessage,
+        session: VkUserSession,
+        topic_id: int | None,
+        event_id: str,
+    ) -> None:
+        listing = await self._manual_forwarding.destination_list(message.from_id)
+        offer = next(
+            (
+                candidate
+                for candidate in listing.destinations
+                if candidate.topic.topic_id == topic_id
+            ),
+            None,
+        )
+        if offer is None or not offer.available:
+            await self._answer_event(message.from_id, event_id, STALE_TOPIC_TEXT)
+            retry_text = f"{STALE_TOPIC_TEXT}\n\n{_destinations_text(listing)}"
+            retry_keyboard = topic_selection_keyboard(_available_topic_rows(listing))
+            if not await self._edit_event_message(message, retry_text, retry_keyboard):
+                await self._reply(message, retry_text, retry_keyboard)
+            return
+        await self._answer_event(message.from_id, event_id, "Топик выбран.")
+        pending = session.manual_pending_message
+        if not isinstance(pending, VkUiMessage):
+            await self._manual_failure(message, session, PUBLISH_FAILED_TEXT)
+            return
+        resolution = AliasResolution(
+            status=AliasResolution.Status.FOUND,
+            topic=offer.topic,
+            chat_id=listing.chat_id,
+        )
+        await self._publish_manual(
+            message,
+            session,
+            resolution,
+            source=pending,
+            callback_message=message,
+        )
+
+    async def _finish_delete_topic_error(
+        self, message: VkUiMessage, session: VkUserSession, text: str
+    ) -> None:
+        session.state = VkUiState.ALIAS_MENU
+        session.pending_alias_action = None
+        session.pending_topic_id = None
+        session.context.clear()
+        self._sessions.set(message.from_id, session)
+        await self._edit_event_message(message, text, alias_menu_keyboard_json())
+
+    @staticmethod
+    def _is_delete_topic_selection(session: VkUserSession) -> bool:
+        return (
+            session.pending_alias_action == "alias_delete"
+            or session.state is VkUiState.ALIAS_DELETE_WAIT_TOPIC
+        )
+
+    async def _handle_topic_callback(
+        self,
+        message: VkUiMessage,
+        session: VkUserSession,
+        topic_id: int | None,
+        event_id: str,
+    ) -> None:
+        listing = await self._manual_forwarding.destination_list(message.from_id)
+        offer = next(
+            (
+                candidate
+                for candidate in listing.destinations
+                if candidate.topic.topic_id == topic_id
+            ),
+            None,
+        )
+        if offer is None or not offer.available:
+            await self._answer_event(message.from_id, event_id, STALE_TOPIC_TEXT)
+            if self._is_delete_topic_selection(session):
+                await self._finish_delete_topic_error(message, session, STALE_TOPIC_TEXT)
+                return
+            await self._reply(
+                message,
+                f"{STALE_TOPIC_TEXT}\n\n{_destinations_text(listing)}",
+                topic_selection_keyboard(_available_topic_rows(listing)),
+            )
+            return
+        if session.state is VkUiState.WAIT_DESTINATION:
+            await self._answer_event(message.from_id, event_id, "Топик выбран.")
+            resolution = AliasResolution(
+                status=AliasResolution.Status.FOUND,
+                topic=offer.topic,
+                chat_id=listing.chat_id,
+            )
+            pending = session.pending_message
+            if not isinstance(pending, VkUiMessage):
+                await self._manual_failure(message, session, PUBLISH_FAILED_TEXT)
+                return
+            await self._publish_manual(
+                message,
+                session,
+                resolution,
+                source=pending,
+                callback_message=message,
+            )
+            return
+        alias_action = session.pending_alias_action
+        if alias_action is None and session.state is VkUiState.ALIAS_ADD_WAIT_TOPIC:
+            alias_action = "alias_edit"
+        if alias_action is None and session.state is VkUiState.ALIAS_DELETE_WAIT_TOPIC:
+            alias_action = "alias_delete"
+        entries: list[AliasEntry] = []
+        if alias_action == "alias_delete":
+            entries = await self._alias_manager.list_with_topics(message.from_id)
+            entry = _find_entry(entries, offer.topic.topic_id)
+            if entry is None or entry.alias is None:
+                await self._answer_event(message.from_id, event_id, NO_ALIAS_TEXT)
+                await self._finish_delete_topic_error(message, session, NO_ALIAS_TEXT)
+                return
+        await self._answer_event(message.from_id, event_id, "Топик выбран.")
+        session.pending_topic_id = offer.topic.topic_id
+        if alias_action == "alias_edit":
+            await self._edit_event_message(
+                message,
+                f"Топик выбран: {offer.topic.title}",
+                EMPTY_KEYBOARD,
+            )
+            session.pending_alias_action = None
+            session.state = VkUiState.ALIAS_ADD_WAIT_VALUE
+            self._sessions.set(message.from_id, session)
+            await self._reply(message, ALIAS_ADD_VALUE_TEXT, cancel_keyboard_json())
+            return
+        if alias_action != "alias_delete":
+            await self._answer_event(message.from_id, event_id, "Кнопка устарела.")
+            return
+        await self._alias_manager.delete(message.from_id, offer.topic.topic_id)
+        session.state = VkUiState.ALIAS_MENU
+        session.pending_alias_action = None
+        session.pending_topic_id = None
+        session.context.clear()
+        self._sessions.set(message.from_id, session)
+        entries = await self._alias_manager.list_with_topics(message.from_id)
+        alias_root = f"Алиас удалён.\n\n{_alias_menu_text(entries)}"
+        if not await self._edit_event_message(message, alias_root, alias_menu_keyboard_json()):
+            await self._reply(message, alias_root, alias_menu_keyboard_json())
+
+
+def _reply_keyboard_json(state: VkUiState) -> str:
+    if state is VkUiState.ALIAS_ADD_WAIT_VALUE:
+        return cancel_keyboard_json()
+    if state in (
+        VkUiState.ALIAS_MENU,
+        VkUiState.ALIAS_ADD_WAIT_TOPIC,
+        VkUiState.ALIAS_DELETE_WAIT_TOPIC,
+    ):
+        return alias_menu_keyboard_json()
+    return main_keyboard_json()
 
 
 def _parse_ordinal(text: str) -> int | None:
@@ -595,7 +910,29 @@ def _destinations_text(listing: ManualDestinationList) -> str:
     for index, offer in enumerate(listing.destinations, start=1):
         suffix = "" if offer.available else " (недоступна)"
         lines.append(f"{index}. {offer.topic.title}{suffix}")
-    return "\n".join(lines)
+    return Formatter("{heading}\n{body}").format(
+        heading=bold(lines[0]),
+        body="\n".join(lines[1:]),
+    )
+
+
+def _available_topic_rows(listing: ManualDestinationList) -> list[tuple[int | None, str]]:
+    return [
+        (offer.topic.topic_id, offer.topic.title)
+        for offer in listing.destinations
+        if offer.available
+    ]
+
+
+def _available_alias_topic_rows(
+    listing: ManualDestinationList, entries: Sequence[AliasEntry]
+) -> list[tuple[int | None, str]]:
+    aliased_topic_ids = {entry.topic_id for entry in entries if entry.alias is not None}
+    return [
+        (offer.topic.topic_id, offer.topic.title)
+        for offer in listing.destinations
+        if offer.available and offer.topic.topic_id in aliased_topic_ids
+    ]
 
 
 def _alias_menu_text(entries: Sequence[AliasEntry]) -> str:
@@ -605,7 +942,10 @@ def _alias_menu_text(entries: Sequence[AliasEntry]) -> str:
     for index, entry in enumerate(entries, start=1):
         alias_text = f"алиас: {entry.alias}" if entry.alias else "алиас не задан"
         lines.append(f"{index}. {entry.topic_title} — {alias_text}")
-    return "\n".join(lines)
+    return Formatter("{heading}\n\n{body}").format(
+        heading=bold(lines[0]),
+        body="\n".join(lines[2:]),
+    )
 
 
 def _find_entry(entries: Sequence[AliasEntry], topic_id: int | None) -> AliasEntry | None:

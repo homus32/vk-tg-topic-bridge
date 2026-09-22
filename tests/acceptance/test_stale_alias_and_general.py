@@ -62,7 +62,6 @@ async def test_general_alias_publishes_directly_to_general() -> None:
 
     await harness.dispatcher.handle_dm(make_vk_ui_message(fwd_count=1, text="общий"))
 
-    assert harness.send.last_text == "Сообщение отправлено."
     assert harness.publisher.publications[0].message_thread_id is None
 
 

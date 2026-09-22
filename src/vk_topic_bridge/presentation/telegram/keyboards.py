@@ -6,10 +6,26 @@ constants from ``presentation.telegram.filters`` so handlers and keyboards canno
 
 from __future__ import annotations
 
-from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
+from typing import Literal
+
+from aiogram.filters.callback_data import CallbackData
+from aiogram.types import (
+    InlineKeyboardMarkup,
+    KeyboardButton,
+    ReplyKeyboardMarkup,
+    ReplyKeyboardRemove,
+)
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from vk_topic_bridge.application.dto.settings import BridgeSettingsState
 from vk_topic_bridge.presentation.telegram import filters as btn
+
+
+class DestinationCallback(CallbackData, prefix="dest"):
+    kind: Literal["messages", "wall"]
+    action: Literal["select", "cancel", "back"]
+    topic_id: int
+    version: int
 
 
 def owner_main_keyboard(state: BridgeSettingsState) -> ReplyKeyboardMarkup:
@@ -44,12 +60,33 @@ def unregistered_keyboard() -> ReplyKeyboardRemove:
     return ReplyKeyboardRemove()
 
 
-def ordinal_choice_keyboard() -> ReplyKeyboardMarkup:
-    """Cancel row for ordinal-wait wizards."""
-    return ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text=btn.BTN_CANCEL)]],
-        resize_keyboard=True,
-    )
+def ordinal_choice_keyboard() -> ReplyKeyboardRemove:
+    return ReplyKeyboardRemove()
+
+
+def destination_keyboard(
+    topics: list[tuple[int | None, str, bool]],
+    kind: Literal["messages", "wall"],
+    version: int,
+    current_topic_id: int | None,
+) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    for topic_id, title, available in topics:
+        if not available:
+            continue
+        normalized_id = -1 if topic_id is None else topic_id
+        current = " (текущий)" if topic_id == current_topic_id else ""
+        builder.button(
+            text=f"{title}{current}",
+            callback_data=DestinationCallback(
+                kind=kind,
+                action="select",
+                topic_id=normalized_id,
+                version=version,
+            ),
+        )
+    builder.adjust(1)
+    return builder.as_markup()
 
 
 def topics_settings_keyboard() -> ReplyKeyboardMarkup:

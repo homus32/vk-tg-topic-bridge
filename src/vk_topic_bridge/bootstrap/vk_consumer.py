@@ -15,6 +15,7 @@ from typing import Protocol, TypeGuard, cast
 
 from vkbottle.api import ABCAPI
 from vkbottle.polling import BotPolling
+from vkbottle_types.events import GroupEventType
 
 from vk_topic_bridge.application.forwarding.forward_message import ForwardVkMessage
 from vk_topic_bridge.application.forwarding.forward_wall import ForwardWallPost
@@ -43,6 +44,8 @@ class VkUiRouter(Protocol):
     """Presentation fan-out for user-DM UI events (finish plan)."""
 
     async def handle_dm(self, update: Mapping[str, object]) -> bool: ...
+
+    async def handle_message_event(self, update: Mapping[str, object]) -> bool: ...
 
 
 def _is_int(value: object) -> TypeGuard[int]:
@@ -114,6 +117,11 @@ class VkEventConsumer:
             )
             if event_type == "wall_post_new":
                 await self._handle_wall(update, group_id)
+                return
+            if event_type == GroupEventType.MESSAGE_EVENT.value:
+                if group_id != self._allowed_group_id or self._ui_router is None:
+                    return
+                await self._ui_router.handle_message_event(update)
                 return
             if event_type != "message_new":
                 logger.debug(

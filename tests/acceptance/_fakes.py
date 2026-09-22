@@ -651,6 +651,15 @@ class FakeVkUiSend:
         self.messages.append((user_id, text, keyboard_json))
         return len(self.messages)
 
+    async def answer_message_event(self, user_id: int, event_id: str, text: str) -> None:
+        _ = (user_id, event_id, text)
+        return None
+
+    async def edit_user_message(
+        self, peer_id: int, conversation_message_id: int, text: str, keyboard_json: str
+    ) -> None:
+        _ = (peer_id, conversation_message_id, text, keyboard_json)
+
     @property
     def last_text(self) -> str:
         assert self.messages, "no UI message was sent"
@@ -788,5 +797,24 @@ def make_vk_ui_message(
                 "text": text,
                 "fwd_messages": fwd,
             }
+        },
+    }
+
+
+def make_vk_message_event(
+    payload: dict[str, object],
+    *,
+    event_id: str = "event-1",
+    from_id: int = VK_USER_ID,
+) -> dict[str, object]:
+    return {
+        "type": "message_event",
+        "group_id": WALL_GROUP_ID,
+        "object": {
+            "user_id": from_id,
+            "peer_id": from_id,
+            "event_id": event_id,
+            "payload": payload,
+            "conversation_message_id": 9002,
         },
     }

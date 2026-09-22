@@ -4,12 +4,14 @@ The constructor accepts any object exposing ``async request(method, data)`` so t
 whole gateway is testable with a fake API and never reaches into SDK model types.
 """
 
+import json
 import logging
 import random
 from collections.abc import Mapping
 from typing import Protocol
 
 from vkbottle import VKAPIError
+from vkbottle.tools.formatting import Formatter
 
 from config import Settings
 from vk_topic_bridge.application.dto.infrastructure import LongPollInfo
@@ -244,7 +246,9 @@ class VkApiGateway:
             extra={"peer_id": peer_id, "conversation_message_id": conversation_message_id},
         )
 
-    async def send_user_message(self, user_id: int, text: str, keyboard_json: str | None) -> int:
+    async def send_user_message(
+        self, user_id: int, text: str | Formatter, keyboard_json: str | None
+    ) -> int:
         """``messages.send`` to one user DM; returns the sent message id.
 
         ``random_id`` is always generated: VK uses it to deduplicate an identical
@@ -252,9 +256,11 @@ class VkApiGateway:
         """
         params: dict[str, object] = {
             "peer_id": user_id,
-            "message": text,
+            "message": str(text),
             "random_id": random.getrandbits(31),
         }
+        if isinstance(text, Formatter):
+            params["format_data"] = json.dumps(text.format_data, ensure_ascii=False)
         if keyboard_json is not None:
             params["keyboard"] = keyboard_json
         logger.debug(
@@ -268,6 +274,32 @@ class VkApiGateway:
             extra={"owner_id": user_id, "message_id_count": 1 if message_id else 0},
         )
         return message_id
+
+    async def answer_message_event(self, user_id: int, event_id: str, text: str) -> None:
+        await self._request(
+            "messages.sendMessageEventAnswer",
+            {
+                "event_id": event_id,
+                "user_id": user_id,
+                "peer_id": user_id,
+                "event_data": json.dumps(
+                    {"type": "show_snackbar", "text": text}, ensure_ascii=False
+                ),
+            },
+        )
+
+    async def edit_user_message(
+        self, peer_id: int, conversation_message_id: int, text: str, keyboard_json: str
+    ) -> None:
+        await self._request(
+            "messages.edit",
+            {
+                "peer_id": peer_id,
+                "conversation_message_id": conversation_message_id,
+                "message": text,
+                "keyboard": keyboard_json,
+            },
+        )
 
     async def normalize_event(
         self, raw_event: Mapping[str, object], author: Author

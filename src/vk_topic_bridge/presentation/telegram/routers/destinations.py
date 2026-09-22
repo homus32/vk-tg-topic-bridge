@@ -11,14 +11,14 @@ from __future__ import annotations
 import logging
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
-from typing import Protocol
+from typing import Literal, Protocol, cast
 from uuid import uuid4
 
 from aiogram import F, Router
 from aiogram.dispatcher.event.bases import SkipHandler
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State
-from aiogram.types import Message
+from aiogram.types import CallbackQuery, InlineKeyboardMarkup, Message
 
 from vk_topic_bridge.application.admin.destination_admin import (
     DestinationConfirmationResult,
@@ -34,7 +34,9 @@ from vk_topic_bridge.application.errors import (
 from vk_topic_bridge.domain.value_objects import TopicInfo
 from vk_topic_bridge.presentation.telegram import filters as btn
 from vk_topic_bridge.presentation.telegram.keyboards import (
+    DestinationCallback,
     back_keyboard,
+    destination_keyboard,
     ordinal_choice_keyboard,
     owner_main_keyboard,
     unregistered_keyboard,
@@ -80,9 +82,33 @@ def _destination_rows(topics: list[TopicInfo]) -> list[tuple[TopicInfo, str]]:
     return rows
 
 
-def _render_destination_list(rows: list[tuple[TopicInfo, str]]) -> str:
-    body = "\n".join(label for _, label in rows)
+def _render_destination_list(rows: list[tuple[TopicInfo, str]], current_topic_id: int = -2) -> str:
+    labels = [
+        f"{label} (текущий)" if topic.topic_id == current_topic_id else label
+        for topic, label in rows
+    ]
+    body = "\n".join(labels)
     return f"Выберите топик:\n\n{body}"
+
+
+def _topic_version(topics: list[TopicInfo]) -> int:
+    return hash(
+        tuple((topic.topic_id, topic.title, topic.is_closed, topic.is_hidden) for topic in topics)
+    )
+
+
+def _current_topic_id(state: BridgeSettingsState, kind: str) -> int:
+    configured = (
+        state.telegram_messages_topic_configured
+        if kind == "messages"
+        else state.telegram_wall_topic_configured
+    )
+    topic_id = (
+        state.telegram_messages_topic_id if kind == "messages" else state.telegram_wall_topic_id
+    )
+    if not configured:
+        return -2
+    return -1 if topic_id is None else topic_id
 
 
 def _parse_ordinal(text: str | None, count: int) -> int | None:
@@ -98,8 +124,8 @@ def _parse_ordinal(text: str | None, count: int) -> int | None:
 def _confirmation_text(kind: str, topic: TopicInfo, result: DestinationConfirmationResult) -> str:
     role = "сообщений VK" if kind == "messages" else "постов стены VK"
     if result.general_selected:
-        return f"Топик для автоматической пересылки {role}:\nGeneral"
-    return f"Топик для автоматической пересылки {role}:\n{topic.title}"
+        return f"Топик назначения для автоматической пересылки {role} изменён на:\nGeneral"
+    return f"Топик назначения для автоматической пересылки {role} изменён на:\n{topic.title}"
 
 
 def _wizard_state(kind: str) -> State:
@@ -121,11 +147,12 @@ def build_destinations_router(
     *,
     run_id_factory: Callable[[], str],
     refresh_use_case: RefreshUseCase,
+    owner_ids: frozenset[int] | None = None,
 ) -> Router:
     """Wire both destination wizards; General is selectable, unavailable topics are not."""
     router = Router(name="destinations")
 
-    async def _open(message: Message, state: FSMContext, kind: str) -> None:
+    async def _open(message: Message, state: FSMContext, kind: Literal["messages", "wall"]) -> None:
         current = await settings_reader()
         if current is None or current.telegram_chat_id is None:
             await message.answer(UNREGISTERED_TEXT, reply_markup=unregistered_keyboard())
@@ -135,10 +162,18 @@ def build_destinations_router(
         if not topics:
             await message.answer(EMPTY_TOPICS_TEXT, reply_markup=back_keyboard())
             return
+        version = _topic_version(topics)
+        rows = _destination_rows(topics)
         await state.set_state(_wizard_state(kind))
+        await state.update_data(destination_version=version)
         await message.answer(
-            _render_destination_list(_destination_rows(topics)),
-            reply_markup=ordinal_choice_keyboard(),
+            _render_destination_list(rows, _current_topic_id(current, kind)),
+            reply_markup=destination_keyboard(
+                [(topic.topic_id, topic.title, _topic_available(topic)) for topic, _ in rows],
+                cast("Literal['messages', 'wall']", kind),
+                version,
+                _current_topic_id(current, kind),
+            ),
         )
 
     async def messages_destination(message: Message, state: FSMContext) -> None:
@@ -169,6 +204,16 @@ def build_destinations_router(
                 reply_markup=ordinal_choice_keyboard(),
             )
             return
+        await _apply_topic(message, state, kind, topic, chat_id)
+
+    async def _apply_topic(
+        message: Message,
+        state: FSMContext,
+        kind: str,
+        topic: TopicInfo,
+        chat_id: int,
+        edit_message: bool = False,
+    ) -> None:
         try:
             result = await select_destination.execute(chat_id, topic, kind, run_id_factory())
         except PublicationRejectedError as error:
@@ -222,10 +267,58 @@ def build_destinations_router(
             )
             return
         else:
-            await state.set_state(None)
+            await state.clear()
+            confirmation = _confirmation_text(kind, topic, result)
+            if edit_message:
+                await message.edit_text(
+                    confirmation,
+                    reply_markup=InlineKeyboardMarkup(inline_keyboard=[]),
+                )
+                return
             fresh = await settings_reader()
             markup = owner_main_keyboard(fresh) if fresh is not None else ordinal_choice_keyboard()
-            await message.answer(_confirmation_text(kind, topic, result), reply_markup=markup)
+            await message.answer(confirmation, reply_markup=markup)
+
+    async def _callback_pick(
+        callback: CallbackQuery,
+        state: FSMContext,
+        callback_data: DestinationCallback,
+        kind: str,
+    ) -> None:
+        owner_id = getattr(getattr(callback, "from_user", None), "id", None)
+        if owner_ids is not None and owner_id not in owner_ids:
+            return
+        message = callback.message
+        if message is None:
+            await callback.answer("Кнопка устарела.")
+            return
+        if not callable(getattr(message, "edit_text", None)):
+            await callback.answer("Кнопка устарела.")
+            return
+        message = cast(Message, message)
+        if await state.get_state() != _wizard_state(kind).state:
+            await callback.answer("Кнопка устарела.")
+            return
+        data = await state.get_data()
+        if data.get("destination_version") != callback_data.version:
+            await callback.answer("Список топиков устарел.")
+            return
+        if callback_data.action in {"cancel", "back"}:
+            await callback.answer("Действие отменено.")
+            await _cancel(message, state, kind)
+            return
+        current = await settings_reader()
+        if current is None or current.telegram_chat_id is None:
+            await callback.answer("Чат не зарегистрирован.")
+            return
+        topics = await topics_reader(current.telegram_chat_id)
+        topic_id = None if callback_data.topic_id == -1 else callback_data.topic_id
+        topic = next((candidate for candidate in topics if candidate.topic_id == topic_id), None)
+        if topic is None or not _topic_available(topic):
+            await callback.answer("Топик больше недоступен.")
+            return
+        await callback.answer("Топик выбран.")
+        await _apply_topic(message, state, kind, topic, current.telegram_chat_id, edit_message=True)
 
     async def _recover_stale_topic(
         message: Message,
@@ -275,7 +368,7 @@ def build_destinations_router(
     async def _cancel(message: Message, state: FSMContext, kind: str) -> None:
         if not _in_wizard(await state.get_state(), kind):
             raise SkipHandler
-        await state.set_state(None)
+        await state.clear()
         current = await settings_reader()
         if current is None or current.telegram_chat_id is None:
             await message.answer(UNREGISTERED_TEXT, reply_markup=unregistered_keyboard())
@@ -300,4 +393,23 @@ def build_destinations_router(
     router.message.register(wall_pick, F.text.regexp(r"^\d+$"))
     router.message.register(wizard_cancel, F.text == btn.BTN_CANCEL)
     router.message.register(wizard_back, F.text == btn.BTN_BACK)
+
+    async def messages_callback(
+        callback: CallbackQuery, state: FSMContext, callback_data: DestinationCallback
+    ) -> None:
+        await _callback_pick(callback, state, callback_data, "messages")
+
+    async def wall_callback(
+        callback: CallbackQuery, state: FSMContext, callback_data: DestinationCallback
+    ) -> None:
+        await _callback_pick(callback, state, callback_data, "wall")
+
+    router.callback_query.register(
+        messages_callback,
+        DestinationCallback.filter(F.kind == "messages"),
+    )
+    router.callback_query.register(
+        wall_callback,
+        DestinationCallback.filter(F.kind == "wall"),
+    )
     return router

@@ -215,7 +215,7 @@ def _harness(
     async def settings_reader() -> BridgeSettingsState | None:
         return current
 
-    async def topics_reader(chat_id: int) -> list[TopicInfo]:
+    async def topics_reader(_chat_id: int) -> list[TopicInfo]:
         return list(TOPICS)
 
     router = build_settings_router(
@@ -371,6 +371,37 @@ async def test_refresh_rerenders_and_warns_when_destination_disappeared() -> Non
     assert str(MESSAGES_TOPIC_ID) in text
 
 
+async def test_refresh_reports_added_removed_unavailable_and_destinations() -> None:
+    refreshed_topics = [
+        TopicInfo(
+            topic_id=None, title="General", is_general=True, is_closed=False, is_hidden=False
+        ),
+        TopicInfo(topic_id=9, title="Новая", is_general=False, is_closed=False, is_hidden=False),
+        TopicInfo(topic_id=10, title="Скрытая", is_general=False, is_closed=False, is_hidden=True),
+    ]
+    harness = _harness(refresh=FakeRefreshUseCase(topics=refreshed_topics))
+    message = FakeMessage(text=btn.BTN_REFRESH)
+
+    await _handler(harness.router, "refresh_topics")(message)
+
+    text, _ = message.answers[0]
+    assert "Добавлены" in text
+    assert "Удалены" in text
+    assert "Новая" in text
+    assert "Скрытая" in text
+    assert "Сообщения VK-чата" in text
+    assert "Посты стены VK" in text
+
+
+async def test_refresh_reports_no_changes() -> None:
+    harness = _harness(refresh=FakeRefreshUseCase(topics=list(TOPICS)))
+    message = FakeMessage(text=btn.BTN_REFRESH)
+
+    await _handler(harness.router, "refresh_topics")(message)
+
+    assert "Изменений нет" in message.answers[0][0]
+
+
 async def test_refresh_failure_keeps_previous_view_and_reports_error() -> None:
     harness = _harness(refresh=FakeRefreshUseCase(error=ProvisioningError("telethon down")))
     message = FakeMessage(text=btn.BTN_REFRESH)
@@ -396,6 +427,8 @@ async def test_diagnostics_lists_entries_and_sets_state() -> None:
     assert await fsm.get_state() == DeliveryDiagnosticsView.list_view.state
     text, markup = message.answers[0]
     assert "ambiguous" in text
+    assert "ручной проверки" in text
+    assert "дубль" in text
     assert str(entry.delivery_id) in text
     assert isinstance(markup, ReplyKeyboardMarkup)
 

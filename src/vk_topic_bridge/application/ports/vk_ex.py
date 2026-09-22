@@ -13,6 +13,12 @@ class VkManualUiPort(Protocol):
         """``messages.send`` to one user DM; returns the sent message id."""
         ...
 
+    async def answer_message_event(self, user_id: int, event_id: str, text: str) -> None: ...
+
+    async def edit_user_message(
+        self, peer_id: int, conversation_message_id: int, text: str, keyboard_json: str
+    ) -> None: ...
+
 
 # Media download contract lives in telegram_ex.py ( VkMediaDownloaderPort ); the
 # forwarding use case (tasks 15/16) downloads BEFORE planning and passes

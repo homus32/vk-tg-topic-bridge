@@ -25,14 +25,16 @@ class VkUiState(StrEnum):
 class VkUserSession:
     """One user's ephemeral session payload.
 
-    ``pending_message`` holds the normalized forwarded message captured in IDLE
-    (exactly-one contract enforced before entering WAIT_DESTINATION);
-    ``pending_topic_id`` carries the ordinal choice between alias steps; all fields are
-    dropped on cancel/success. Nothing here is ever written to SQLite.
+    ``pending_message`` is retained for the legacy destination state;
+    ``manual_pending_message`` overlays manual forwarding without replacing an active
+    alias FSM; ``pending_topic_id`` carries the selected alias topic. Nothing here is
+    ever written to SQLite.
     """
 
     state: VkUiState = VkUiState.IDLE
     pending_message: object | None = None
+    manual_pending_message: object | None = None
+    pending_alias_action: str | None = None
     pending_topic_id: int | None = None
     context: dict[str, str] = field(default_factory=dict)
 
@@ -53,6 +55,9 @@ class VkSessionStore:
             session = VkUserSession()
             self._sessions[user_id] = session
         return session
+
+    def peek(self, user_id: int) -> VkUserSession | None:
+        return self._sessions.get(user_id)
 
     def set(self, user_id: int, session: VkUserSession) -> None:
         self._sessions[user_id] = session

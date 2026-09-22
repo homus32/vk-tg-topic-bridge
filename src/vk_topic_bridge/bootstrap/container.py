@@ -375,6 +375,7 @@ def _register_routers(
             topics_reader,
             run_id_factory=default_run_id,
             refresh_use_case=refresh_topics_v2,
+            owner_ids=owner_ids,
         )
     )
     dispatcher.include_router(

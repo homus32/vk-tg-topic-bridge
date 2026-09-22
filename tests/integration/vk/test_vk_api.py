@@ -150,6 +150,23 @@ async def test_get_community_id_empty_groups_is_fatal() -> None:
         await gateway.get_community_id()
 
 
+async def test_edit_user_message_removes_keyboard_with_conversation_message_id() -> None:
+    module = _api_module()
+    fake = FakeVkApi({"messages.edit": _ok(1)})
+    gateway = module.VkApiGateway(fake, _settings())
+
+    await gateway.edit_user_message(PEER_ID, CMID, "Отмена", '{"buttons": []}')
+
+    assert fake.params_for("messages.edit") == [
+        {
+            "peer_id": PEER_ID,
+            "conversation_message_id": CMID,
+            "message": "Отмена",
+            "keyboard": '{"buttons": []}',
+        }
+    ]
+
+
 # --- Long Poll handshake ------------------------------------------------------
 
 
