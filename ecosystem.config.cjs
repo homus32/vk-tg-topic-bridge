@@ -10,10 +10,15 @@ module.exports = {
       script: "./scripts/start.sh",
       interpreter: "none",
 
+      instances: 1,
+      exec_mode: "fork",
+
       autorestart: true,
       watch: false,
-      restart_delay: 5000,
+
+      min_uptime: "10s",
       max_restarts: 10,
+      restart_delay: 5000,
       kill_timeout: 15000,
 
       log_file: "./logs/pm2.log",
