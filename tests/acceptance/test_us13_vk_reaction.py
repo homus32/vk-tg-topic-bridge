@@ -42,7 +42,7 @@ async def test_us13_ac131_successful_publication_sets_the_reaction() -> None:
 async def test_us13_ac132_partial_attachment_success_still_reacts() -> None:
     harness = make_forwarding_harness()
     source = make_source(
-        "#новость с вложениями",  # noqa: RUF001
+        "#новость с вложениями",
         attachments=(PHOTO_ATTACHMENT, SKIPPED_ATTACHMENT),
     )
 

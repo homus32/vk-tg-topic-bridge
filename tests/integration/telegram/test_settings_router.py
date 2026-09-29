@@ -409,7 +409,7 @@ async def test_refresh_failure_keeps_previous_view_and_reports_error() -> None:
     await _handler(harness.router, "refresh_topics")(message)
 
     text, _ = message.answers[0]
-    assert "⚠️ Не удалось обновить список топиков." in text  # noqa: RUF001
+    assert "⚠️ Не удалось обновить список топиков." in text
     assert "Важные" in text
 
 

@@ -70,7 +70,7 @@ def _publication(thread_id: int | None) -> Publication:
     return Publication(
         chat_id=CHAT_ID,
         message_thread_id=thread_id,
-        html_text="<b>Иван Петров</b> (https://vk.com/id1)\nпривет\n#извк",  # noqa: RUF001
+        html_text="<b>Иван Петров</b> (https://vk.com/id1)\nпривет\n#извк",
         has_all=False,
         source=_source(),
     )

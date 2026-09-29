@@ -20,7 +20,7 @@ def test_normalize_rejects_blank_alias(raw: str) -> None:
         alias_policy.normalize_alias(raw)
 
 
-@pytest.mark.parametrize("raw", ["важ ное", "два\tслова", "a b"])  # noqa: RUF001
+@pytest.mark.parametrize("raw", ["важ ное", "два\tслова", "a b"])
 def test_normalize_rejects_inner_whitespace(raw: str) -> None:
     with pytest.raises(InvalidAlias):
         alias_policy.normalize_alias(raw)

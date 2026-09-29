@@ -35,6 +35,9 @@ target-version = "py314"
 line-length = 100
 
 [tool.ruff.lint]
+ignore = [
+    "RUF001",
+]
 select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
 
 [tool.basedpyright]

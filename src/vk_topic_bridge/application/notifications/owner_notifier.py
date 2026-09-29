@@ -134,7 +134,7 @@ def attention_notification_text(*, status: str, delivery_id: int) -> str:
     """
     label = _STATUS_LABELS.get(status, status)
     return (
-        f"Проблема с доставкой (запись #{delivery_id}): {label}.\n"  # noqa: RUF001
+        f"Проблема с доставкой (запись #{delivery_id}): {label}.\n"
         "Подробности — в разделе «Проблемы доставки»."
     )
 
@@ -150,7 +150,7 @@ def history_gap_notification_text(*, kind: str) -> str:
     label = _GAP_LABELS.get(kind, kind)
     return (
         f"VK Long Poll: {label}.\n"
-        "Точное число пропущенных событий неизвестно; приём продолжается с нового курсора."  # noqa: RUF001
+        "Точное число пропущенных событий неизвестно; приём продолжается с нового курсора."
     )
 
 

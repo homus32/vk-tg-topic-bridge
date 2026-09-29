@@ -231,7 +231,7 @@ def build_destinations_router(
                 },
             )
             await message.answer(
-                f"Не удалось подтвердить топик «{topic.title}». "  # noqa: RUF001
+                f"Не удалось подтвердить топик «{topic.title}». "
                 "Ничего не сохранено. Повторите попытку."
             )
             return
@@ -245,13 +245,13 @@ def build_destinations_router(
                 },
             )
             await message.answer(
-                f"Не удалось подтвердить топик «{topic.title}»: "  # noqa: RUF001
+                f"Не удалось подтвердить топик «{topic.title}»: "
                 "Telegram не подтвердил результат. Ничего не сохранено. Повторите попытку."
             )
             return
         except ProvisioningError as error:
             await message.answer(
-                f"Не удалось подтвердить топик «{topic.title}»: {error}\n"  # noqa: RUF001
+                f"Не удалось подтвердить топик «{topic.title}»: {error}\n"
                 "Ничего не сохранено. Повторите попытку."
             )
             return
@@ -264,7 +264,7 @@ def build_destinations_router(
                 },
             )
             await message.answer(
-                f"Не удалось подтвердить топик «{topic.title}». "  # noqa: RUF001
+                f"Не удалось подтвердить топик «{topic.title}». "
                 "Ничего не сохранено. Повторите попытку."
             )
             return

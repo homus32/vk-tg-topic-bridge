@@ -52,8 +52,7 @@ START_COMMAND = "start"
 logger = logging.getLogger(__name__)
 
 MASTER_ACTIVE_TEXT = (
-    "Режим регистрации активен.\n"
-    "Отправьте /register в целевом чате, чтобы зарегистрировать его."  # noqa: RUF001
+    "Режим регистрации активен.\nОтправьте /register в целевом чате, чтобы зарегистрировать его."
 )
 CAPABILITY_ERROR_TEXT = (
     "Бот не может публиковать в этом чате: не хватает прав.\n"
@@ -225,7 +224,7 @@ def build_registration_router(
             await _send_owner_feedback(
                 bot,
                 owner_id,
-                f"Не удалось подготовить чат: {error}\n"  # noqa: RUF001
+                f"Не удалось подготовить чат: {error}\n"
                 "Чат не зарегистрирован. Исправьте причину и повторите /register.",
                 reason="provisioning_error",
             )

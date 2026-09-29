@@ -70,7 +70,7 @@ async def handle_register(message: Message, register_chat: RegisterChatUseCase) 
         return
     except ProvisioningError as error:
         await message.answer(
-            f"Не удалось подготовить чат: {error}\n"  # noqa: RUF001
+            f"Не удалось подготовить чат: {error}\n"
             "Чат не зарегистрирован. Исправьте причину и повторите /register."
         )
         return

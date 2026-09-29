@@ -148,13 +148,13 @@ def test_compose_escapes_html_in_original_text() -> None:
 
 
 def test_compose_links_author_to_numeric_profile() -> None:
-    author = Author(user_id=555, first_name="Анна", last_name="&Ко", screen_name="anna")  # noqa: RUF001
+    author = Author(user_id=555, first_name="Анна", last_name="&Ко", screen_name="anna")
     publication = forwarding_policy.compose_publication(
         _source(text="@all", has_all=True, author=author),
         Destination(chat_id=100, message_thread_id=None),
     )
     assert 'href="https://vk.com/id555"' in publication.html_text
-    assert ">Анна &amp;Ко</a>" in publication.html_text  # noqa: RUF001
+    assert ">Анна &amp;Ко</a>" in publication.html_text
 
 
 def test_compose_leaves_attachments_untouched() -> None:

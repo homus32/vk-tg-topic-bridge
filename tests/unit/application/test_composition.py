@@ -176,10 +176,10 @@ def test_media_failure_warning_oversize_reason() -> None:
 @pytest.mark.parametrize(
     "text",
     [
-        "а" * 10,  # noqa: RUF001
-        "а" * 4096,  # noqa: RUF001
-        "а" * 4097,  # noqa: RUF001
-        "а" * 12000,  # noqa: RUF001
+        "а" * 10,
+        "а" * 4096,
+        "а" * 4097,
+        "а" * 12000,
     ],
 )
 def test_split_text_safely_preserves_text_exactly(text: str) -> None:
@@ -190,7 +190,7 @@ def test_split_text_safely_preserves_text_exactly(text: str) -> None:
 
 
 def test_split_text_respects_html_entities() -> None:
-    text = ("а" * 4089) + "&#39;" + ("б" * 10)  # noqa: RUF001
+    text = ("а" * 4089) + "&#39;" + ("б" * 10)
 
     chunks = split_text_safely(text, 4096)
 
@@ -199,7 +199,7 @@ def test_split_text_respects_html_entities() -> None:
 
 
 def test_split_text_never_cuts_inside_entity() -> None:
-    text = ("х" * 4093) + "&#39;" + "у"  # noqa: RUF001
+    text = ("х" * 4093) + "&#39;" + "у"
 
     chunks = split_text_safely(text, 4096)
 

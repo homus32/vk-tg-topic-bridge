@@ -41,7 +41,7 @@ async def test_us14_ac142_supported_wall_media_travels() -> None:
     )
 
     outcome = await harness.use_case.execute(
-        make_wall_post("с медиа", attachments=(photo, document))  # noqa: RUF001
+        make_wall_post("с медиа", attachments=(photo, document))
     )
 
     assert outcome.published is True

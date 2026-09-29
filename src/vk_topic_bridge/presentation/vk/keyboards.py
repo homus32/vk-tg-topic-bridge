@@ -10,7 +10,7 @@ BTN_ALIASES = "🏷 Алиасы"
 BTN_HELP = "❓ Помощь"
 BTN_CANCEL = "✖ Отмена"
 BTN_BACK = "⬅️ Назад"
-BTN_EDIT = "➕ Добавить / изменить"  # noqa: RUF001
+BTN_EDIT = "➕ Добавить / изменить"
 BTN_DELETE = "🗑 Удалить"
 
 

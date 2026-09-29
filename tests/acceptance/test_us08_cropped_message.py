@@ -22,7 +22,7 @@ from vk_topic_bridge.domain.policies.forwarding_policy import compose_publicatio
 from vk_topic_bridge.domain.value_objects import Attachment, Author, Destination
 from vk_topic_bridge.infrastructure.vk.api import VkApiGateway
 
-FULL_TEXT = "@all #анонс Полная версия сообщения с вложением"  # noqa: RUF001
+FULL_TEXT = "@all #анонс Полная версия сообщения с вложением"
 CROPPED_TEXT = "Полная вер"
 AUTHOR = Author(user_id=555, first_name="Пётр", last_name="Смирнов", screen_name=None)
 

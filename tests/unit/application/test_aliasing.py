@@ -315,9 +315,9 @@ async def test_upsert_stores_normalized_alias() -> None:
     uow = FakeUnitOfWork(settings=_settings(), topics=[NEWS], aliases=[])
     manager = AliasManager(lambda: uow)
 
-    await manager.upsert(555, topic_id=7, alias="Вaжное")  # noqa: RUF001
+    await manager.upsert(555, topic_id=7, alias="Вaжное")
 
-    assert uow.vk_aliases.rows == [(7, "вaжное")]  # noqa: RUF001
+    assert uow.vk_aliases.rows == [(7, "вaжное")]
 
 
 async def test_general_alias_conflict_surfaces_as_invalid_alias() -> None:

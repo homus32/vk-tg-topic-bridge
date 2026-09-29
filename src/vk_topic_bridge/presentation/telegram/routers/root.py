@@ -53,7 +53,7 @@ async def render_root_state(
         return
     title = state.telegram_chat_title or str(state.telegram_chat_id)
     await message.answer(
-        f"Главное меню.\nЧат: «{title}».",  # noqa: RUF001
+        f"Главное меню.\nЧат: «{title}».",
         reply_markup=owner_main_keyboard(state, styles_enabled=styles_enabled),
     )
 

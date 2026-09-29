@@ -407,7 +407,7 @@ async def test_unexpected_proof_failure_reports_and_keeps_wizard_active() -> Non
     await _handler(harness.router, "messages_pick")(message, fsm)
 
     text, _ = message.answers[0]
-    assert "Не удалось подтвердить топик" in text  # noqa: RUF001
+    assert "Не удалось подтвердить топик" in text
     assert "Повторите попытку" in text
     assert await fsm.get_state() == MessagesDestinationWizard.wait_ordinal.state
 

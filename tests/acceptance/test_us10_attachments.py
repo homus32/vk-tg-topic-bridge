@@ -22,7 +22,7 @@ async def test_us10_ac101_supported_attachments_become_media_operations() -> Non
     harness = make_forwarding_harness()
 
     outcome = await harness.use_case.execute(
-        make_source("@all с вложениями", attachments=(PHOTO, VIDEO, DOCUMENT))  # noqa: RUF001
+        make_source("@all с вложениями", attachments=(PHOTO, VIDEO, DOCUMENT))
     )
 
     assert outcome.published is True
@@ -36,7 +36,7 @@ async def test_us10_ac102_one_failed_attachment_does_not_cancel_the_rest() -> No
     harness = make_forwarding_harness(downloader_fail_refs=frozenset({"-1_11"}))
 
     outcome = await harness.use_case.execute(
-        make_source("@all с вложениями", attachments=(PHOTO, VIDEO, DOCUMENT))  # noqa: RUF001
+        make_source("@all с вложениями", attachments=(PHOTO, VIDEO, DOCUMENT))
     )
 
     assert outcome.published is True

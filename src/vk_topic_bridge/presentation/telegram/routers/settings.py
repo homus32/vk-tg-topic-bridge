@@ -57,14 +57,13 @@ class DiagnosticsReader(Protocol):
 UNREGISTERED_TEXT = "Telegram-чат ещё не зарегистрирован."
 CHANGE_CHAT_PROMPT = (
     "Текущий Telegram-чат будет отвязан.\n"
-    "Все настройки Telegram-интеграции будут сброшены до заводского состояния.\n\n"  # noqa: RUF001
+    "Все настройки Telegram-интеграции будут сброшены до заводского состояния.\n\n"
     "Продолжить?"
 )
 RESET_DONE_TEXT = (
-    "Telegram-чат отвязан. Все настройки Telegram-интеграции сброшены.\n\n"  # noqa: RUF001
-    + UNREGISTERED_TEXT
+    "Telegram-чат отвязан. Все настройки Telegram-интеграции сброшены.\n\n" + UNREGISTERED_TEXT
 )
-EMPTY_DIAGNOSTICS_TEXT = "ℹ️ Проблемных доставок нет."  # noqa: RUF001
+EMPTY_DIAGNOSTICS_TEXT = "ℹ️ Проблемных доставок нет."
 DIAGNOSTICS_HEADER = "⚠️ Проблемы доставки (последние записи):"
 DIAGNOSTICS_PICK_HINT = "Отправьте номер записи для подробностей."
 DIAGNOSTICS_EXPLANATION = (
@@ -102,7 +101,7 @@ def _binding_block(
         title = titles.get(topic_id)
         label = title if title is not None else f"топик {topic_id}"
         return f"{label}\n└ {role}"
-    return f"{role}:\nне настроено"  # noqa: RUF001
+    return f"{role}:\nне настроено"
 
 
 def _render_bindings(state: BridgeSettingsState, topics: list[TopicInfo]) -> str:
@@ -151,7 +150,7 @@ def _render_topics_refresh(before: list[TopicInfo], after: list[TopicInfo]) -> s
     lines = ["🔄 Список топиков обновлён:"]
     lines.extend(f"- {topic.title}" for topic in after)
     if added:
-        lines.append("➕ Добавлены: " + ", ".join(sorted(added)))  # noqa: RUF001
+        lines.append("➕ Добавлены: " + ", ".join(sorted(added)))
     if removed:
         lines.append("🗑 Удалены: " + ", ".join(sorted(removed)))
     if unavailable:
@@ -330,7 +329,7 @@ def build_settings_router(
         except ProvisioningError:
             stored = await topics_reader(chat_id)
             await message.answer(
-                "⚠️ Не удалось обновить список топиков. Повторите попытку.\n\n"  # noqa: RUF001
+                "⚠️ Не удалось обновить список топиков. Повторите попытку.\n\n"
                 f"{_render_bindings(current, stored)}",
                 reply_markup=topics_settings_keyboard(styles_enabled=styles_enabled),
             )

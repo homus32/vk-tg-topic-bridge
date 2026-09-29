@@ -364,7 +364,7 @@ async def test_wall_runtime_general_fallback_keeps_ambiguous_fail_closed() -> No
     )
     assert any(record.publication_status is PublicationStatus.AMBIGUOUS for record in records)
     assert len(notifier.all_texts) == 1
-    assert "Проблема с доставкой" in notifier.all_texts[0]  # noqa: RUF001
+    assert "Проблема с доставкой" in notifier.all_texts[0]
 
 
 async def test_wall_never_notifies_on_healthy_destination() -> None:

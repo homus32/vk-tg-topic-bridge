@@ -241,7 +241,7 @@ async def test_alias_root_uses_text_buttons() -> None:
     actions = [button["action"] for row in keyboard["buttons"] for button in row]
     assert [action["type"] for action in actions] == ["text", "text", "text"]
     assert [action["label"] for action in actions] == [
-        "➕ Добавить / изменить",  # noqa: RUF001
+        "➕ Добавить / изменить",
         "🗑 Удалить",
         "⬅️ Назад",
     ]
@@ -294,7 +294,7 @@ async def test_alias_menu_has_one_add_edit_action_without_add_button() -> None:
     assert h.send.last_keyboard is not None
     buttons = json.loads(h.send.last_keyboard)["buttons"]
     labels = [button["action"]["label"] for row in buttons for button in row]
-    assert labels == ["➕ Добавить / изменить", "🗑 Удалить", "⬅️ Назад"]  # noqa: RUF001
+    assert labels == ["➕ Добавить / изменить", "🗑 Удалить", "⬅️ Назад"]
 
 
 async def test_combined_add_edit_prompt_lists_topics() -> None:
@@ -502,7 +502,7 @@ async def test_delete_prompt_without_aliases_has_no_inline_keyboard() -> None:
 
     assert h.sessions.get(USER_ID).state is VkUiState.ALIAS_MENU
     assert h.sessions.get(USER_ID).pending_alias_action is None
-    assert "Нет топиков с алиасами" in h.send.last_text  # noqa: RUF001
+    assert "Нет топиков с алиасами" in h.send.last_text
     assert json.loads(h.send.last_keyboard or "{}")["inline"] is False
 
 
@@ -829,7 +829,7 @@ async def test_manual_publication_failure_clears_fsm() -> None:
         _callback({"action": "topic", "topic_id": 7}, event_id="manual-topic")
     )
     assert h.sessions.get(USER_ID).state is VkUiState.IDLE
-    assert "Не удалось" in h.send.edited_messages[-1][2]  # noqa: RUF001
+    assert "Не удалось" in h.send.edited_messages[-1][2]
 
 
 async def test_manual_publication_result_failure_keeps_destination_fsm() -> None:
