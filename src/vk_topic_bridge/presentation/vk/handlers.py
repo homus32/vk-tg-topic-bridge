@@ -13,6 +13,7 @@ from collections.abc import Awaitable, Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import cast
 
+from pydantic import TypeAdapter, ValidationError
 from vkbottle.tools.formatting import Formatter, bold
 from vkbottle.tools.keyboard import EMPTY_KEYBOARD
 from vkbottle_types.events.bot_events import MessageEvent
@@ -50,6 +51,18 @@ from vk_topic_bridge.presentation.vk.keyboards import (
 from vk_topic_bridge.presentation.vk.states import VkSessionStore, VkUiState, VkUserSession
 
 logger = logging.getLogger(__name__)
+_MESSAGE_EVENT_PAYLOAD_ADAPTER = TypeAdapter(dict[str, object])
+
+
+def _decode_message_event_payload(raw_payload: object) -> dict[str, object] | None:
+    try:
+        if isinstance(raw_payload, str):
+            return _MESSAGE_EVENT_PAYLOAD_ADAPTER.validate_json(raw_payload)
+        if isinstance(raw_payload, dict):
+            return _MESSAGE_EVENT_PAYLOAD_ADAPTER.validate_python(raw_payload)
+    except ValidationError:
+        return None
+    return None
 
 
 def _format_notice(title: str, body: str = "") -> Formatter:
@@ -192,14 +205,16 @@ class VkUiDispatcher:
             or not isinstance(raw_peer_id, int)
             or isinstance(raw_peer_id, bool)
             or not isinstance(raw_event_id, str)
-            or (raw_payload is not None and not isinstance(raw_payload, dict))
-            or (raw_cmid is not None and not isinstance(raw_cmid, int))
+            or (
+                raw_cmid is not None
+                and (not isinstance(raw_cmid, int) or isinstance(raw_cmid, bool))
+            )
         ):
             return False
         user_id = cast(int, raw_user_id)
         peer_id = cast(int, raw_peer_id)
         event_id = cast(str, raw_event_id)
-        payload = cast("dict[str, object] | None", raw_payload)
+        payload = _decode_message_event_payload(raw_payload) or {}
         conversation_message_id = cast("int | None", raw_cmid)
         try:
             event_object = MessageEventObject(
@@ -217,9 +232,6 @@ class VkUiDispatcher:
         if event_id in self._handled_event_ids:
             return True
         self._handled_event_ids.add(event_id)
-        if payload is None or not isinstance(payload.get("action"), str):
-            await self._answer_event(user_id, event_id, "Кнопка устарела.")
-            return True
         message = VkUiMessage(
             from_id=user_id,
             peer_id=peer_id,
@@ -228,19 +240,37 @@ class VkUiDispatcher:
             conversation_message_id=conversation_message_id,
             raw={"message_event": payload},
         )
+        raw_action = payload.get("action")
         session = self._sessions.peek(message.from_id)
+        if not isinstance(raw_action, str):
+            stale_text = "Кнопка устарела."
+            await self._answer_event(message.from_id, event_id, stale_text)
+            if session is not None and session.manual_pending_message is not None:
+                session.manual_pending_message = None
+                self._sessions.set(message.from_id, session)
+            keyboard_json = (
+                _reply_keyboard_json(session.state) if session is not None else main_keyboard_json()
+            )
+            if not await self._edit_event_message(message, stale_text, keyboard_json):
+                await self._reply(message, stale_text, keyboard_json)
+            return True
         if session is None:
-            return False
-        action = cast(str, payload["action"])
+            if raw_action not in {"cancel", "topic"}:
+                return False
+            stale_text = "Отмена" if raw_action == "cancel" else "Кнопка устарела."
+            keyboard_json = main_keyboard_json()
+            await self._answer_event(message.from_id, event_id, stale_text)
+            if not await self._edit_event_message(message, stale_text, keyboard_json):
+                await self._reply(message, stale_text, keyboard_json)
+            return True
+        action = raw_action
         if action == "cancel" and session.manual_pending_message is not None:
             await self._answer_event(message.from_id, event_id, "Отмена")
             session.manual_pending_message = None
             self._sessions.set(message.from_id, session)
-            await self._edit_event_message(
-                message,
-                "Отмена",
-                _reply_keyboard_json(session.state),
-            )
+            keyboard_json = _reply_keyboard_json(session.state)
+            if not await self._edit_event_message(message, "Отмена", keyboard_json):
+                await self._reply(message, "Отмена", keyboard_json)
             return True
         if action == "help" and session.state is VkUiState.IDLE:
             await self._answer_event(message.from_id, event_id, "Помощь.")
@@ -277,7 +307,8 @@ class VkUiDispatcher:
             else:
                 self._sessions.clear(message.from_id)
                 keyboard_json = main_keyboard_json()
-            await self._edit_event_message(message, "Отмена", keyboard_json)
+            if not await self._edit_event_message(message, "Отмена", keyboard_json):
+                await self._reply(message, "Отмена", keyboard_json)
             return True
         if action == "topic" and "topic_id" in payload:
             topic_id = payload["topic_id"]
@@ -291,7 +322,14 @@ class VkUiDispatcher:
             else:
                 await self._handle_topic_callback(message, session, topic_id, event_id)
             return True
-        await self._answer_event(message.from_id, event_id, "Кнопка устарела.")
+        stale_text = "Кнопка устарела."
+        await self._answer_event(message.from_id, event_id, stale_text)
+        if session.manual_pending_message is not None:
+            session.manual_pending_message = None
+            self._sessions.set(message.from_id, session)
+        keyboard_json = _reply_keyboard_json(session.state)
+        if not await self._edit_event_message(message, stale_text, keyboard_json):
+            await self._reply(message, stale_text, keyboard_json)
         return True
 
     def normalize(self, update: Mapping[str, object]) -> VkUiMessage | None:
@@ -418,12 +456,13 @@ class VkUiDispatcher:
                 notice = f"{UNKNOWN_ALIAS_TEXT}\n\n{_destinations_text(listing)}"
         else:
             notice = f"Куда отправить сообщение?\n\n{_destinations_text(listing)}"
-        session.manual_pending_message = message
+        selection = topic_selection_keyboard(_available_topic_rows(listing))
         await self._reply(
             message,
-            notice,
-            topic_selection_keyboard(_available_topic_rows(listing)),
+            selection.with_notice(notice),
+            selection.keyboard_json,
         )
+        session.manual_pending_message = message
         self._sessions.set(message.from_id, session)
 
     # --- WAIT_DESTINATION ---------------------------------------------------
@@ -474,11 +513,8 @@ class VkUiDispatcher:
         session.pending_alias_action = action
         session.pending_topic_id = None
         self._sessions.set(message.from_id, session)
-        await self._reply(
-            message,
-            prompt,
-            topic_selection_keyboard(topic_rows),
-        )
+        selection = topic_selection_keyboard(topic_rows)
+        await self._reply(message, selection.with_notice(prompt), selection.keyboard_json)
 
     async def _handle_alias_menu(self, message: VkUiMessage, session: VkUserSession) -> None:
         text = message.text.strip()
@@ -520,18 +556,20 @@ class VkUiDispatcher:
         listing = await self._manual_forwarding.destination_list(message.from_id)
         ordinal = _parse_ordinal(text)
         if ordinal is None or not 1 <= ordinal <= len(listing.destinations):
+            selection = topic_selection_keyboard(_available_topic_rows(listing))
             await self._reply(
                 message,
-                f"{TOPIC_NOT_FOUND_TEXT}\n\n{_destinations_text(listing)}",
-                topic_selection_keyboard(_available_topic_rows(listing)),
+                selection.with_notice(f"{TOPIC_NOT_FOUND_TEXT}\n\n{_destinations_text(listing)}"),
+                selection.keyboard_json,
             )
             return
         offer = listing.destinations[ordinal - 1]
         if not offer.available:
+            selection = topic_selection_keyboard(_available_topic_rows(listing))
             await self._reply(
                 message,
-                f"{STALE_TOPIC_TEXT}\n\n{_destinations_text(listing)}",
-                topic_selection_keyboard(_available_topic_rows(listing)),
+                selection.with_notice(f"{STALE_TOPIC_TEXT}\n\n{_destinations_text(listing)}"),
+                selection.keyboard_json,
             )
             return
         session.pending_topic_id = offer.topic.topic_id
@@ -698,7 +736,7 @@ class VkUiDispatcher:
             )
             for offer in listing.destinations
         )
-        session.manual_pending_message = source
+        session.manual_pending_message = None
         self._sessions.set(message.from_id, session)
         retry_listing = ManualDestinationList(
             chat_registered=listing.chat_registered,
@@ -717,11 +755,14 @@ class VkUiDispatcher:
         retry_text = (
             f"{_manual_result_error_text(error_code)}\n\n{_destinations_text(retry_listing)}"
         )
-        retry_keyboard = topic_selection_keyboard(_available_topic_rows(retry_listing))
-        if callback_message is not None:
-            await self._edit_event_message(callback_message, retry_text, retry_keyboard)
-        else:
-            await self._reply(message, retry_text, retry_keyboard)
+        selection = topic_selection_keyboard(_available_topic_rows(retry_listing))
+        retry_text = selection.with_notice(retry_text)
+        if callback_message is None or not await self._edit_event_message(
+            callback_message, retry_text, selection.keyboard_json
+        ):
+            await self._reply(message, retry_text, selection.keyboard_json)
+        session.manual_pending_message = source
+        self._sessions.set(message.from_id, session)
 
     async def _resolve_source(self, message: VkUiMessage) -> SourceMessage | None:
         return await self._source_resolver(message)
@@ -797,9 +838,10 @@ class VkUiDispatcher:
         if offer is None or not offer.available:
             await self._answer_event(message.from_id, event_id, STALE_TOPIC_TEXT)
             retry_text = f"{STALE_TOPIC_TEXT}\n\n{_destinations_text(listing)}"
-            retry_keyboard = topic_selection_keyboard(_available_topic_rows(listing))
-            if not await self._edit_event_message(message, retry_text, retry_keyboard):
-                await self._reply(message, retry_text, retry_keyboard)
+            selection = topic_selection_keyboard(_available_topic_rows(listing))
+            retry_text = selection.with_notice(retry_text)
+            if not await self._edit_event_message(message, retry_text, selection.keyboard_json):
+                await self._reply(message, retry_text, selection.keyboard_json)
             return
         await self._answer_event(message.from_id, event_id, "Топик выбран.")
         pending = session.manual_pending_message
@@ -857,10 +899,11 @@ class VkUiDispatcher:
             if self._is_delete_topic_selection(session):
                 await self._finish_delete_topic_error(message, session, STALE_TOPIC_TEXT)
                 return
+            selection = topic_selection_keyboard(_available_topic_rows(listing))
             await self._reply(
                 message,
-                f"{STALE_TOPIC_TEXT}\n\n{_destinations_text(listing)}",
-                topic_selection_keyboard(_available_topic_rows(listing)),
+                selection.with_notice(f"{STALE_TOPIC_TEXT}\n\n{_destinations_text(listing)}"),
+                selection.keyboard_json,
             )
             return
         if session.state is VkUiState.WAIT_DESTINATION:

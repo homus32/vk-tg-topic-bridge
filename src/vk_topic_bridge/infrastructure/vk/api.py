@@ -20,6 +20,7 @@ from vk_topic_bridge.domain.errors import RecoverableInfraError
 from vk_topic_bridge.domain.value_objects import Author, SourceMessage, SourceWallPost
 from vk_topic_bridge.domain.wall_post import wall_post_url
 from vk_topic_bridge.infrastructure.vk import mapper
+from vk_topic_bridge.infrastructure.vk.keyboard import fit_vk_keyboard
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ logger = logging.getLogger(__name__)
 # HUMAN GATE / final real E2E before being treated as verified. Single override point.
 LIKE_REACTION_ID = 1
 
-_FATAL_CODES = frozenset({5, 15, 100})
+_FATAL_CODES = frozenset({5, 15, 100, 911})
 _RETRYABLE_CODES = frozenset({6, 10})
 
 
@@ -42,7 +43,7 @@ class VkError(RecoverableInfraError):
 
 
 class VkFatalError(VkError):
-    """Auth/access/invalid-param failure: retrying cannot help."""
+    """Permanent VK failure: retrying the same request cannot help."""
 
 
 class VkRetryableError(VkError):
@@ -59,6 +60,20 @@ def _classify(code: int) -> VkError:
     if code in _FATAL_CODES:
         return VkFatalError(code)
     return VkRetryableError(code)
+
+
+def _fit_keyboard_json(method: str, keyboard_json: str) -> str:
+    fitted = fit_vk_keyboard(keyboard_json)
+    if fitted.dropped_buttons:
+        logger.warning(
+            "vk keyboard truncated to API limits",
+            extra={
+                "method": method,
+                "inline": fitted.inline,
+                "dropped_button_count": fitted.dropped_buttons,
+            },
+        )
+    return fitted.keyboard_json
 
 
 class VkApiGateway:
@@ -356,7 +371,7 @@ class VkApiGateway:
         if isinstance(text, Formatter):
             params["format_data"] = json.dumps(text.format_data, ensure_ascii=False)
         if keyboard_json is not None:
-            params["keyboard"] = keyboard_json
+            params["keyboard"] = _fit_keyboard_json("messages.send", keyboard_json)
         logger.debug(
             "vk UI reply started",
             extra={"owner_id": user_id, "text_length": len(text)},
@@ -389,9 +404,9 @@ class VkApiGateway:
             "messages.edit",
             {
                 "peer_id": peer_id,
-                "conversation_message_id": conversation_message_id,
+                "cmid": conversation_message_id,
                 "message": text,
-                "keyboard": keyboard_json,
+                "keyboard": _fit_keyboard_json("messages.edit", keyboard_json),
             },
         )
 

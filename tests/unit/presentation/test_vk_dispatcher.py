@@ -7,6 +7,7 @@ from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass, field, replace
 from typing import Any, cast
 
+import pytest
 from vkbottle.tools.formatting import Formatter
 
 from tests.acceptance._fakes import (
@@ -25,6 +26,7 @@ from vk_topic_bridge.application.manual.publish_manual import (
 from vk_topic_bridge.application.ports.unit_of_work import UnitOfWork
 from vk_topic_bridge.domain.enums import SourceType
 from vk_topic_bridge.domain.value_objects import Author, SourceMessage, TopicInfo
+from vk_topic_bridge.infrastructure.vk.api import VkFatalError
 from vk_topic_bridge.presentation.vk.handlers import VkUiDispatcher, VkUiMessage
 from vk_topic_bridge.presentation.vk.keyboards import (
     BTN_ALIASES,
@@ -51,8 +53,14 @@ class FakeSend:
         self.messages: list[tuple[int, str, str | None]] = []
         self.callback_answers: list[tuple[int, str, str]] = []
         self.edited_messages: list[tuple[int, int, str, str]] = []
+        self.send_error: Exception | None = None
+        self.edit_error: Exception | None = None
 
     async def send_user_message(self, user_id: int, text: str, keyboard_json: str | None) -> int:
+        error = self.send_error
+        self.send_error = None
+        if error is not None:
+            raise error
         self.messages.append((user_id, text, keyboard_json))
         return len(self.messages)
 
@@ -62,6 +70,10 @@ class FakeSend:
     async def edit_user_message(
         self, peer_id: int, conversation_message_id: int, text: str, keyboard_json: str
     ) -> None:
+        error = self.edit_error
+        self.edit_error = None
+        if error is not None:
+            raise error
         self.edited_messages.append((peer_id, conversation_message_id, text, keyboard_json))
 
     @property
@@ -151,7 +163,7 @@ def _msg(text: str, *, fwd: int = 0, author: Author | None = None) -> VkUiMessag
 
 
 def _callback(
-    payload: dict[str, object],
+    payload: dict[str, object] | str,
     *,
     user_id: int = USER_ID,
     peer_id: int = PEER_ID,
@@ -357,9 +369,12 @@ async def test_vk_callback_selects_topic_by_internal_id() -> None:
     assert consumed is True
     assert h.sessions.get(USER_ID).state is VkUiState.ALIAS_MENU
     assert h.sessions.get(USER_ID).pending_alias_action == "alias_edit"
+    keyboard = json.loads(h.send.last_keyboard or "{}")
+    topic_payload = keyboard["buttons"][0][1]["action"]["payload"]
+    assert topic_payload == {"action": "topic", "topic_id": 7}
 
     consumed = await h.dispatcher.handle_message_event(
-        _callback({"action": "topic", "topic_id": 7}, event_id="event-2")
+        _callback(json.dumps(topic_payload), event_id="event-2")
     )
     assert consumed is True
     assert h.sessions.get(USER_ID).state is VkUiState.ALIAS_ADD_WAIT_VALUE
@@ -394,9 +409,11 @@ async def test_vk_alias_topic_selection_removes_inline_and_shows_reply_cancel() 
 async def test_vk_cancel_callback_edits_inline_message_to_cancelled_text() -> None:
     h = _harness()
     await h.dispatcher.dispatch(_msg("", fwd=1))
+    picker = json.loads(h.send.last_keyboard or "{}")
+    cancel_payload = picker["buttons"][-1][0]["action"]["payload"]
 
     consumed = await h.dispatcher.handle_message_event(
-        _callback({"action": "cancel"}, event_id="cancel-1")
+        _callback(json.dumps(cancel_payload), event_id="cancel-1")
     )
 
     assert consumed is True
@@ -411,6 +428,35 @@ async def test_vk_cancel_callback_edits_inline_message_to_cancelled_text() -> No
         BTN_ALIASES,
         BTN_HELP,
     ]
+
+
+async def test_vk_cancel_without_cmid_sends_main_menu_reply() -> None:
+    h = _harness()
+    await h.dispatcher.dispatch(_msg("", fwd=1))
+    cancel_payload = json.loads(h.send.last_keyboard or "{}")["buttons"][-1][0]["action"]["payload"]
+    update = _callback(json.dumps(cancel_payload), event_id="cancel-no-cmid")
+    raw_object = update["object"]
+    assert isinstance(raw_object, dict)
+    raw_object.pop("conversation_message_id")
+
+    consumed = await h.dispatcher.handle_message_event(update)
+
+    assert consumed is True
+    assert h.sessions.get(USER_ID).manual_pending_message is None
+    assert h.send.last_text == "Отмена"
+    assert json.loads(h.send.last_keyboard or "{}")["inline"] is False
+
+
+async def test_vk_cancel_from_old_picker_after_restart_is_handled() -> None:
+    h = _harness()
+
+    consumed = await h.dispatcher.handle_message_event(
+        _callback(json.dumps({"action": "cancel"}), event_id="old-cancel")
+    )
+
+    assert consumed is True
+    assert h.send.callback_answers == [(USER_ID, "old-cancel", "Отмена")]
+    assert h.send.edited_messages[-1][2] == "Отмена"
 
 
 async def test_vk_alias_topic_cancel_keeps_alias_menu_reply_keyboard() -> None:
@@ -697,6 +743,122 @@ async def test_one_forward_without_text_shows_destination_list() -> None:
     assert h.sessions.get(USER_ID).manual_pending_message is not None
 
 
+async def test_manual_callback_payload_string_releases_dm_for_help() -> None:
+    h = _harness()
+    await h.dispatcher.dispatch(_msg("", fwd=1))
+    picker = json.loads(h.send.last_keyboard or "{}")
+    topic_payload = picker["buttons"][0][1]["action"]["payload"]
+
+    consumed = await h.dispatcher.handle_message_event(
+        _callback(json.dumps(topic_payload), event_id="manual-topic-json")
+    )
+    assert consumed is True
+    assert len(h.publisher.calls) == 1
+    assert h.sessions.get(USER_ID).manual_pending_message is None
+
+    await h.dispatcher.dispatch(_msg(BTN_HELP))
+
+    assert "Как пользоваться ботом" in h.send.last_text
+
+
+async def test_topic_picker_truncates_tail_and_reports_visible_count() -> None:
+    topics = (
+        GENERAL,
+        *(
+            TopicInfo(
+                topic_id=topic_id,
+                title=f"Топик {topic_id}",
+                is_general=False,
+                is_closed=False,
+                is_hidden=False,
+            )
+            for topic_id in range(1, 10)
+        ),
+    )
+    h = _harness(topics=topics)
+
+    await h.dispatcher.dispatch(_msg("", fwd=1))
+
+    keyboard = json.loads(h.send.last_keyboard or "{}")
+    labels_by_row = [[button["action"]["label"] for button in row] for row in keyboard["buttons"]]
+    assert len(keyboard["buttons"]) <= 5
+    assert sum(map(len, labels_by_row)) <= 10
+    assert labels_by_row == [
+        ["General", "Топик 1"],
+        ["Топик 2", "Топик 3"],
+        ["Топик 4", "Топик 5"],
+        ["Топик 6", "Топик 7"],
+        [BTN_CANCEL],
+    ]
+    assert "первые 8 из 10 топиков" in h.send.last_text
+
+
+async def test_topic_picker_balances_odd_topic_count_between_columns() -> None:
+    topics = (
+        GENERAL,
+        *(
+            TopicInfo(
+                topic_id=topic_id,
+                title=f"Топик {topic_id}",
+                is_general=False,
+                is_closed=False,
+                is_hidden=False,
+            )
+            for topic_id in range(1, 7)
+        ),
+    )
+    h = _harness(topics=topics)
+
+    await h.dispatcher.dispatch(_msg("", fwd=1))
+
+    keyboard = json.loads(h.send.last_keyboard or "{}")
+    labels_by_row = [[button["action"]["label"] for button in row] for row in keyboard["buttons"]]
+    topic_rows = labels_by_row[:-1]
+    left_column_count = len(topic_rows)
+    right_column_count = sum(len(row) == 2 for row in topic_rows)
+    assert [len(row) for row in topic_rows] == [2, 2, 2, 1]
+    assert abs(left_column_count - right_column_count) <= 1
+    assert labels_by_row[-1] == [BTN_CANCEL]
+
+
+async def test_topic_picker_shortens_long_label_and_keeps_full_topic_in_text() -> None:
+    long_title = "Очень длинное название топика для клавиатуры VK"
+    topics = (
+        GENERAL,
+        TopicInfo(
+            topic_id=8,
+            title=long_title,
+            is_general=False,
+            is_closed=False,
+            is_hidden=False,
+        ),
+    )
+    h = _harness(topics=topics)
+
+    await h.dispatcher.dispatch(_msg("", fwd=1))
+
+    keyboard = json.loads(h.send.last_keyboard or "{}")
+    labels_by_row = [[button["action"]["label"] for button in row] for row in keyboard["buttons"]]
+    assert len(labels_by_row[0][1]) == 40
+    assert labels_by_row[0][1].endswith("…")
+    assert long_title in h.send.last_text
+    assert "сокращены до 40 символов" in h.send.last_text
+
+
+async def test_failed_initial_picker_send_leaves_session_recoverable() -> None:
+    h = _harness()
+    h.send.send_error = VkFatalError(911)
+
+    with pytest.raises(VkFatalError):
+        await h.dispatcher.dispatch(_msg("", fwd=1))
+
+    assert h.sessions.get(USER_ID).manual_pending_message is None
+
+    await h.dispatcher.dispatch(_msg(BTN_HELP))
+
+    assert "Как пользоваться ботом" in h.send.last_text
+
+
 async def test_manual_topic_number_is_ignored_after_inline_picker() -> None:
     h = _harness()
     await h.dispatcher.dispatch(_msg("", fwd=1))
@@ -873,6 +1035,31 @@ async def test_manual_publication_result_failure_keeps_destination_fsm() -> None
     assert publisher.calls[1].destination.message_thread_id is None
     assert "✅ Сообщение отправлено" in h.send.edited_messages[-1][2]
     assert "Telegram → топик «General»." in h.send.edited_messages[-1][2]
+
+
+async def test_failed_retry_picker_edit_leaves_session_recoverable() -> None:
+    publisher = FakeManualPublisher(
+        result=ManualPublicationResult(
+            published=False,
+            message_ids=(),
+            delivery_id=1,
+            error="telegram_topic_not_found",
+        )
+    )
+    h = _harness(publisher=publisher)
+    await h.dispatcher.dispatch(_msg("", fwd=1))
+    h.send.edit_error = VkFatalError(911)
+
+    with pytest.raises(VkFatalError):
+        await h.dispatcher.handle_message_event(
+            _callback({"action": "topic", "topic_id": 7}, event_id="retry-topic")
+        )
+
+    assert h.sessions.get(USER_ID).manual_pending_message is None
+
+    await h.dispatcher.dispatch(_msg(BTN_HELP))
+
+    assert "Как пользоваться ботом" in h.send.last_text
 
 
 # --- session isolation -------------------------------------------------------

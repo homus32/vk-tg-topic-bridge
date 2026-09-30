@@ -136,7 +136,7 @@ def build_root_router(
         )
         await message.answer(UNKNOWN_TEXT_HINT)
 
-    router.message.register(start, Command(START_COMMAND))
+    router.message.register(start, Command(START_COMMAND), PrivateChatFilter())
     router.message.register(cancel, Command(CANCEL_COMMAND))
     router.message.register(unknown, F.text, PrivateChatFilter())
     return router

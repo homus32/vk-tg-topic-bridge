@@ -5,11 +5,14 @@ including real ``vkbottle.VKAPIError`` instances for error-classification covera
 """
 
 import importlib
+import json
 from collections.abc import Mapping
 from types import ModuleType
 
 import pytest
 from vkbottle import VKAPIError
+from vkbottle.tools.keyboard import Keyboard, KeyboardButtonColor
+from vkbottle.tools.keyboard.action import Callback
 
 from config import Settings
 from vk_topic_bridge.domain.value_objects import Author, SourceWallPost
@@ -124,6 +127,32 @@ def _community_groups() -> dict[str, object]:
     return _ok({"groups": [{"id": GROUP_ID, "name": "Бот", "screen_name": "bot"}]})
 
 
+def _keyboard_json(*, inline: bool, row_sizes: tuple[int, ...]) -> str:
+    buttons: list[list[dict[str, object]]] = []
+    for row_index, button_count in enumerate(row_sizes, start=1):
+        row: list[dict[str, object]] = []
+        for button_index in range(1, button_count + 1):
+            action: dict[str, object] = {
+                "type": "callback" if inline else "text",
+                "label": f"{row_index}-{button_index}",
+            }
+            if inline:
+                action["payload"] = {"action": "topic"}
+            row.append({"action": action, "color": "positive"})
+        buttons.append(row)
+    return json.dumps({"one_time": False, "inline": inline, "buttons": buttons}, ensure_ascii=False)
+
+
+def _unicode_inline_keyboard_json() -> str:
+    keyboard = Keyboard(inline=True)
+    keyboard.add(
+        Callback("Новости", {"action": "cancel"}),
+        color=KeyboardButtonColor.SECONDARY,
+    )
+    keyboard.row()
+    return keyboard.get_json()
+
+
 class FakeVkApi:
     """Minimal stand-in for ``vkbottle.API``: records calls and replays responses."""
 
@@ -196,7 +225,7 @@ async def test_get_community_id_empty_groups_is_fatal() -> None:
         await gateway.get_community_id()
 
 
-async def test_edit_user_message_removes_keyboard_with_conversation_message_id() -> None:
+async def test_edit_user_message_sends_cmid_and_removes_keyboard() -> None:
     module = _api_module()
     fake = FakeVkApi({"messages.edit": _ok(1)})
     gateway = module.VkApiGateway(fake, _settings())
@@ -206,11 +235,114 @@ async def test_edit_user_message_removes_keyboard_with_conversation_message_id()
     assert fake.params_for("messages.edit") == [
         {
             "peer_id": PEER_ID,
-            "conversation_message_id": CMID,
+            "cmid": CMID,
             "message": "Отмена",
             "keyboard": '{"buttons": []}',
         }
     ]
+
+
+async def test_send_user_message_preserves_valid_inline_keyboard_json() -> None:
+    module = _api_module()
+    fake = FakeVkApi({"messages.send": _ok(1234)})
+    gateway = module.VkApiGateway(fake, _settings())
+    keyboard_json = _unicode_inline_keyboard_json()
+
+    await gateway.send_user_message(PEER_ID, "Меню", keyboard_json)
+
+    assert fake.params_for("messages.send")[0]["keyboard"] == keyboard_json
+
+
+async def test_edit_user_message_preserves_valid_inline_keyboard_json() -> None:
+    module = _api_module()
+    fake = FakeVkApi({"messages.edit": _ok(1)})
+    gateway = module.VkApiGateway(fake, _settings())
+    keyboard_json = _unicode_inline_keyboard_json()
+
+    await gateway.edit_user_message(PEER_ID, CMID, "Меню", keyboard_json)
+
+    assert fake.params_for("messages.edit")[0]["keyboard"] == keyboard_json
+
+
+async def test_send_user_message_fits_inline_row_limit() -> None:
+    module = _api_module()
+    fake = FakeVkApi({"messages.send": _ok(1234)})
+    gateway = module.VkApiGateway(fake, _settings())
+
+    await gateway.send_user_message(
+        PEER_ID,
+        "Меню",
+        _keyboard_json(inline=True, row_sizes=(1, 1, 1, 1, 1, 1, 1, 1)),
+    )
+
+    keyboard_json = fake.params_for("messages.send")[0]["keyboard"]
+    assert isinstance(keyboard_json, str)
+    keyboard = json.loads(keyboard_json)
+    assert keyboard["inline"] is True
+    assert [len(row) for row in keyboard["buttons"]] == [1, 1, 1, 1, 1]
+    assert [button["action"]["label"] for row in keyboard["buttons"] for button in row] == [
+        "1-1",
+        "2-1",
+        "3-1",
+        "4-1",
+        "5-1",
+    ]
+
+
+async def test_edit_user_message_fits_inline_button_limit() -> None:
+    module = _api_module()
+    fake = FakeVkApi({"messages.edit": _ok(1)})
+    gateway = module.VkApiGateway(fake, _settings())
+
+    await gateway.edit_user_message(
+        PEER_ID,
+        CMID,
+        "Меню",
+        _keyboard_json(inline=True, row_sizes=(5, 5, 5)),
+    )
+
+    keyboard_json = fake.params_for("messages.edit")[0]["keyboard"]
+    assert isinstance(keyboard_json, str)
+    keyboard = json.loads(keyboard_json)
+    assert sum(len(row) for row in keyboard["buttons"]) == 10
+    assert len(keyboard["buttons"]) == 2
+
+
+async def test_send_user_message_fits_regular_row_limit() -> None:
+    module = _api_module()
+    fake = FakeVkApi({"messages.send": _ok(1234)})
+    gateway = module.VkApiGateway(fake, _settings())
+
+    await gateway.send_user_message(
+        PEER_ID,
+        "Меню",
+        _keyboard_json(inline=False, row_sizes=(1,) * 12),
+    )
+
+    keyboard_json = fake.params_for("messages.send")[0]["keyboard"]
+    assert isinstance(keyboard_json, str)
+    keyboard = json.loads(keyboard_json)
+    assert len(keyboard["buttons"]) == 10
+    assert sum(len(row) for row in keyboard["buttons"]) == 10
+
+
+async def test_edit_user_message_fits_regular_button_limit() -> None:
+    module = _api_module()
+    fake = FakeVkApi({"messages.edit": _ok(1)})
+    gateway = module.VkApiGateway(fake, _settings())
+
+    await gateway.edit_user_message(
+        PEER_ID,
+        CMID,
+        "Меню",
+        _keyboard_json(inline=False, row_sizes=(5,) * 10),
+    )
+
+    keyboard_json = fake.params_for("messages.edit")[0]["keyboard"]
+    assert isinstance(keyboard_json, str)
+    keyboard = json.loads(keyboard_json)
+    assert len(keyboard["buttons"]) == 8
+    assert sum(len(row) for row in keyboard["buttons"]) == 40
 
 
 # --- Long Poll handshake ------------------------------------------------------
@@ -615,7 +747,7 @@ async def test_set_reaction_sends_peer_cmid_and_reaction_id() -> None:
 # --- error classification -----------------------------------------------------
 
 
-@pytest.mark.parametrize("code", [5, 15, 100])
+@pytest.mark.parametrize("code", [5, 15, 100, 911])
 async def test_fatal_vk_codes_are_classified(code: int) -> None:
     module = _api_module()
     fake = FakeVkApi(errors={"groups.getById": code})

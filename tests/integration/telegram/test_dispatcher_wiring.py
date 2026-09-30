@@ -10,6 +10,7 @@ from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import Any, cast
 
+import pytest
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.strategy import FSMStrategy
 from aiogram.types import Chat, Message, Update, User
@@ -165,6 +166,15 @@ async def test_unknown_group_command_is_silent() -> None:
     dispatcher = _build_dispatcher()
 
     responses = await _dispatch_message(dispatcher, _message_update("/asd", chat_type="supergroup"))
+
+    assert responses == []
+
+
+@pytest.mark.parametrize("chat_type", ["group", "supergroup"])
+async def test_start_in_group_context_is_silent(chat_type: str) -> None:
+    dispatcher = _build_dispatcher()
+
+    responses = await _dispatch_message(dispatcher, _message_update("/start", chat_type=chat_type))
 
     assert responses == []
 

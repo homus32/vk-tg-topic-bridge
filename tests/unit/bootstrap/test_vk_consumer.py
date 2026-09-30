@@ -9,10 +9,10 @@ from typing import cast
 import pytest
 
 from vk_topic_bridge.application.forwarding.forward_message import ForwardOutcome, ForwardVkMessage
-from vk_topic_bridge.bootstrap.vk_consumer import VkEventConsumer
+from vk_topic_bridge.bootstrap.vk_consumer import VkEventConsumer, VkUiRouter
 from vk_topic_bridge.domain.enums import SourceType
 from vk_topic_bridge.domain.value_objects import Author, SourceMessage
-from vk_topic_bridge.infrastructure.vk.api import VkApiGateway
+from vk_topic_bridge.infrastructure.vk.api import VkApiGateway, VkFatalError
 
 ALLOWED_GROUP = 1
 PEER_ID = 2_000_000_100
@@ -108,6 +108,23 @@ class FakeForward:
         return ForwardOutcome(published=True, skipped=False, reason="test", delivery_id=1)
 
 
+class FailingUiRouter:
+    def __init__(self) -> None:
+        self.calls = 0
+        self.received_updates: list[Mapping[str, object]] = []
+
+    async def handle_dm(self, update: Mapping[str, object]) -> bool:
+        self.calls += 1
+        self.received_updates.append(update)
+        if self.calls == 1:
+            raise VkFatalError(911)
+        return True
+
+    async def handle_message_event(self, update: Mapping[str, object]) -> bool:
+        self.received_updates.append(update)
+        return True
+
+
 def _consumer(
     events: list[dict[str, object]],
     *,
@@ -183,6 +200,22 @@ async def test_failing_update_does_not_stop_the_loop() -> None:
 
     assert len(gateway.normalize_calls) == 2
     assert len(forward.calls) == 1
+
+
+async def test_vk_911_ui_send_failure_does_not_stop_the_loop() -> None:
+    ui_router: VkUiRouter = FailingUiRouter()
+    consumer = VkEventConsumer(
+        polling=FakePolling([_event(_update(peer_id=FROM_ID), _update(peer_id=FROM_ID))]),
+        gateway=cast(VkApiGateway, FakeGateway()),
+        forward=cast(ForwardVkMessage, FakeForward()),
+        allowed_group_id=ALLOWED_GROUP,
+        ui_router=ui_router,
+    )
+
+    await consumer.run()
+
+    assert ui_router.calls == 2
+    assert len(ui_router.received_updates) == 2
 
 
 async def test_run_returns_when_the_stream_ends() -> None:
