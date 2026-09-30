@@ -107,6 +107,12 @@ class _FakeTelethonClient:
         self.requests.append(request)
         return self._pages.pop(0)
 
+    def is_connected(self) -> bool:
+        return True
+
+    async def connect(self) -> None:
+        raise AssertionError("topic mapping must not reconnect a healthy connection")
+
 
 async def test_general_topic_maps_to_none_id_with_general_flag() -> None:
     mtproto = _mtproto()

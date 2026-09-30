@@ -54,6 +54,7 @@ def _default_telethon_client_factory(settings: Settings) -> TelethonUserClient:
         settings.TELEGRAM_SESSION_PATH,
         settings.TELEGRAM_API_ID,
         settings.TELEGRAM_API_HASH.get_secret_value(),
+        receive_updates=False,
         **client_connection_kwargs(settings),
     )
 

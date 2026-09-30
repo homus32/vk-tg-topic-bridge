@@ -40,6 +40,12 @@ class _FakeTelethonClient:
     async def __call__(self, request: functions.messages.GetForumTopicsRequest) -> object:
         raise AssertionError("chat access must not fetch forum topics")
 
+    def is_connected(self) -> bool:
+        return True
+
+    async def connect(self) -> None:
+        raise AssertionError("chat access must not reconnect a healthy connection")
+
 
 def _channel(*, forum: bool | None) -> types.Channel:
     return types.Channel(

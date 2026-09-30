@@ -35,6 +35,12 @@ _NOISY_LOGGER_PREFIXES: tuple[str, ...] = (
     "aiosqlite",
 )
 
+# Telethon warns on every socket close before its automatic reconnect; only these
+# known-benign chatter messages are muted, all other library warnings stay visible.
+_SUPPRESSED_LIBRARY_RECORDS: tuple[tuple[str, str], ...] = (
+    ("telethon.network.connection.connection", "Server closed the connection"),
+)
+
 _SAFE_CONTEXT_FIELDS: frozenset[str] = (
     _VK_EVENT_POLLING_FIELDS
     | _CROSS_SYSTEM_CORRELATION_FIELDS
@@ -64,6 +70,13 @@ def redact_secrets(text: str, secrets: Iterable[str]) -> str:
     return redacted
 
 
+def _is_suppressed_library_record(name: str, message: str) -> bool:
+    return any(
+        name.startswith(prefix) and marker in message
+        for prefix, marker in _SUPPRESSED_LIBRARY_RECORDS
+    )
+
+
 class _InterceptHandler(logging.Handler):
     """Forward stdlib logging records into Loguru, dropping noisy library noise."""
 
@@ -73,6 +86,10 @@ class _InterceptHandler(logging.Handler):
 
     def emit(self, record: logging.LogRecord) -> None:
         if record.levelno < self._noisy_level and record.name.startswith(_NOISY_LOGGER_PREFIXES):
+            return
+
+        message = record.getMessage()
+        if _is_suppressed_library_record(record.name, message):
             return
 
         try:
@@ -89,7 +106,6 @@ class _InterceptHandler(logging.Handler):
             frame = frame.f_back
             depth += 1
 
-        message = record.getMessage()
         context = _safe_context(record)
         if context:
             message = f"{message} | {context}"
@@ -101,11 +117,15 @@ def _sink_filter(noisy_level: int) -> Callable[[object], bool]:
         if not isinstance(record, Mapping):
             return True
         name = record.get("name")
+        if not isinstance(name, str):
+            return True
+        message = record.get("message")
+        if isinstance(message, str) and _is_suppressed_library_record(name, message):
+            return False
         level = record.get("level")
         level_number = getattr(level, "no", None)
         return not (
-            isinstance(name, str)
-            and name.startswith(_NOISY_LOGGER_PREFIXES)
+            name.startswith(_NOISY_LOGGER_PREFIXES)
             and isinstance(level_number, int)
             and level_number < noisy_level
         )

@@ -197,6 +197,43 @@ def test_library_filter_keeps_noisy_record_at_lib_level(
 
 
 @pytest.mark.usefixtures("logging_state")
+def test_suppressed_telethon_connection_warning_is_dropped(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = _logger_module()
+    module.configure_logging(_settings(tmp_path))
+    sink = _capture_sink()
+
+    _emit_stdlib(
+        monkeypatch,
+        "telethon.network.connection.connection",
+        logging.WARNING,
+        "Server closed the connection: 0 bytes read on a total of 4 expected bytes",
+    )
+    _emit_stdlib(
+        monkeypatch, "telethon.network.connection.connection", logging.WARNING, "telethon-warning"
+    )
+
+    assert not any("Server closed the connection" in message for message in sink.messages)
+    assert any("telethon-warning" in message for message in sink.messages)
+
+
+@pytest.mark.usefixtures("logging_state")
+def test_file_sink_drops_suppressed_telethon_message_from_direct_record(tmp_path: Path) -> None:
+    module = _logger_module()
+    settings = _settings(tmp_path)
+    module.configure_logging(settings)
+    telethon_logger = logger.patch(
+        lambda record: record.update(name="telethon.network.connection.connection")
+    )
+
+    telethon_logger.warning("Server closed the connection: 0 bytes read on a total of 4 bytes")
+    module.flush_logging()
+
+    assert "Server closed the connection" not in settings.log_file().read_text(encoding="utf-8")
+
+
+@pytest.mark.usefixtures("logging_state")
 def test_library_filter_keeps_non_noisy_record_below_lib_level(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
