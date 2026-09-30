@@ -13,6 +13,14 @@ from collections.abc import Callable, Iterable, Mapping
 from loguru import logger
 
 from config import Settings
+from log_context_fields import (
+    _CROSS_SYSTEM_CORRELATION_FIELDS,
+    _DELIVERY_NOTIFICATION_FIELDS,
+    _MEDIA_PREPARATION_FIELDS,
+    _REGISTRATION_CAPABILITY_FIELDS,
+    _VK_API_MAPPING_FIELDS,
+    _VK_EVENT_POLLING_FIELDS,
+)
 
 _MIN_SECRET_LENGTH = 8
 _REDACTED = "<redacted>"
@@ -24,70 +32,16 @@ _NOISY_LOGGER_PREFIXES: tuple[str, ...] = (
     "sqlalchemy",
     "aiohttp",
     "asyncio",
+    "aiosqlite",
 )
 
-_SAFE_CONTEXT_FIELDS = frozenset(
-    {
-        "active_owner_id",
-        "attachment_count",
-        "attachment_index",
-        "attachment_kind",
-        "access_key_present",
-        "api_adapter",
-        "chat_id",
-        "conversation_message_id",
-        "delivery_id",
-        "destination_topic_id",
-        "event_id",
-        "event_type",
-        "failed_count",
-        "filename_present",
-        "files_present",
-        "from_id",
-        "group_id",
-        "http_status",
-        "message_count",
-        "message_id_count",
-        "media_count",
-        "media_id",
-        "method",
-        "missing",
-        "operation",
-        "operation_count",
-        "operation_kind",
-        "outcome",
-        "owner_id",
-        "owner_count",
-        "post_id",
-        "peer_id",
-        "planned_media_count",
-        "player_present",
-        "poller",
-        "reason",
-        "resolution_source",
-        "route",
-        "sent_count",
-        "source_type",
-        "source_key",
-        "state_after",
-        "state_before",
-        "status",
-        "text_length",
-        "topic_count",
-        "token_type",
-        "update_count",
-        "url_host",
-        "direct_url_present",
-        "download_result",
-        "lookup",
-        "lookup_method",
-        "size_bytes",
-        "variant_count",
-        "vk_error_class",
-        "vk_error_code",
-        "warning_count",
-        "written_bytes",
-    }
+_SAFE_CONTEXT_FIELDS: frozenset[str] = (
+    _VK_EVENT_POLLING_FIELDS
+    | _CROSS_SYSTEM_CORRELATION_FIELDS
+    | _DELIVERY_NOTIFICATION_FIELDS
+    | _MEDIA_PREPARATION_FIELDS
+    | _REGISTRATION_CAPABILITY_FIELDS
+    | _VK_API_MAPPING_FIELDS
 )
 
 _CONSOLE_FORMAT = (
@@ -126,8 +80,12 @@ class _InterceptHandler(logging.Handler):
         except ValueError:
             level = record.levelno
 
-        frame, depth = logging.currentframe(), 2
-        while frame is not None and frame.f_code.co_filename == logging.__file__:
+        frame, depth = logging.currentframe(), 0
+        while frame is not None and (
+            frame.f_code.co_filename != record.pathname
+            or frame.f_code.co_name != record.funcName
+            or frame.f_lineno != record.lineno
+        ):
             frame = frame.f_back
             depth += 1
 

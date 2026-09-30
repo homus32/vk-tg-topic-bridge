@@ -5,6 +5,7 @@ normal test failure instead of aborting collection of the whole suite.
 """
 
 import importlib
+import inspect
 import logging
 import sys
 from collections.abc import Iterator
@@ -16,7 +17,15 @@ from loguru import logger
 
 from config import Settings
 
-NOISY_PREFIXES = ("aiogram", "vkbottle", "telethon", "sqlalchemy", "aiohttp", "asyncio")
+NOISY_PREFIXES = (
+    "aiogram",
+    "vkbottle",
+    "telethon",
+    "sqlalchemy",
+    "aiohttp",
+    "asyncio",
+    "aiosqlite",
+)
 
 
 class _CapturedSink:
@@ -87,6 +96,28 @@ def test_stdlib_record_reaches_loguru_sink(tmp_path: Path) -> None:
 
 
 @pytest.mark.usefixtures("logging_state")
+def test_stdlib_record_uses_original_caller_location(tmp_path: Path) -> None:
+    module = _logger_module()
+    settings = _settings(tmp_path)
+    module.configure_logging(settings)
+    sink = _CapturedSink()
+    logger.add(sink, format="{name}:{function}:{line}|{message}", level=0)
+
+    frame = inspect.currentframe()
+    assert frame is not None
+    expected_line = frame.f_lineno + 1
+    logging.getLogger("vk_topic_bridge.test").warning("source-attribution")
+    module.flush_logging()
+
+    message = next(message for message in sink.messages if "source-attribution" in message)
+    expected_location = (
+        f"{Path(__file__).stem}:test_stdlib_record_uses_original_caller_location:{expected_line}"
+    )
+    assert expected_location in message
+    assert expected_location in settings.log_file().read_text(encoding="utf-8")
+
+
+@pytest.mark.usefixtures("logging_state")
 def test_stdlib_extra_context_is_rendered_without_unknown_fields(tmp_path: Path) -> None:
     module = _logger_module()
     module.configure_logging(_settings(tmp_path))
@@ -152,14 +183,15 @@ def test_loguru_library_filter_drops_direct_noisy_record(tmp_path: Path) -> None
 
 
 @pytest.mark.usefixtures("logging_state")
+@pytest.mark.parametrize("logger_name", ("aiogram.diagnostics", "aiosqlite.core"))
 def test_library_filter_keeps_noisy_record_at_lib_level(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, logger_name: str
 ) -> None:
     module = _logger_module()
     module.configure_logging(_settings(tmp_path))
     sink = _capture_sink()
 
-    _emit_stdlib(monkeypatch, "aiogram.diagnostics", logging.WARNING, "noisy-warning")
+    _emit_stdlib(monkeypatch, logger_name, logging.WARNING, "noisy-warning")
 
     assert any("noisy-warning" in message for message in sink.messages)
 
@@ -178,15 +210,16 @@ def test_library_filter_keeps_non_noisy_record_below_lib_level(
 
 
 @pytest.mark.usefixtures("logging_state")
+@pytest.mark.parametrize("logger_name", ("aiogram.diagnostics", "aiosqlite.core"))
 def test_library_filter_level_comes_from_settings(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, logger_name: str
 ) -> None:
     module = _logger_module()
     module.configure_logging(_settings(tmp_path, LOG_LEVEL_LIBS="ERROR"))
     sink = _capture_sink()
 
-    _emit_stdlib(monkeypatch, "aiogram.diagnostics", logging.WARNING, "noisy-warning")
-    _emit_stdlib(monkeypatch, "aiogram.diagnostics", logging.ERROR, "noisy-error")
+    _emit_stdlib(monkeypatch, logger_name, logging.WARNING, "noisy-warning")
+    _emit_stdlib(monkeypatch, logger_name, logging.ERROR, "noisy-error")
 
     assert not any("noisy-warning" in message for message in sink.messages)
     assert any("noisy-error" in message for message in sink.messages)
